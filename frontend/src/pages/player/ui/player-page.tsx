@@ -8,6 +8,7 @@ import { MeetingPlayer } from "#/shared/ui/meeting-player";
 import type {
   MediaSource,
   MeetingPlayerHandle,
+  TimelineMarker,
 } from "#/shared/ui/meeting-player";
 import { Button } from "#/shared/ui/shadcn/button";
 import {
@@ -16,6 +17,7 @@ import {
 } from "#/shared/ui/transcript-sync";
 import type { TranscriptSegment } from "#/shared/ui/transcript-sync";
 
+import { readAudioWaveform } from "../lib/audio-waveform";
 import { readLocalTranscript } from "../lib/local-transcript";
 import type { LocalTranscriptError } from "../lib/local-transcript";
 
@@ -31,6 +33,7 @@ export const PlayerPage = () => {
   const [transcriptError, setTranscriptError] =
     useState<LocalTranscriptError | null>(null);
   const [transcriptLoading, setTranscriptLoading] = useState(false);
+  const [waveform, setWaveform] = useState<number[] | null>(null);
   const [selectedServerRecording, setSelectedServerRecording] = useState("");
   const ownedUrl = useRef<string | null>(null);
   const player = useRef<MeetingPlayerHandle>(null);
@@ -95,6 +98,19 @@ export const PlayerPage = () => {
         title: `${selectedServerSource.meetingTitle} — ${selectedServerSource.original_filename}`,
       }
     : null;
+  const markers: TimelineMarker[] = transcript
+    ? transcript.segments
+        .filter(
+          (_, index) =>
+            index % Math.max(1, Math.ceil(transcript.segments.length / 8)) === 0
+        )
+        .slice(0, 8)
+        .map((segment) => ({
+          id: segment.id,
+          startMs: segment.start_ms,
+          label: segment.text,
+        }))
+    : [];
 
   useEffect(
     () => () => {
@@ -105,6 +121,7 @@ export const PlayerPage = () => {
 
   const replaceFile = (file: File | null) => {
     generation.current++;
+    const currentGeneration = generation.current;
     player.current?.pause();
     if (ownedUrl.current) URL.revokeObjectURL(ownedUrl.current);
     const url = file ? URL.createObjectURL(file) : null;
@@ -115,7 +132,13 @@ export const PlayerPage = () => {
     setTranscript(null);
     setTranscriptError(null);
     setTranscriptLoading(false);
+    setWaveform(null);
     if (transcriptInput.current) transcriptInput.current.value = "";
+    if (file) {
+      void readAudioWaveform(file).then((peaks) => {
+        if (generation.current === currentGeneration) setWaveform(peaks);
+      });
+    }
   };
 
   const importTranscript = async (file: File | null) => {
@@ -148,16 +171,16 @@ export const PlayerPage = () => {
   };
 
   return (
-    <section className="mx-auto max-w-3xl space-y-6">
+    <section className="mx-auto max-w-7xl space-y-7">
       <div className="space-y-2">
-        <h1 className="text-2xl font-semibold">
+        <h1 className="text-3xl font-semibold tracking-tight">
           {m.player_page({}, { locale })}
         </h1>
         <p className="text-sm text-muted-foreground">
           {m.player_local_help({}, { locale })}
         </p>
       </div>
-      <div className="space-y-3 rounded-lg border p-4">
+      <div className="grid gap-5 rounded-2xl border bg-card p-5 lg:grid-cols-2">
         <div className="space-y-2">
           <label
             htmlFor="server-recording"
@@ -176,8 +199,8 @@ export const PlayerPage = () => {
               const recording = serverRecordings.find(
                 (item) => item.id === event.target.value
               );
-              setSelectedServerRecording(recording?.id ?? "");
               replaceFile(null);
+              setSelectedServerRecording(recording?.id ?? "");
               if (input.current) input.current.value = "";
             }}
           >
@@ -203,31 +226,35 @@ export const PlayerPage = () => {
             </p>
           ) : null}
         </div>
-        <div aria-hidden="true" className="border-t" />
-        <label htmlFor="local-recording" className="block text-sm font-medium">
-          {m.player_choose({}, { locale })}
-        </label>
-        <input
-          ref={input}
-          id="local-recording"
-          type="file"
-          accept="audio/*,video/*"
-          className="block w-full min-w-0 text-sm file:me-3 file:rounded-md file:border file:bg-background file:px-3 file:py-2 file:text-foreground"
-          onChange={(event) => {
-            replaceFile(event.target.files?.[0] ?? null);
-          }}
-        />
-        {source && (
-          <Button
-            variant="outline"
-            onClick={() => {
-              replaceFile(null);
-              if (input.current) input.current.value = "";
-            }}
+        <div className="space-y-2">
+          <label
+            htmlFor="local-recording"
+            className="block text-sm font-medium"
           >
-            {m.player_clear({}, { locale })}
-          </Button>
-        )}
+            {m.player_choose({}, { locale })}
+          </label>
+          <input
+            ref={input}
+            id="local-recording"
+            type="file"
+            accept="audio/*,video/*"
+            className="block w-full min-w-0 text-sm file:me-3 file:rounded-md file:border file:bg-background file:px-3 file:py-2 file:text-foreground"
+            onChange={(event) => {
+              replaceFile(event.target.files?.[0] ?? null);
+            }}
+          />
+          {source && (
+            <Button
+              variant="outline"
+              onClick={() => {
+                replaceFile(null);
+                if (input.current) input.current.value = "";
+              }}
+            >
+              {m.player_clear({}, { locale })}
+            </Button>
+          )}
+        </div>
       </div>
       {selectedServerMedia ? (
         <MeetingPlayer
@@ -237,13 +264,15 @@ export const PlayerPage = () => {
           onPositionChange={sync.onPositionChange}
         />
       ) : source ? (
-        <div className="space-y-5">
+        <div className="space-y-7">
           <MeetingPlayer
             source={source}
             ref={player}
             onPositionChange={sync.onPositionChange}
+            markers={markers}
+            waveform={waveform}
           />
-          <div className="space-y-3 rounded-lg border p-4">
+          <div className="space-y-3 rounded-2xl border bg-card p-5">
             <label
               htmlFor="local-transcript"
               className="block text-sm font-medium"
