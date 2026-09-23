@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AskOrganizationQuestionData, AskOrganizationQuestionErrors, AskOrganizationQuestionResponses, CreateMeetingData, CreateMeetingErrors, CreateMeetingResponses, CreateParticipantData, CreateParticipantErrors, CreateParticipantResponses, CreateProcessingJobData, CreateProcessingJobErrors, CreateProcessingJobResponses, CreateRecordingData, CreateRecordingErrors, CreateRecordingResponses, DeleteMeetingData, DeleteMeetingErrors, DeleteMeetingResponses, DeleteParticipantData, DeleteParticipantErrors, DeleteParticipantResponses, DeleteRecordingData, DeleteRecordingErrors, DeleteRecordingResponses, ExportReviewedResultData, ExportReviewedResultErrors, ExportReviewedResultResponses, ExtractResultDraftData, ExtractResultDraftErrors, ExtractResultDraftResponses, FinalizeRecordingData, FinalizeRecordingErrors, FinalizeRecordingResponses, GetAccessPolicyData, GetAccessPolicyErrors, GetAccessPolicyResponses, GetCurrentUserData, GetCurrentUserErrors, GetCurrentUserResponses, GetLivenessData, GetLivenessErrors, GetLivenessResponses, GetMeetingData, GetMeetingErrors, GetMeetingResponses, GetProcessingJobData, GetProcessingJobErrors, GetProcessingJobResponses, GetReadinessData, GetReadinessErrors, GetReadinessResponses, GetRecordingData, GetRecordingErrors, GetRecordingMediaData, GetRecordingMediaErrors, GetRecordingMediaResponses, GetRecordingResponses, GetResultDiarizationData, GetResultDiarizationErrors, GetResultDiarizationResponses, GetResultReviewData, GetResultReviewErrors, GetResultReviewResponses, GetResultVersionData, GetResultVersionErrors, GetResultVersionResponses, HeadRecordingMediaData, HeadRecordingMediaErrors, HeadRecordingMediaResponses, ListMeetingsData, ListMeetingsErrors, ListMeetingsResponses, ListParticipantsData, ListParticipantsErrors, ListParticipantsResponses, ListProcessingJobsData, ListProcessingJobsErrors, ListProcessingJobsResponses, ListRecordingsData, ListRecordingsErrors, ListRecordingsResponses, ListRemindersData, ListRemindersErrors, ListRemindersResponses, ListResultVersionsData, ListResultVersionsErrors, ListResultVersionsResponses, ListTranscriptSegmentsData, ListTranscriptSegmentsErrors, ListTranscriptSegmentsResponses, UpdateMeetingData, UpdateMeetingErrors, UpdateMeetingResponses, UpdateParticipantData, UpdateParticipantErrors, UpdateParticipantResponses, UpdateResultReviewData, UpdateResultReviewErrors, UpdateResultReviewResponses, UploadRecordingChunkData, UploadRecordingChunkErrors, UploadRecordingChunkResponses, UploadRecordingFileData, UploadRecordingFileErrors, UploadRecordingFileResponses } from './types.gen';
+import type { AskOrganizationQuestionData, AskOrganizationQuestionErrors, AskOrganizationQuestionResponses, CreateMeetingData, CreateMeetingErrors, CreateMeetingResponses, CreateParticipantData, CreateParticipantErrors, CreateParticipantResponses, CreateProcessingJobData, CreateProcessingJobErrors, CreateProcessingJobResponses, CreateRecordingData, CreateRecordingErrors, CreateRecordingResponses, DeleteMeetingData, DeleteMeetingErrors, DeleteMeetingResponses, DeleteParticipantData, DeleteParticipantErrors, DeleteParticipantResponses, DeleteRecordingData, DeleteRecordingErrors, DeleteRecordingResponses, ExportReviewedResultData, ExportReviewedResultErrors, ExportReviewedResultResponses, ExtractResultDraftData, ExtractResultDraftErrors, ExtractResultDraftResponses, FinalizeRecordingData, FinalizeRecordingErrors, FinalizeRecordingResponses, GetAccessPolicyData, GetAccessPolicyErrors, GetAccessPolicyResponses, GetCurrentUserData, GetCurrentUserErrors, GetCurrentUserResponses, GetLivenessData, GetLivenessErrors, GetLivenessResponses, GetMeetingCanvasData, GetMeetingCanvasErrors, GetMeetingCanvasResponses, GetMeetingCanvasVersionData, GetMeetingCanvasVersionErrors, GetMeetingCanvasVersionResponses, GetMeetingData, GetMeetingErrors, GetMeetingResponses, GetProcessingJobData, GetProcessingJobErrors, GetProcessingJobResponses, GetReadinessData, GetReadinessErrors, GetReadinessResponses, GetRecordingData, GetRecordingErrors, GetRecordingMediaData, GetRecordingMediaErrors, GetRecordingMediaResponses, GetRecordingResponses, GetResultDiarizationData, GetResultDiarizationErrors, GetResultDiarizationResponses, GetResultReviewData, GetResultReviewErrors, GetResultReviewResponses, GetResultVersionData, GetResultVersionErrors, GetResultVersionResponses, HeadRecordingMediaData, HeadRecordingMediaErrors, HeadRecordingMediaResponses, ListMeetingsData, ListMeetingsErrors, ListMeetingsResponses, ListParticipantsData, ListParticipantsErrors, ListParticipantsResponses, ListProcessingJobsData, ListProcessingJobsErrors, ListProcessingJobsResponses, ListRecordingsData, ListRecordingsErrors, ListRecordingsResponses, ListRemindersData, ListRemindersErrors, ListRemindersResponses, ListResultVersionsData, ListResultVersionsErrors, ListResultVersionsResponses, ListTranscriptSegmentsData, ListTranscriptSegmentsErrors, ListTranscriptSegmentsResponses, SaveMeetingCanvasData, SaveMeetingCanvasErrors, SaveMeetingCanvasResponses, UpdateMeetingData, UpdateMeetingErrors, UpdateMeetingResponses, UpdateParticipantData, UpdateParticipantErrors, UpdateParticipantResponses, UpdateResultReviewData, UpdateResultReviewErrors, UpdateResultReviewResponses, UploadRecordingChunkData, UploadRecordingChunkErrors, UploadRecordingChunkResponses, UploadRecordingFileData, UploadRecordingFileErrors, UploadRecordingFileResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -91,6 +91,37 @@ export const updateMeeting = <ThrowOnError extends boolean = false>(options: Opt
         'Content-Type': 'application/json',
         ...options.headers
     }
+});
+
+/**
+ * Get Meeting Canvas
+ */
+export const getMeetingCanvas = <ThrowOnError extends boolean = false>(options: Options<GetMeetingCanvasData, ThrowOnError>): RequestResult<GetMeetingCanvasResponses, GetMeetingCanvasErrors, ThrowOnError> => (options.client ?? client).get<GetMeetingCanvasResponses, GetMeetingCanvasErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/meetings/{meeting_id}/canvas',
+    ...options
+});
+
+/**
+ * Save Meeting Canvas
+ */
+export const saveMeetingCanvas = <ThrowOnError extends boolean = false>(options: Options<SaveMeetingCanvasData, ThrowOnError>): RequestResult<SaveMeetingCanvasResponses, SaveMeetingCanvasErrors, ThrowOnError> => (options.client ?? client).put<SaveMeetingCanvasResponses, SaveMeetingCanvasErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/meetings/{meeting_id}/canvas',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Get Meeting Canvas Version
+ */
+export const getMeetingCanvasVersion = <ThrowOnError extends boolean = false>(options: Options<GetMeetingCanvasVersionData, ThrowOnError>): RequestResult<GetMeetingCanvasVersionResponses, GetMeetingCanvasVersionErrors, ThrowOnError> => (options.client ?? client).get<GetMeetingCanvasVersionResponses, GetMeetingCanvasVersionErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/meetings/{meeting_id}/canvas/{canvas_id}',
+    ...options
 });
 
 /**

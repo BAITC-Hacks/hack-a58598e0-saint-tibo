@@ -20,6 +20,7 @@ import {
 import type { ProcessingTarget } from "../api/meetings";
 import { reviewQuery } from "../api/review";
 import { useCopy } from "../lib/copy";
+import { CanvasPanel } from "./canvas-panel";
 import { ReviewPanel } from "./review-panel";
 
 export function MeetingPage({ meetingId }: { meetingId: string }) {
@@ -407,45 +408,60 @@ export function MeetingPage({ meetingId }: { meetingId: string }) {
         </aside>
       </div>
 
-      {review.isPending ? (
-        <output className="block rounded-xl border p-8">{t.loading}</output>
-      ) : review.isError ? (
-        <div
-          role="alert"
-          className="rounded-xl border border-destructive/40 p-6"
-        >
-          <p>{t.error}</p>
-          <Button
-            className="mt-3"
-            variant="outline"
-            onClick={() => void review.refetch()}
-          >
-            {t.retry}
-          </Button>
-        </div>
-      ) : result ? (
-        <ReviewPanel
-          key={`${result.result_version_id}:${result.revision}`}
+      <div className="grid items-start gap-5 lg:grid-cols-[minmax(280px,1fr)_minmax(0,2fr)]">
+        <CanvasPanel
           meetingId={meetingId}
-          review={result}
-          onDirtyChange={setReviewDirty}
-          participants={participants.data?.items ?? []}
-          recording={
-            recordings.data?.items.find(
-              (recording) => recording.id === result.segments[0]?.recording_id
-            ) ?? latestRecording
+          result={
+            result?.source === "real" && result.recording_id
+              ? {
+                  recordingId: result.recording_id,
+                  versionId: result.result_version_id,
+                }
+              : undefined
           }
         />
-      ) : (
-        <div className="rounded-xl border border-dashed p-8">
-          <AlertCircle
-            className="mb-2 size-6 text-muted-foreground"
-            aria-hidden="true"
+        {review.isPending ? (
+          <output className="block rounded-xl border p-8">{t.loading}</output>
+        ) : review.isError ? (
+          <div
+            role="alert"
+            className="rounded-xl border border-destructive/40 p-6"
+          >
+            <p>{t.error}</p>
+            <Button
+              className="mt-3"
+              variant="outline"
+              onClick={() => void review.refetch()}
+            >
+              {t.retry}
+            </Button>
+          </div>
+        ) : result ? (
+          <ReviewPanel
+            key={`${result.result_version_id}:${result.revision}`}
+            meetingId={meetingId}
+            review={result}
+            onDirtyChange={setReviewDirty}
+            participants={participants.data?.items ?? []}
+            recording={
+              recordings.data?.items.find(
+                (recording) => recording.id === result.segments[0]?.recording_id
+              ) ?? latestRecording
+            }
           />
-          <h2 className="font-medium">{t.noResult}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">{t.noResultHelp}</p>
-        </div>
-      )}
+        ) : (
+          <div className="rounded-xl border border-dashed p-8">
+            <AlertCircle
+              className="mb-2 size-6 text-muted-foreground"
+              aria-hidden="true"
+            />
+            <h2 className="font-medium">{t.noResult}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {t.noResultHelp}
+            </p>
+          </div>
+        )}
+      </div>
     </section>
   );
 }
