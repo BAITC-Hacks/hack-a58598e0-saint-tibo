@@ -6,7 +6,8 @@ TanStack Start SPA, one origin with auth. Conventions:
 ## Structure
 
 - Routes `src/app/routes/`: `__root`, `_app` shell + `_app.index`
-  (home/meetings placeholder), `login`, `api/auth/$` (Better Auth
+  (home/meetings placeholder), `login`, `dev-login` + `api/dev-login`
+  (guarded dev auto-login — AUTH-01), `api/auth/$` (Better Auth
   catch-all), `api/media/meetings/$meetingId/recordings/$recordingId`
   (same-origin media proxy — on main).
 - Server code `src/app/server/`: `auth.server.ts` (Better Auth),
