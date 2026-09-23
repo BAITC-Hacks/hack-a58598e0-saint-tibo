@@ -24,6 +24,9 @@
   and same-origin checks. Dedicated seed refuses account collisions.
   Production disables this path. Details: `docs/access-control.md`,
   `docs/browser-testing.md`; deployment wiring: INFRA-01.
+- `DEMO.md` separately documents deliberately public ordinary persistent demo
+  credentials authorized by the owner. Preserve those identities; this does
+  not authorize publishing infrastructure/admin/API secrets or enabling prod dev-login.
 
 ## Known Gaps
 
@@ -33,4 +36,4 @@
   includes immediate 401 after logout for old JWT/cookie, owner isolation
   and dev login. It does not replace the broader security acceptance backlog.
 
-Last commit: `a2cfe28c10b214a8189b8c140d9d6b31167bf27a` (audited tree, 2026-09-23; not a live assertion).
+Last commit: `6ed682e734620ec6cc710ad59192350e3f46ed39` (audited core release tree, 2026-09-23; production 7d5b481 LIVE-OK; TEST-01).

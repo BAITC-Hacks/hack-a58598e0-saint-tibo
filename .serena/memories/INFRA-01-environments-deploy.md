@@ -36,13 +36,16 @@
 
 - Current wave integration and deployment scheduling belong to the parent
   coordinator; no worker should replace another worker's live version.
-- Exact `97e804e` has DEPLOY-OK plus independent [review/export LIVE-OK](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/14#issuecomment-5793710152)
-  on Danil dev, including migration 0005 and real JWT downloads/ACL.
-- Dev `34062c4` adds synthetic player; `ab3d331` adds marker overflow fix.
-  Those frontend changes still need scheduled dev deploy/browser proof.
-  The user authorized current-wave main/prod release after QA without #69;
-  fetched main remains 62b137d. Parent records exact release receipts in #94.
+- Review/export LIVE 97e804e, duration/privacy LIVE b1e33cb and canonical
+  browser PASS 6ed682e have distinct receipts (TEST-01); production 7d5b481 is LIVE-OK.
+- Runtime model choice is explicit BACKEND_STT_MODEL_PATH; default small,
+  prepared turbo supported with verified hashes/provenance. Do not infer the
+  active server model from code default or a model preparation command.
+- Production SHA: `7d5b48104b85c307eb6b794f90521347d8c179db`.
+  Main merged pinned core 6ed682e via PR114 with identical tree;
+  production LIVE-OK is recorded in TEST-01. Newer dev/#12 is outside this release.
+  Honcho is a separate tools Compose stack and is not launched by app deployment.
 - Organizational controls, retention/backup proof and enterprise hardening
   remain separate issues; local model egress isolation is not total certification.
 
-Last commit: `ab3d3312c3bafb3892bde93539383cea9e48b6de` (audited tree, 2026-09-23; live evidence is separate).
+Last commit: `6ed682e734620ec6cc710ad59192350e3f46ed39` (audited core release tree, 2026-09-23; production 7d5b481 LIVE-OK; TEST-01).
