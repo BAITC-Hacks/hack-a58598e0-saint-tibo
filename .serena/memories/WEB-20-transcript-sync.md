@@ -11,13 +11,13 @@
   are excluded. Repeated reveal requests carry a sequence number.
 - Follow toggle respects wheel/touch/keyboard/native scrolling; automatic
   scrolling preserves keyboard focus.
-- Parent keys hook owner by `recordingId:resultVersionId`; load the full
-  selected version's segment list before using this client hook.
-- `/transcript-demo` is explicitly public and synthetic: generated
-  32-second WAV/eight markers, no meeting API or private uploaded data.
-  The local player can also provide validated STT JSON (WEB-19).
-- Integrated #98 adds a separate `/player` synthetic walkthrough with
-  generated tones and explicitly fictional dialogue; this is not STT output.
+- `/player` now requests the latest completed result version for the selected
+  protected recording via generated `listResultVersions`, then fetches every
+  `SegmentRead` page via `listTranscriptSegments` before rendering the panel.
+  Query keys include meeting/recording/version; source switching clears stale
+  text. Server markers and the transcript use those same segments. No result,
+  empty result, loading and errors are distinct states.
+- #110 removes synthetic tones, local import and the public demo route. `/player` uses protected server recordings only.
 - Integration details: `docs/transcript-sync.md`; implementation `16cd152`.
   Historical browser evidence is recorded in the doc and
   [#20](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/20#issuecomment-5793184614).
@@ -25,11 +25,15 @@
 
 ## Known Gaps
 
-- No automatic paginated result fetch is implemented inside the hook.
-- The player now selects protected server media, but server result fetching
-  and editor/action-source integration remain #19/#20 and Artem's UI work.
-  Local markers and the synthetic demo do not prove those scenarios.
+- The sync hook remains a UI primitive; pagination lives in the player page.
+- Server action-source navigation and editor integration remain #20 and Artem's
+  UI work. No action items or speakers are inferred from transcript text.
 - #12 speaker identity and #13 reviewed source data remain backend
   dependencies; don't treat local demo fields as persisted product data.
+- Branch `ivan/20-real-transcript` was built and deployed on `dev-ivan` as
+  `cc131fd`. Browser `/player` showed the protected selector and preserved #98
+  sample. The dev user had no playable server recordings, and the worker's
+  `/models` directory was empty, so a completed server result and its seek/follow
+  behavior were not verified there. Keep #20 open and do not label it LIVE-OK.
 
-Last commit: `ab3d3312c3bafb3892bde93539383cea9e48b6de` (audited tree, 2026-09-23; live evidence is separate).
+Updated 2026-09-23 from the `ivan/20-real-transcript` worktree.
