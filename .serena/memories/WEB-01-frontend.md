@@ -5,8 +5,8 @@
 - TanStack Start SPA under `frontend/src/`; thin route → page modules.
   Shared UI is vendored shadcn/Base UI; reuse existing auth and controls.
 - `app/routes/`: protected `_app` shell/home placeholder, `/capture`
-  (WEB-21), local/stored-media `/player` (WEB-19), synthetic `/transcript-demo`
-  (WEB-20), login/dev-login and auth/media server routes.
+  (WEB-21), protected-recording `/player` (WEB-19/20),
+  login/dev-login and auth/media server routes.
 - Server modules in `app/server/` own Better Auth, auth guards, dev login
   and cookie→JWT media proxy. API requests use the generated backend client.
 - Dev root entry auto-logs in an unauthenticated dedicated dev user;
@@ -20,15 +20,18 @@
   app operation must not require an external font/image CDN.
 - Baseline UI/branding contract: `docs/product-baseline.md`,
   `docs/conventions.md`. Static examples must not masquerade as real results.
+- #110 removes the synthetic `/player` sample and public transcript demo.
 
 ## Known Gaps
 
 - Artem owns #83/#84/#85 and wider UI/design/landing work; those branches
   are not integrated into audited dev. Home is still a placeholder.
-- Mock meeting-level review/export routes (#85) differ from version-scoped
-  backend work (#13/#14); reconcile through an adapter/generated contract.
+- Mock meeting-level review/export routes (#85) differ from integrated
+  version-scoped review/export (#13/#14); adapt to the generated contract.
+  Review GET omits speakers/segments; load segments from the paginated API.
+  Export is JWT-authenticated SDK fetch with `parseAs: "blob"`, not a bare link.
 - Ivan's protected recording selector and rich player are integrated in dev
   `a2cfe28`; reported Ivan deploy passed HTTP probes, interactive QA is pending.
   Server transcript fetching and the full review/export flow remain separate.
 
-Last commit: `a2cfe28c10b214a8189b8c140d9d6b31167bf27a` (audited tree, 2026-09-23; not a live assertion).
+Last commit: `ab3d3312c3bafb3892bde93539383cea9e48b6de` (audited tree, 2026-09-23; live evidence is separate).

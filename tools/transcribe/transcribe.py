@@ -9,7 +9,7 @@ from pathlib import Path
 import sys
 import wave
 
-MODEL_REVISION = "536b0662742c02347bc0e980a01041f333bce120"
+from prepare_model import prepared_model
 
 
 def emit(payload):
@@ -26,12 +26,7 @@ def main():
     args = parser.parse_args()
     stage = "stt_model_unavailable"
     try:
-        for name in ("model.bin", "config.json", "tokenizer.json", "vocabulary.txt"):
-            if not (args.model_dir / name).is_file():
-                raise ValueError("Incomplete local bundle")
-        manifest = json.loads((args.model_dir / "manifest.json").read_text())
-        if manifest["revision"] != MODEL_REVISION:
-            raise ValueError("Unexpected model revision")
+        spec = prepared_model(args.model_dir)
         os.environ.update(
             {
                 "HF_HUB_OFFLINE": "1",
@@ -56,7 +51,8 @@ def main():
         )
         stage = "transcription_failed"
         with wave.open(str(args.audio), "rb") as audio:
-            duration_ms = round(audio.getnframes() * 1000 / audio.getframerate())
+            frames, sample_rate = audio.getnframes(), audio.getframerate()
+            duration_ms = (frames * 1000 + sample_rate - 1) // sample_rate
         segments, info = model.transcribe(
             str(args.audio),
             language=args.language if args.language in ("ru", "kk") else None,
@@ -91,7 +87,15 @@ def main():
                     "text": text,
                 }
             )
-        emit({"event": "done", "language": info.language, "duration_ms": duration_ms})
+        emit(
+            {
+                "event": "done",
+                "language": info.language,
+                "duration_ms": duration_ms,
+                "model_id": spec["model"],
+                "model_revision": spec["revision"],
+            }
+        )
         return 0
     except Exception:
         # Exceptions from decoders/models may contain private text or paths.

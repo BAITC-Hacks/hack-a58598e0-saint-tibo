@@ -12,19 +12,31 @@ CTranslate2 4.8.2. Оно не устанавливается в окружен�
 На этом срезе один worker и одно задание одновременно, CPU INT8, 4 потока,
 beam 5, без VAD и без word alignment. Паузы и шкала записи сохраняются.
 
-Модель — [Systran/faster-whisper-small](https://huggingface.co/Systran/faster-whisper-small/tree/536b0662742c02347bc0e980a01041f333bce120),
-MIT, revision `536b0662742c02347bc0e980a01041f333bce120`.
-Подготовка выполняется явно до обработки и скачивает только модель:
+Разрешены два закреплённых MIT bundle; `small` остаётся выбором по умолчанию:
+
+- [small](https://huggingface.co/Systran/faster-whisper-small/tree/536b0662742c02347bc0e980a01041f333bce120),
+  revision `536b0662742c02347bc0e980a01041f333bce120`;
+- [large-v3-turbo](https://huggingface.co/dropbox-dash/faster-whisper-large-v3-turbo/tree/0a363e9161cbc7ed1431c9597a8ceaf0c4f78fcf),
+  revision `0a363e9161cbc7ed1431c9597a8ceaf0c4f78fcf`, около 1,62 GB.
+
+Подготовка выполняется явно до обработки; она не отправляет аудио или текст:
 
 ```sh
 python3 tools/transcribe/prepare_model.py /opt/saint-tibo/models/small
+python3 tools/transcribe/prepare_model.py /opt/saint-tibo/models/turbo --model turbo
 ```
 
 Для личного сервера можно выполнить тот же скрипт через SSH:
 `ssh saint-dev-danil 'python3 - /opt/saint-tibo/models/small' < tools/transcribe/prepare_model.py`.
 В серверном `.env` указать `STT_MODELS_PATH=/opt/saint-tibo/models`;
 локально использовать `./models` и подготовить `./models/small`.
+Для подготовленного turbo задать `BACKEND_STT_MODEL_PATH=/models/turbo`
+и пересоздать worker; без этого используется `/models/small`.
 Скрипт сверяет SHA256 весов, сохраняет manifest и исходную карточку с лицензией.
+Каждое задание проверяет разрешённые model/revision и hashes всех файлов.
+Неизвестный или повреждённый bundle отклоняется без сетевого fallback.
+Фактические `model_id`/`model_revision` передаются через приватный pipe
+и сохраняются в версии результата; старые версии сохраняют своё происхождение.
 Весов, токенизатора и промежуточных транскриптов в Git нет.
 
 `processing-worker` подключён только к Docker-сети `processing` с `internal:true`,
@@ -38,6 +50,10 @@ frontend и внешний STT API при обработке не нужны. `l
 задают язык явно, `auto` определяет язык, `mixed` включает multilingual.
 Само наличие этих режимов не доказывает качество KK и смешанной речи;
 ручная оценка на соответствующих материалах остаётся в #11/#70.
+На коротких синтетических RU/KK/mixed записях turbo снизил CER соответственно
+с 7,11/12,60/53,16% до 6,28/5,91/12,24%; пропущенные small казахские фразы
+сохранились. Это сравнение с заданным TTS-текстом, не полная приёмка живой речи:
+ошибки имён и отдельных слов требуют проверки человеком.
 
 ## Версии и реплики
 
