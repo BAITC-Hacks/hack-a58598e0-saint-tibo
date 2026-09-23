@@ -42,5 +42,16 @@
     "Better Auth/Drizzle owns auth; FastAPI/SQLAlchemy/Alembic owns app.",
     "The API client generator is isolated with TypeScript 6; the frontend uses TypeScript 7.",
     "Audio and meeting text must only be processed by local or self-hosted models."
-  ]
+  ],
+  "deploy": {
+    "mode": "manual",
+    "gateway": "caddy:2@sha256:0c994536bddb66445885237f1a5dcc1916bccea922661c76b4e9fc24061f9b52",
+    "production_branch": "main"
+  },
+  "ml": {
+    "stt_environment": "tools/transcribe/uv.lock",
+    "stt_model": "Systran/faster-whisper-small",
+    "stt_model_revision": "536b0662742c02347bc0e980a01041f333bce120",
+    "stt_runtime": "CPU INT8, 4 threads; separate worker on an internal Docker network"
+  }
 }

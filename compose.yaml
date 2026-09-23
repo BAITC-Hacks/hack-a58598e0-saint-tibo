@@ -8,14 +8,43 @@ x-backend: &backend
     BACKEND_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-saint_tibo}:${POSTGRES_PASSWORD:-saint_tibo}@postgres:5432/${POSTGRES_DB:-saint_tibo}
     BACKEND_AUTH_JWKS_URL: ${BACKEND_DOCKER_AUTH_JWKS_URL:-http://frontend:3000/api/auth/jwks}
     BACKEND_AUTH_ISSUER: ${BACKEND_AUTH_ISSUER:-http://localhost:3000}
+    BACKEND_RECORDING_STORAGE_PATH: /var/lib/saint-tibo/recordings
+    BACKEND_RECORDING_MAX_BYTES: ${BACKEND_RECORDING_MAX_BYTES:-536870912}
+    BACKEND_RECORDING_CHUNK_MAX_BYTES: ${BACKEND_RECORDING_CHUNK_MAX_BYTES:-8388608}
+    BACKEND_RECORDING_MAX_DURATION_MS: ${BACKEND_RECORDING_MAX_DURATION_MS:-14400000}
+    BACKEND_RECORDING_MAX_CHUNKS: ${BACKEND_RECORDING_MAX_CHUNKS:-4096}
+    BACKEND_RECORDING_UPLOAD_TIMEOUT_SECONDS: ${BACKEND_RECORDING_UPLOAD_TIMEOUT_SECONDS:-600}
+    BACKEND_RECORDING_MEDIA_TIMEOUT_SECONDS: ${BACKEND_RECORDING_MEDIA_TIMEOUT_SECONDS:-600}
+    BACKEND_RECORDING_STALE_SECONDS: ${BACKEND_RECORDING_STALE_SECONDS:-900}
     BACKEND_AUTH_AUDIENCE: ${BACKEND_AUTH_AUDIENCE:-saint_tibo-api}
     BACKEND_CORS_ORIGINS: '${BACKEND_CORS_ORIGINS:-["http://localhost:3000"]}'
   extra_hosts:
     - host.docker.internal:host-gateway
 
 services:
+  mock-api:
+    profiles: [mock]
+    image: python:3.13-alpine
+    working_dir: /mock
+    command: ["python", "server.py"]
+    environment:
+      MOCK_API_DEV_ONLY: "1"
+      MOCK_API_HOST: 0.0.0.0
+      MOCK_API_PORT: 8015
+      MOCK_FRONTEND_ORIGIN: http://localhost:${FRONTEND_PORT:-3000}
+    volumes:
+      - ./tools/mock-api:/mock:ro
+    ports:
+      - "127.0.0.1:${MOCK_API_PORT:-8015}:8015"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8015/health/ready', timeout=2)"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   postgres:
     image: postgres:17-bookworm
+    restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-saint_tibo}
       POSTGRES_USER: ${POSTGRES_USER:-saint_tibo}
@@ -24,6 +53,7 @@ services:
       - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks: [default, processing]
     healthcheck:
       test: ["CMD-SHELL", 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
       interval: 5s
@@ -41,6 +71,9 @@ services:
   backend:
     profiles: [app]
     <<: *backend
+    volumes:
+      - recordings_data:/var/lib/saint-tibo/recordings
+    restart: unless-stopped
     ports:
       - "127.0.0.1:${BACKEND_PORT:-8000}:8000"
     depends_on:
@@ -51,6 +84,27 @@ services:
       interval: 10s
       timeout: 6s
       retries: 5
+
+  processing-worker:
+    profiles: [app]
+    <<: *backend
+    image: saint-tibo-processing:local
+    build:
+      context: .
+      dockerfile: tools/transcribe/Dockerfile
+    command: ["python", "-m", "saint_tibo.modules.processing.worker"]
+    restart: unless-stopped
+    stop_grace_period: 20s
+    volumes:
+      - recordings_data:/var/lib/saint-tibo/recordings:ro
+      - ${STT_MODELS_PATH:-./models}:/models:ro
+    networks: [processing]
+    cpus: 4
+    mem_limit: 6g
+    extra_hosts: []
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
 
   # Drizzle owns the `auth` schema and only exists in the build stage, which has the dev tools.
   auth-migrate:
@@ -68,16 +122,19 @@ services:
 
   frontend:
     profiles: [app]
+    restart: unless-stopped
     build:
       context: ./frontend
       args:
         VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
-    environment:
+    environment: &frontend-environment
       FRONTEND_PORT: 3000
+      BACKEND_INTERNAL_URL: http://backend:8000
       AUTH_DATABASE_URL: postgresql://${POSTGRES_USER:-saint_tibo}:${POSTGRES_PASSWORD:-saint_tibo}@postgres:5432/${POSTGRES_DB:-saint_tibo}
       BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:3000}
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?run `bun run setup` first}
       BETTER_AUTH_JWT_AUDIENCE: ${BETTER_AUTH_JWT_AUDIENCE:-saint_tibo-api}
+      DEV_LOGIN_ENABLED: ${DEV_LOGIN_ENABLED:-false}
     ports:
       - "127.0.0.1:${FRONTEND_PORT:-3000}:3000"
     depends_on:
@@ -91,5 +148,41 @@ services:
       timeout: 6s
       retries: 5
 
+  # Explicit deploy-only operation; never included in the production app profile.
+  auth-seed-dev:
+    profiles: [dev-tools]
+    build:
+      context: ./frontend
+      target: deps
+    environment: *frontend-environment
+    command: ["bun", "run", "seed:dev"]
+
+  gateway:
+    profiles: [edge]
+    image: caddy:2@sha256:0c994536bddb66445885237f1a5dcc1916bccea922661c76b4e9fc24061f9b52
+    restart: unless-stopped
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:-localhost}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infra/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+
 volumes:
+  recordings_data:
   postgres_data:
+  caddy_data:
+  caddy_config:
+
+networks:
+  default:
+  processing:
+    internal: true

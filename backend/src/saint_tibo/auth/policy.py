@@ -11,6 +11,8 @@ class Role(StrEnum):
 
 class Permission(StrEnum):
     PROFILE_READ = "profile:read"
+    MEETING_READ = "meeting:read"
+    MEETING_WRITE = "meeting:write"
     ACCESS_READ = "access:read"
     USERS_READ = "users:read"
     USERS_MANAGE = "users:manage"
@@ -19,10 +21,14 @@ class Permission(StrEnum):
 
 ROLE_PERMISSIONS = MappingProxyType(
     {
-        Role.USER: frozenset({Permission.PROFILE_READ}),
+        Role.USER: frozenset(
+            {Permission.PROFILE_READ, Permission.MEETING_READ, Permission.MEETING_WRITE}
+        ),
         Role.ADMIN: frozenset(
             {
                 Permission.PROFILE_READ,
+                Permission.MEETING_READ,
+                Permission.MEETING_WRITE,
                 Permission.ACCESS_READ,
                 Permission.USERS_READ,
                 Permission.USERS_MANAGE,

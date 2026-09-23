@@ -31,4 +31,21 @@ export const serverEnv = {
   get jwtAudience() {
     return required("BETTER_AUTH_JWT_AUDIENCE");
   },
+  get devLoginEnabled() {
+    return process.env.DEV_LOGIN_ENABLED === "true";
+  },
+  get backendInternalUrl() {
+    const url = new URL(required("BACKEND_INTERNAL_URL"));
+    if (
+      !["http:", "https:"].includes(url.protocol) ||
+      url.username ||
+      url.password ||
+      url.pathname !== "/" ||
+      url.search ||
+      url.hash
+    ) {
+      throw new Error("BACKEND_INTERNAL_URL must be an HTTP(S) origin.");
+    }
+    return url.origin;
+  },
 };
