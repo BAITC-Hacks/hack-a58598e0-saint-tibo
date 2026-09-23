@@ -89,6 +89,7 @@
   "player_rate": "Скорость",
   "player_volume": "Громкость",
   "player_page": "Плеер записи",
+  "player_open_page": "Открыть плеер",
   "player_server_help": "Выберите запись совещания. Аудио и транскрипт загружаются из защищённого хранилища после входа.",
   "player_server_recordings": "Защищённые записи совещаний",
   "player_choose_server_recording": "Выберите воспроизводимую запись",

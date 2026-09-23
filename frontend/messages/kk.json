@@ -89,6 +89,7 @@
   "player_rate": "Жылдамдық",
   "player_volume": "Дыбыс деңгейі",
   "player_page": "Жазба ойнатқышы",
+  "player_open_page": "Ойнатқышты ашу",
   "player_server_help": "Жиналыс жазбасын таңдаңыз. Аудио мен транскрипт жүйеге кірген соң қорғалған қоймадан жүктеледі.",
   "player_server_recordings": "Қорғалған жиналыс жазбалары",
   "player_choose_server_recording": "Ойнатылатын жазбаны таңдаңыз",

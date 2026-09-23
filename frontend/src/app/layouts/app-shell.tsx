@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useNavigate, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   BarChart3,
   Bell,
@@ -138,9 +138,9 @@ const Navigation = ({ onNavigate, reminderCount }: {
           const active =
             pathname === to || (to !== "/" && pathname.startsWith(`${to}/`));
           return (
-            <a
+            <Link
               key={to}
-              href={to}
+              to={to}
               onClick={onNavigate}
               aria-current={active ? "page" : undefined}
               className="flex min-h-10 items-center gap-2.5 border-l-[3px] border-transparent px-[18px] py-2 text-[15px] text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:bg-sidebar-accent focus-visible:text-sidebar-accent-foreground aria-[current=page]:border-brand-gold aria-[current=page]:bg-white/10 aria-[current=page]:font-bold aria-[current=page]:text-white"
@@ -153,7 +153,7 @@ const Navigation = ({ onNavigate, reminderCount }: {
               {to === "/notifications" && reminderCount !== undefined && (
                 <span className="ms-auto text-xs tabular-nums">{reminderCount}</span>
               )}
-            </a>
+            </Link>
           );
         })}
     </nav>

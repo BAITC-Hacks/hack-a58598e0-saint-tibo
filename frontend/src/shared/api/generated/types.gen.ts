@@ -159,6 +159,32 @@ export type ErrorResponse = {
 };
 
 /**
+ * ExtractionProvenance
+ */
+export type ExtractionProvenance = {
+    /**
+     * Model Id
+     */
+    model_id: string;
+    /**
+     * Model Revision
+     */
+    model_revision: string;
+    /**
+     * Model Sha256
+     */
+    model_sha256: string;
+    /**
+     * Prompt Sha256
+     */
+    prompt_sha256: string;
+    /**
+     * Runtime Id
+     */
+    runtime_id: string;
+};
+
+/**
  * HealthResponse
  */
 export type HealthResponse = {
@@ -460,9 +486,9 @@ export type ProcessingJobCreate = {
     /**
      * Target Stage
      *
-     * Diarize also produces anonymous speaker intervals.
+     * Diarize adds anonymous speaker intervals; extract also adds an unreviewed local-model draft.
      */
-    target_stage?: 'transcribe' | 'diarize';
+    target_stage?: 'transcribe' | 'diarize' | 'extract';
 };
 
 /**
@@ -534,7 +560,7 @@ export type ProcessingJobRead = {
     /**
      * Target Stage
      */
-    target_stage: 'transcribe' | 'diarize';
+    target_stage: 'transcribe' | 'diarize' | 'extract';
     /**
      * Updated At
      */
@@ -743,7 +769,7 @@ export type ResultVersionRead = {
     /**
      * Completed Stage
      */
-    completed_stage: 'transcribe' | 'diarize';
+    completed_stage: 'transcribe' | 'diarize' | 'extract';
     /**
      * Created At
      */
@@ -916,6 +942,7 @@ export type ReviewRead = {
      * Action Items
      */
     action_items: Array<ReviewActionItemRead>;
+    extraction_provenance?: ExtractionProvenance | null;
     /**
      * Is Incomplete
      */

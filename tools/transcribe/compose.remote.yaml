@@ -1,0 +1,16 @@
+# Explicit opt-in: docker compose -f compose.yaml -f tools/transcribe/compose.remote.yaml ...
+services:
+  processing-worker:
+    environment:
+      BACKEND_STT_REMOTE_ENABLED: "true"
+      BACKEND_STT_REMOTE_HOST: ${STT_REMOTE_HOST:?Set the pinned GPU SSH host}
+      BACKEND_STT_REMOTE_USER: ${STT_REMOTE_USER:-saint-stt}
+      BACKEND_STT_REMOTE_PORT: ${STT_REMOTE_PORT:-22}
+    volumes:
+      - ${STT_SSH_PATH:?Set the dedicated SSH credential directory}:/run/stt-ssh:ro
+    networks: [processing, stt_egress]
+
+networks:
+  stt_egress:
+    driver_opts:
+      com.docker.network.bridge.name: stt-ssh-egress
