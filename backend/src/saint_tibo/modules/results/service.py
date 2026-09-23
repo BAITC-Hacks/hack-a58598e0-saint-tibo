@@ -187,14 +187,14 @@ async def update_review(
     # Match DELETE/publish lock order and freeze the metadata for this revision.
     meeting_row = await meeting(session, owner_id, meeting_id, lock=True)
     await recording(session, owner_id, meeting_id, recording_id, lock=True)
-    version = await get_version(
-        session, owner_id, meeting_id, recording_id, version_id, lock=True
-    )
+    version = await get_version(session, owner_id, meeting_id, recording_id, version_id, lock=True)
     if body.revision != version.revision:
         raise APIError(409, "version_conflict", "Reload the latest revision before saving")
     previous = await review_snapshot(session, version, version.revision)
-    summary = body.summary if body.summary is not None else (
-        previous.summary if previous is not None else ReviewSummary()
+    summary = (
+        body.summary
+        if body.summary is not None
+        else (previous.summary if previous is not None else ReviewSummary())
     )
     items = (
         [
@@ -202,14 +202,18 @@ async def update_review(
             for item in body.action_items
         ]
         if body.action_items is not None
-        else previous.action_items if previous is not None else []
+        else previous.action_items
+        if previous is not None
+        else []
     )
-    participants = list(await session.scalars(
-        select(Participant)
-        .where(Participant.meeting_id == meeting_id)
-        .order_by(Participant.created_at, Participant.id)
-        .with_for_update()
-    ))
+    participants = list(
+        await session.scalars(
+            select(Participant)
+            .where(Participant.meeting_id == meeting_id)
+            .order_by(Participant.created_at, Participant.id)
+            .with_for_update()
+        )
+    )
     participant_ids = {row.id for row in participants}
     if any(
         item.assignee_participant_id is not None
@@ -221,19 +225,23 @@ async def update_review(
     for item in items:
         source_ids.update(item.source_segment_ids)
     if source_ids:
-        found = set(await session.scalars(
-            select(Segment.id).where(
-                Segment.result_version_id == version.id,
-                Segment.recording_id == recording_id,
-                Segment.id.in_(source_ids),
+        found = set(
+            await session.scalars(
+                select(Segment.id).where(
+                    Segment.result_version_id == version.id,
+                    Segment.recording_id == recording_id,
+                    Segment.id.in_(source_ids),
+                )
             )
-        ))
+        )
         if found != source_ids:
             raise APIError(422, "invalid_source_segment", "Sources must belong to this result")
 
     content_changed = body.summary is not None or body.action_items is not None
-    reviewed = body.reviewed if body.reviewed is not None else (
-        previous.reviewed if previous is not None and not content_changed else False
+    reviewed = (
+        body.reviewed
+        if body.reviewed is not None
+        else (previous.reviewed if previous is not None and not content_changed else False)
     )
     snapshot = ReviewRead(
         result_version_id=version.id,
@@ -250,16 +258,18 @@ async def update_review(
     payload = snapshot.model_dump(mode="json")
     if len(json.dumps(payload, ensure_ascii=False).encode()) > 512 * 1024:
         raise APIError(422, "review_too_large", "Review exceeds the 512 KiB snapshot limit")
-    session.add(ResultReview(
-        result_version_id=version.id, revision=snapshot.revision, payload=payload
-    ))
+    session.add(
+        ResultReview(result_version_id=version.id, revision=snapshot.revision, payload=payload)
+    )
     version.revision = snapshot.revision
     version.status = "reviewed" if reviewed else "draft"
     # completed_stage remains transcribe: human review does not claim ML extraction.
     await session.commit()
     logger.info(
         "Saved result review result_version_id=%s revision=%s reviewed=%s",
-        version_id, snapshot.revision, reviewed,
+        version_id,
+        snapshot.revision,
+        reviewed,
     )
     return snapshot
 
