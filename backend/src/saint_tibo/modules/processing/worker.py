@@ -19,11 +19,12 @@ from saint_tibo.core.logging import configure_logging
 from saint_tibo.db.session import create_engine
 from saint_tibo.modules.meetings.models import Meeting, Recording
 from saint_tibo.modules.meetings.storage import recording_dir
+from saint_tibo.modules.processing.diarization import diarize
 from saint_tibo.modules.processing.extraction import extract
 from saint_tibo.modules.processing.models import ProcessingJob
 from saint_tibo.modules.processing.service import interrupt_expired
 from saint_tibo.modules.processing.transcription import transcribe
-from saint_tibo.modules.results.service import publish_transcript
+from saint_tibo.modules.results.service import publish_transcript, segment_speakers, speaker_data
 
 logger = logging.getLogger(__name__)
 SessionFactory = async_sessionmaker[AsyncSession]
@@ -93,10 +94,11 @@ def validate_audio(path: Path, expected_duration_ms: int | None, config: Setting
             ):
                 raise APIError(422, "invalid_recording", "Expected normalized PCM16 mono audio")
             frames = source.getnframes()
-            duration_ms = round(frames * 1000 / 16000)
+            sample_rate = source.getframerate()
+            duration_ms = (frames * 1000 + sample_rate - 1) // sample_rate
             if not frames or duration_ms > config.recording_max_duration_ms:
                 raise APIError(422, "invalid_recording", "Invalid audio duration")
-            if expected_duration_ms is None or abs(duration_ms - expected_duration_ms) > 1:
+            if expected_duration_ms is None or duration_ms != expected_duration_ms:
                 raise APIError(422, "invalid_recording", "Audio duration differs from metadata")
             remaining = frames * 2
             while remaining > 0:
@@ -125,9 +127,11 @@ async def process(factory: SessionFactory, config: Settings, job: ProcessingJob)
         meeting_row = await session.get(Meeting, media.meeting_id)
         if meeting_row is None:
             raise LeaseLost
-        meeting_context = {"title": meeting_row.title,
-                           "started_at": meeting_row.started_at.isoformat(),
-                           "timezone": meeting_row.timezone}
+        meeting_context = {
+            "title": meeting_row.title,
+            "started_at": meeting_row.started_at.isoformat(),
+            "timezone": meeting_row.timezone,
+        }
     path = recording_dir(config.recording_storage_path, job.recording_id) / "media.wav"
     await asyncio.to_thread(validate_audio, path, duration, config)
     await save(factory, job, stage="transcribe", progress=None)
@@ -136,15 +140,41 @@ async def process(factory: SessionFactory, config: Settings, job: ProcessingJob)
     async def progress(value: float) -> None:
         await save(factory, job, progress=value)
 
-    segments, detected_language = await transcribe(config, path, job.language, duration, progress)
+    segments, detected_language, model_id, model_revision = await transcribe(
+        config, path, job.language, duration, progress
+    )
+    diarization = None
+    if job.target_stage in ("diarize", "extract"):
+        await save(factory, job, stage="diarize", progress=None)
+        diarization = await diarize(config, path, duration)
     segment_ids = [uuid4() for _ in segments]
     draft = None
     if job.target_stage == "extract":
         await save(factory, job, stage="extract", progress=None)
-        draft = await extract(config, segments, segment_ids, meeting_context)
+        assert diarization is not None
+        data = speaker_data(diarization)
+        labels = {speaker.speaker_id: speaker.label for speaker in data.speakers}
+        assignments = segment_speakers(segments, data)
+        speaker_labels = [
+            labels[speaker_id] if speaker_id is not None else None
+            for speaker_id in (assignments[index] for index in range(len(segments)))
+        ]
+        draft = await extract(
+            config, segments, segment_ids, meeting_context, speaker_labels=speaker_labels
+        )
     async with factory() as session:
-        await publish_transcript(session, job, segments, detected_language, duration,
-                                 segment_ids=segment_ids, extraction_draft=draft)
+        await publish_transcript(
+            session,
+            job,
+            segments,
+            detected_language,
+            duration,
+            model_id=model_id,
+            model_revision=model_revision,
+            diarization=diarization,
+            segment_ids=segment_ids,
+            extraction_draft=draft,
+        )
 
 
 async def run_job(factory: SessionFactory, config: Settings, job: ProcessingJob) -> None:

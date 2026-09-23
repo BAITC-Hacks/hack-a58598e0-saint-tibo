@@ -16,8 +16,11 @@ class ProcessingJobCreate(BaseModel):
     )
     allow_incomplete: bool = False
     language: Literal["auto", "ru", "kk", "mixed"] = "auto"
-    target_stage: Literal["transcribe", "extract"] = Field(
-        default="transcribe", description="transcribe produces a transcript; extract also produces an unreviewed local-model draft."
+    target_stage: Literal["transcribe", "diarize", "extract"] = Field(
+        default="transcribe",
+        description=(
+            "Diarize adds anonymous speaker intervals; extract also adds an unreviewed local-model draft."
+        ),
     )
 
 
@@ -28,7 +31,7 @@ class ProcessingJobRead(ReadModel):
     retry_of_job_id: UUID | None
     allow_incomplete: bool
     language: Literal["auto", "ru", "kk", "mixed"]
-    target_stage: Literal["transcribe", "extract"]
+    target_stage: Literal["transcribe", "diarize", "extract"]
     attempt: int
     status: Literal["queued", "running", "succeeded", "failed", "interrupted"]
     stage: Literal["decode", "transcribe", "diarize", "extract", "complete"]

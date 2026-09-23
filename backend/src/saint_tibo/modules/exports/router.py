@@ -56,10 +56,14 @@ async def export_result(
         content = await run_in_threadpool(render_pdf if format == "pdf" else render_docx, payload)
     except (LayoutError, ValueError):
         # Renderer exceptions may include user text; do not log or expose them.
-        raise APIError(500, "export_failed", "The reviewed document could not be rendered") from None
+        raise APIError(
+            500, "export_failed", "The reviewed document could not be rendered"
+        ) from None
     logger.info(
         "Exported result result_version_id=%s revision=%s format=%s",
-        result_version_id, revision, format,
+        result_version_id,
+        revision,
+        format,
     )
     return Response(
         content,

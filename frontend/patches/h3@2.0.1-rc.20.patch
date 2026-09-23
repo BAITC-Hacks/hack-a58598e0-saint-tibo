@@ -1,0 +1,12 @@
+diff --git a/dist/h3-Bz4OPZv_.mjs b/dist/h3-Bz4OPZv_.mjs
+index 6892915a02f6fcd79a0806e04562d34ddbc337a3..d40a20dbcc62854fa88c9bb8d287fdfc61e0d84c 100644
+--- a/dist/h3-Bz4OPZv_.mjs
++++ b/dist/h3-Bz4OPZv_.mjs
+@@ -217,6 +217,7 @@ function prepareResponse(val, event, config, nested) {
+ 		status: 404,
+ 		message: `Cannot find any route matching [${event.req.method}] ${event.url}`
+ 	});
++	if (event.req.signal.aborted && val?.name === "AbortError" && val === event.req.signal.reason) return new FastResponse(null, { status: 499 });
+ 	if (val && val instanceof Error) {
+ 		const isHTTPError = HTTPError.isError(val);
+ 		const error = isHTTPError ? val : new HTTPError(val);

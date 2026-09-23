@@ -71,8 +71,11 @@ accepts numeric loopback HTTP, disables proxies and rejects redirects.
 
 `POST /api/v1/meetings/{meeting_id}/recordings/{recording_id}/jobs` accepts
 `target_stage=extract`; the default remains `transcribe`. One existing worker
-runs decode validation → STT subprocess → extraction subprocess, sequentially.
-No diarization/participant identity is claimed. Model loading and generation
+runs decode validation → STT → diarization → extraction, sequentially.
+Explicit `target_stage=diarize` stops after anonymous speaker intervals.
+Extraction receives only anonymous cluster labels; a segment crossing voices
+or without a matching turn has a null label. Labels never assign participants.
+The system prompt is unchanged. Model loading and generation
 show `stage=extract, progress=null`; there is no fake percentage.
 
 The bounded transcript travels over stdin. The child starts its own local
@@ -89,7 +92,8 @@ and keeps its existing 4 CPU / 6 GiB container cap.
 Segment UUIDs are allocated before extraction. Small numeric prompt IDs map
 only to this new result's UUIDs. The final transaction rechecks the lease,
 recording and all references and writes the same existing `ResultVersion`,
-segments and its nullable `extraction_draft` JSONB (migration 0006).
+segments, immutable diarization and nullable `extraction_draft` JSONB
+(migration `0008`, following the existing `0007` diarization migration).
 Any failed extract attempt publishes no successful result.
 
 `completed_stage=extract`, `status=draft`, `revision=1` means an automatic
@@ -266,9 +270,9 @@ The result is a **working local-model draft → manual-correction persistence
 path**, suitable for continued integration as explicitly unreviewed content.
 It is not an accepted automatic protocol, nor a semantic pass for #69.
 Both-case audio-grounded acceptance and a deployed full `target_stage=extract`
-job remain outstanding. Shared STT/config/backend ownership transferred to
-other workers; integration must consume their final model-provenance contract
-and resolve the 0006/0007 migration order into one head.
+job remain outstanding. The integration below consumes the published STT
+model-provenance contract and resolves the migration order. GPU runtime
+changes remain owned by the separate runtime worker.
 
 Private evidence in `continuation-69-r2/private`: `case2-metrics.json`,
 `case2-private-quality.json`, `case2-safe-field-audit.json`, `db-proof.json`
@@ -276,3 +280,51 @@ and `db-proof-cleanup.json`. Raw output and reference stay there. The initial
 failed run and original Devin files remain unchanged. Exactly two inference
 runs occurred in this continuation: the initial bounded failure and the
 explicitly authorized one-variable correction.
+
+
+## Integration with #12 and current dev — 2026-09-23
+
+Integrated `origin/dev` at `a8c8fd1`, including #12 `1b6843e` and its pinned-check
+fixes. The existing `0005` and `0007` migrations are unchanged. The unreleased
+extraction migration was renamed from `0006` to `0008`, parent `0007`; a fresh
+private database upgraded to the single head `0008`. Earlier `0006` proof
+receipts above refer to the historical feature version, not a release migration.
+
+All three target stages retain the actual STT model ID/revision returned by the
+supervisor. The strict integer-ceiling audio clock is retained, including exact
+metadata equality. The default remains `transcribe`; explicit `diarize` and full
+`extract` publish one atomic result only after all requested stages complete.
+A full result includes the raw anonymous speaker evidence, original STT
+provenance and an unreviewed extraction draft. Speaker edits preserve draft
+content and extraction provenance; no automatic participant mapping or approval
+is introduced. No GPU-owned transcription/runtime behavior was edited.
+
+Bounded replay proof passed against a new temporary local PostgreSQL database:
+
+- Real API job creation, queue claim, worker subprocess supervisors, result
+  publication and review reads observed exactly `transcribe`,
+  `transcribe → diarize`, and `transcribe → diarize → extract` for the three modes.
+- Diarization replayed the existing actual Sherpa two-speaker/four-turn output
+  on its original 23,900 ms synthetic Milena/Aru audio. STT and extraction
+  responses in this scenario were explicitly controlled synthetic fixtures.
+  Turbo identity fields were passed through; this is not a turbo inference claim.
+- Anonymous labels reached extraction, cross-voice attribution remained null,
+  participant IDs remained null and all revisions stayed unreviewed.
+- A speaker-only review edit preserved the automatic task/summary/provenance;
+  original draft and raw diarization remained available. Stale revision and
+  unapproved export both returned 409. Duration metadata ±1 ms was rejected.
+- Fixture records and the uniquely owned database were deleted; the owned
+  local PostgreSQL cluster was stopped. Private receipt:
+  `/tmp/saint-69-integration/cleanup.json`.
+
+Separately, the existing actual case2 STT and successful R2 Qwen3 payload were
+replayed through the current extraction supervisor in a read-only container
+with network disabled: 76 segments, 16 actions, duration 206,032 ms, identical
+content/provenance and reference mapping, null automatic participant IDs and
+ISO dates. No case2 diarization was fabricated. Safe receipt remains privately
+under `continuation-69-integration/real-artifact-receipt.json` on the bench host.
+
+Backend wheel/sdist build, OpenAPI export and TypeScript SDK generation passed.
+No suites, linters, model inference, shared merge, deployment or browser/HTTPS
+full-job verification ran for this integration. The semantic failures documented
+above remain open; replay validates wiring and persistence, not model quality.

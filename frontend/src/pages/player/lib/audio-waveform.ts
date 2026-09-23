@@ -1,4 +1,4 @@
-/** A small, local-only overview for files the user explicitly opens in the player. */
+/** A small overview for an authorized recording already selected in the player. */
 export async function readAudioWaveform(file: File): Promise<number[] | null> {
   // Decoding a long meeting can consume much more memory than the encoded file.
   if (file.size > 32 * 1024 * 1024 || typeof AudioContext === "undefined")

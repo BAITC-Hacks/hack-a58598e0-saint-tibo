@@ -24,13 +24,25 @@ async def extract(
     config: Settings,
     segments: list[TranscriptSegment],
     segment_ids: list[UUID],
-    meeting_context: dict,
+    meeting_context: dict[str, str],
+    *,
+    speaker_labels: list[str | None] | None = None,
 ) -> ExtractionDraft:
     if not config.extract_script_path.is_file() or not config.extract_model_path.is_file():
         raise APIError(503, "extraction_unavailable", "The local extraction bundle is unavailable")
-    request = json.dumps({"meeting": meeting_context,
-                          "segments": [row.model_dump() for row in segments]},
-                         ensure_ascii=False).encode()
+    labels = speaker_labels if speaker_labels is not None else [None] * len(segments)
+    if len(labels) != len(segments) or len(segment_ids) != len(segments):
+        raise APIError(422, "invalid_extraction_input", "Segment annotations do not match")
+    request = json.dumps(
+        {
+            "meeting": meeting_context,
+            "segments": [
+                {**row.model_dump(), "speaker": label}
+                for row, label in zip(segments, labels, strict=True)
+            ],
+        },
+        ensure_ascii=False,
+    ).encode()
     if len(request) > 65536:
         raise APIError(422, "extraction_input_too_large", "Transcript exceeds the local model limit")
     process = await asyncio.create_subprocess_exec(
@@ -65,7 +77,7 @@ async def extract(
                                "Local extraction did not finish")
             payload = event["payload"]
 
-            def refs(values: list) -> list[UUID]:
+            def refs(values: object) -> list[UUID]:
                 if not isinstance(values, list) or not values or len(values) > 64:
                     raise ValueError("Missing evidence")
                 if any(type(i) is not int or not 0 <= i < len(segment_ids) for i in values):

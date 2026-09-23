@@ -7,6 +7,7 @@ font dependency.
 
 from io import BytesIO
 from pathlib import Path
+from typing import cast
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
@@ -24,11 +25,11 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 from saint_tibo.modules.exports.schemas import (
-    ActionItemStatus,
     ExportActionItem,
     ExportParticipant,
     ProtocolExport,
 )
+from saint_tibo.modules.results.schemas import ActionItemStatus
 
 FONTS_DIR = Path(__file__).parent / "assets" / "fonts"
 FONT_FAMILY = "DejaVuSans"
@@ -82,7 +83,7 @@ def _action_item_rows(payload: ProtocolExport) -> list[list[str]]:
 def _docx_table(
     document: DocumentType, headers: tuple[str, ...], widths: tuple[int, ...]
 ) -> DocxTable:
-    table = document.add_table(rows=1, cols=len(headers))
+    table = cast(DocxTable, document.add_table(rows=1, cols=len(headers)))
     table.style = "Table Grid"
     table.autofit = False
     for column, width in zip(table.columns, widths, strict=True):
@@ -116,7 +117,7 @@ def render_docx(payload: ProtocolExport) -> bytes:
     document.add_heading("Участники", level=1)
     participants = _docx_table(document, ("Имя", "Роль"), (80, 100))
     for participant in payload.participants:
-        cells = participants.add_row().cells
+        cells = participants.add_row().cells  # type: ignore[no-untyped-call]
         cells[0].text = participant.display_name
         cells[1].text = participant.role or _MISSING
 
@@ -136,7 +137,7 @@ def render_docx(payload: ProtocolExport) -> bytes:
         document, ("№", "Поручение", "Ответственный", "Срок", "Статус"), (8, 84, 42, 26, 20)
     )
     for row in _action_item_rows(payload):
-        for cell, value in zip(items.add_row().cells, row, strict=True):
+        for cell, value in zip(items.add_row().cells, row, strict=True):  # type: ignore[no-untyped-call]
             cell.text = value
 
     buffer = BytesIO()
@@ -153,12 +154,21 @@ def render_pdf(payload: ProtocolExport) -> bytes:
     _register_fonts()
     base = ParagraphStyle("Base", fontName=FONT_FAMILY, fontSize=9, leading=12)
     heading = ParagraphStyle(
-        "Heading", parent=base, fontName=f"{FONT_FAMILY}-Bold", fontSize=15,
-        leading=19, spaceAfter=6,
+        "Heading",
+        parent=base,
+        fontName=f"{FONT_FAMILY}-Bold",
+        fontSize=15,
+        leading=19,
+        spaceAfter=6,
     )
     section = ParagraphStyle(
-        "Section", parent=base, fontName=f"{FONT_FAMILY}-Bold", fontSize=11,
-        leading=14, spaceBefore=8, spaceAfter=4,
+        "Section",
+        parent=base,
+        fontName=f"{FONT_FAMILY}-Bold",
+        fontSize=11,
+        leading=14,
+        spaceBefore=8,
+        spaceAfter=4,
     )
     cell = ParagraphStyle("Cell", parent=base, fontSize=8, leading=10)
 
