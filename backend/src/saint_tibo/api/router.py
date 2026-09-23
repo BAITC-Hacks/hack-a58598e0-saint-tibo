@@ -6,6 +6,7 @@ from saint_tibo.auth.dependencies import require_permissions
 from saint_tibo.auth.policy import Permission, Role, permissions_for
 from saint_tibo.auth.schemas import AccessPolicy, CurrentUser
 from saint_tibo.core.errors import ErrorResponse
+from saint_tibo.modules.exports.router import router as exports_router
 from saint_tibo.modules.meetings.router import router as meetings_router
 from saint_tibo.modules.processing.router import router as processing_router
 from saint_tibo.modules.results.router import router as results_router
@@ -14,6 +15,7 @@ router = APIRouter(prefix="/api/v1")
 router.include_router(meetings_router)
 router.include_router(processing_router)
 router.include_router(results_router)
+router.include_router(exports_router)
 
 
 @router.get(

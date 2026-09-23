@@ -3,8 +3,8 @@
 import { type InfiniteData, infiniteQueryOptions, queryOptions, type UseMutationOptions } from '@tanstack/react-query';
 
 import { client } from '../client.gen';
-import { createMeeting, createParticipant, createProcessingJob, createRecording, deleteMeeting, deleteParticipant, deleteRecording, finalizeRecording, getAccessPolicy, getCurrentUser, getLiveness, getMeeting, getProcessingJob, getReadiness, getRecording, getRecordingMedia, getResultVersion, listMeetings, listParticipants, listProcessingJobs, listRecordings, listResultVersions, listTranscriptSegments, type Options, updateMeeting, updateParticipant, uploadRecordingChunk, uploadRecordingFile } from '../sdk.gen';
-import type { CreateMeetingData, CreateMeetingError, CreateMeetingResponse, CreateParticipantData, CreateParticipantError, CreateParticipantResponse, CreateProcessingJobData, CreateProcessingJobError, CreateProcessingJobResponse, CreateRecordingData, CreateRecordingError, CreateRecordingResponse, DeleteMeetingData, DeleteMeetingError, DeleteMeetingResponse, DeleteParticipantData, DeleteParticipantError, DeleteParticipantResponse, DeleteRecordingData, DeleteRecordingError, DeleteRecordingResponse, FinalizeRecordingData, FinalizeRecordingError, FinalizeRecordingResponse, GetAccessPolicyData, GetAccessPolicyError, GetAccessPolicyResponse, GetCurrentUserData, GetCurrentUserError, GetCurrentUserResponse, GetLivenessData, GetLivenessError, GetLivenessResponse, GetMeetingData, GetMeetingError, GetMeetingResponse, GetProcessingJobData, GetProcessingJobError, GetProcessingJobResponse, GetReadinessData, GetReadinessError, GetReadinessResponse, GetRecordingData, GetRecordingError, GetRecordingMediaData, GetRecordingMediaError, GetRecordingMediaResponse, GetRecordingResponse, GetResultVersionData, GetResultVersionError, GetResultVersionResponse, ListMeetingsData, ListMeetingsError, ListMeetingsResponse, ListParticipantsData, ListParticipantsError, ListParticipantsResponse, ListProcessingJobsData, ListProcessingJobsError, ListProcessingJobsResponse, ListRecordingsData, ListRecordingsError, ListRecordingsResponse, ListResultVersionsData, ListResultVersionsError, ListResultVersionsResponse, ListTranscriptSegmentsData, ListTranscriptSegmentsError, ListTranscriptSegmentsResponse, UpdateMeetingData, UpdateMeetingError, UpdateMeetingResponse, UpdateParticipantData, UpdateParticipantError, UpdateParticipantResponse, UploadRecordingChunkData, UploadRecordingChunkError, UploadRecordingChunkResponse, UploadRecordingFileData, UploadRecordingFileError, UploadRecordingFileResponse } from '../types.gen';
+import { createMeeting, createParticipant, createProcessingJob, createRecording, deleteMeeting, deleteParticipant, deleteRecording, exportReviewedResult, finalizeRecording, getAccessPolicy, getCurrentUser, getLiveness, getMeeting, getProcessingJob, getReadiness, getRecording, getRecordingMedia, getResultReview, getResultVersion, listMeetings, listParticipants, listProcessingJobs, listRecordings, listResultVersions, listTranscriptSegments, type Options, updateMeeting, updateParticipant, updateResultReview, uploadRecordingChunk, uploadRecordingFile } from '../sdk.gen';
+import type { CreateMeetingData, CreateMeetingError, CreateMeetingResponse, CreateParticipantData, CreateParticipantError, CreateParticipantResponse, CreateProcessingJobData, CreateProcessingJobError, CreateProcessingJobResponse, CreateRecordingData, CreateRecordingError, CreateRecordingResponse, DeleteMeetingData, DeleteMeetingError, DeleteMeetingResponse, DeleteParticipantData, DeleteParticipantError, DeleteParticipantResponse, DeleteRecordingData, DeleteRecordingError, DeleteRecordingResponse, ExportReviewedResultData, ExportReviewedResultError, ExportReviewedResultResponse, FinalizeRecordingData, FinalizeRecordingError, FinalizeRecordingResponse, GetAccessPolicyData, GetAccessPolicyError, GetAccessPolicyResponse, GetCurrentUserData, GetCurrentUserError, GetCurrentUserResponse, GetLivenessData, GetLivenessError, GetLivenessResponse, GetMeetingData, GetMeetingError, GetMeetingResponse, GetProcessingJobData, GetProcessingJobError, GetProcessingJobResponse, GetReadinessData, GetReadinessError, GetReadinessResponse, GetRecordingData, GetRecordingError, GetRecordingMediaData, GetRecordingMediaError, GetRecordingMediaResponse, GetRecordingResponse, GetResultReviewData, GetResultReviewError, GetResultReviewResponse, GetResultVersionData, GetResultVersionError, GetResultVersionResponse, ListMeetingsData, ListMeetingsError, ListMeetingsResponse, ListParticipantsData, ListParticipantsError, ListParticipantsResponse, ListProcessingJobsData, ListProcessingJobsError, ListProcessingJobsResponse, ListRecordingsData, ListRecordingsError, ListRecordingsResponse, ListResultVersionsData, ListResultVersionsError, ListResultVersionsResponse, ListTranscriptSegmentsData, ListTranscriptSegmentsError, ListTranscriptSegmentsResponse, UpdateMeetingData, UpdateMeetingError, UpdateMeetingResponse, UpdateParticipantData, UpdateParticipantError, UpdateParticipantResponse, UpdateResultReviewData, UpdateResultReviewError, UpdateResultReviewResponse, UploadRecordingChunkData, UploadRecordingChunkError, UploadRecordingChunkResponse, UploadRecordingFileData, UploadRecordingFileError, UploadRecordingFileResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -641,6 +641,68 @@ export const getResultVersionOptions = (options: Options<GetResultVersionData>) 
     },
     queryKey: getResultVersionQueryKey(options)
 });
+
+export const exportReviewedResultQueryKey = (options: Options<ExportReviewedResultData>) => createQueryKey('exportReviewedResult', options, false, ['exports']);
+
+/**
+ * Export Result
+ *
+ * Download a specific saved, reviewed revision; requires authenticated owner access.
+ */
+export const exportReviewedResultOptions = (options: Options<ExportReviewedResultData>) => queryOptions<ExportReviewedResultResponse, ExportReviewedResultError, ExportReviewedResultResponse, ReturnType<typeof exportReviewedResultQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await exportReviewedResult({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: exportReviewedResultQueryKey(options)
+});
+
+export const getResultReviewQueryKey = (options: Options<GetResultReviewData>) => createQueryKey('getResultReview', options, false, ['results']);
+
+/**
+ * Get Review
+ *
+ * Read the latest human review, or an immutable saved revision.
+ */
+export const getResultReviewOptions = (options: Options<GetResultReviewData>) => queryOptions<GetResultReviewResponse, GetResultReviewError, GetResultReviewResponse, ReturnType<typeof getResultReviewQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getResultReview({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getResultReviewQueryKey(options)
+});
+
+/**
+ * Update Review
+ *
+ * Save manual corrections. Arrays/summary replace whole fields; omitted fields stay.
+ *
+ * revision must match the latest result revision. Content edits clear approval unless
+ * reviewed=true is explicit. Each save creates an immutable snapshot for later export.
+ */
+export const updateResultReviewMutation = (options?: Partial<Options<UpdateResultReviewData>>): UseMutationOptions<UpdateResultReviewResponse, UpdateResultReviewError, Options<UpdateResultReviewData>> => {
+    const mutationOptions: UseMutationOptions<UpdateResultReviewResponse, UpdateResultReviewError, Options<UpdateResultReviewData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await updateResultReview({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
 
 export const listTranscriptSegmentsQueryKey = (options: Options<ListTranscriptSegmentsData>) => createQueryKey('listTranscriptSegments', options, false, ['results']);
 
