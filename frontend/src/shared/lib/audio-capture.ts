@@ -18,6 +18,8 @@ export type CaptureResult = Readonly<{
   chunks: readonly CaptureChunk[];
   blob: Blob;
   is_complete: boolean;
+  started_at: string;
+  timezone: string;
 }>;
 export type CaptureState = {
   phase:
@@ -73,6 +75,9 @@ export class AudioCapture {
   private timer?: ReturnType<typeof setInterval>;
   private chunks: CaptureChunk[] = [];
   private startedAt = 0;
+  private startMetadata?: Readonly<
+    Pick<CaptureResult, "started_at" | "timezone">
+  >;
   private lastEndMs = 0;
   private disposed = false;
   private acceptChunks = true;
@@ -194,8 +199,13 @@ export class AudioCapture {
         events
       );
       this.recorder.addEventListener("stop", () => this.finish(), events);
-      this.startedAt = performance.now();
       this.recorder.start(2000);
+      this.startedAt = performance.now();
+      this.startMetadata = Object.freeze({
+        started_at: new Date().toISOString(),
+        timezone:
+          Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Almaty",
+      });
       this.publish({
         phase: "recording",
         sources: inputs.map(({ kind, track }) => ({
@@ -308,6 +318,10 @@ export class AudioCapture {
       this.publish({ phase: "error", issue: issue ?? "no_audio" });
       return;
     }
+    if (!this.startMetadata) {
+      this.publish({ phase: "error", issue: "device" });
+      return;
+    }
     const chunks = Object.freeze([...this.chunks]);
     const blob = new Blob(
       chunks.map((chunk) => chunk.data),
@@ -317,7 +331,12 @@ export class AudioCapture {
       phase: issue ? "incomplete" : "complete",
       issue,
       elapsedMs: this.lastEndMs,
-      result: Object.freeze({ chunks, blob, is_complete: !issue }),
+      result: Object.freeze({
+        chunks,
+        blob,
+        is_complete: !issue,
+        ...this.startMetadata,
+      }),
     });
   }
 
