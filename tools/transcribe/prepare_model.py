@@ -86,6 +86,7 @@ def main():
                 raise ValueError("Model checksum mismatch")
             temporary.chmod(0o644)
             os.replace(temporary, target)
+        target.chmod(0o644)
         hashes[name] = digest(target)
         print(f"Prepared {name}", flush=True)
     manifest = {
