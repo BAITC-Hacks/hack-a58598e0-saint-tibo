@@ -504,6 +504,7 @@ class Handler(BaseHTTPRequestHandler):
                     "retry_of_job_id": body.get("retry_of_job_id"),
                     "allow_incomplete": bool(body.get("allow_incomplete", False)),
                     "language": body.get("language", "auto"),
+                    "target_stage": "transcribe",
                     "attempt": len(jobs) + 1,
                     "status": "queued",
                     "stage": "decode",

@@ -46,10 +46,8 @@ try:
     assert request(f"/api/v1/meetings/{meeting}")[1]["title"].startswith("Образец")
     assert request(f"/api/v1/meetings/{meeting}/participants")[1]["total"] == 3
     assert request(f"/api/v1/meetings/{meeting}/recordings")[1]["items"][0]["status"] == "ready"
-    assert (
-        request(f"/api/v1/meetings/{meeting}/recordings/{recording}/jobs")[1]["items"][0]["status"]
-        == "succeeded"
-    )
+    ready_job = request(f"/api/v1/meetings/{meeting}/recordings/{recording}/jobs")[1]["items"][0]
+    assert ready_job["status"] == "succeeded" and ready_job["target_stage"] == "transcribe"
     processing = "10000000-0000-4000-8000-000000000002"
     processing_recording = "20000000-0000-4000-8000-000000000002"
     assert request(f"/api/v1/meetings/{processing}/participants")[1]["items"] == []
