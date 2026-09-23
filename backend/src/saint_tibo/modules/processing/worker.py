@@ -140,7 +140,11 @@ async def process(factory: SessionFactory, config: Settings, job: ProcessingJob)
         diarization = await diarize(config, path, duration)
     async with factory() as session:
         await publish_transcript(
-            session, job, segments, detected_language, duration,
+            session,
+            job,
+            segments,
+            detected_language,
+            duration,
             model_id=model_id,
             model_revision=model_revision,
             diarization=diarization,

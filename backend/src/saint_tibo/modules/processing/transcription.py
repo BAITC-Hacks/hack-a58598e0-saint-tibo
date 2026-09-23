@@ -71,7 +71,9 @@ async def transcribe(
                 value = event.get("language")
                 if not isinstance(value, str) or not 1 <= len(value) <= 16:
                     raise ValueError("Invalid detected language")
-                if event.get("duration_ms") != duration_ms:
+                reported_duration = event.get("duration_ms")
+                # All producers use the same integer ceil of normalized WAV frames.
+                if type(reported_duration) is not int or reported_duration != duration_ms:
                     raise ValueError("STT duration mismatch")
                 model = event.get("model_id")
                 revision = event.get("model_revision")
