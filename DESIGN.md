@@ -3,6 +3,7 @@ version: alpha
 name: Хаттама
 description: Рабочий интерфейс протоколов совещаний и поручений
 colors:
+  primary: "#17335D"
   navy: "#17335D"
   navy-deep: "#162840"
   gold: "#A88C6D"
