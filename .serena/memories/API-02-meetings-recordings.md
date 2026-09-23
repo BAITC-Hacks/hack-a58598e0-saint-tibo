@@ -39,9 +39,10 @@ Needed because HTMLMediaElement can't set Authorization headers.
 Env: `BACKEND_INTERNAL_URL` (`frontend/scripts/setup.ts` seeds it;
 Compose passes `http://backend:8000`; `.env.example` documents it).
 
-## Processing jobs (#10) — on `dev`, not yet `main`
+## Processing jobs + STT results (#10/#11) — on `dev`, not yet `main`
 
-`modules/processing/` + migration `0003_processing_jobs` +
+`modules/processing/` + `modules/results/` + migrations
+`0003_processing_jobs`, `0004_transcript_versions` +
 `docs/processing-jobs.md`. `POST …/recordings/{r}/jobs` → 202,
 `GET` page, `GET /{job_id}` — same owner rules. Client `request_key`
 makes retries idempotent (same key+params → same job; changed params →
@@ -54,14 +55,24 @@ compose service claims jobs (lease ~60 s, heartbeat ~20 s, attempt cap
 2 h, no auto-retry; lease loss/SIGTERM → `interrupted`). Logs IDs/stage/
 error_code only. Polling client: 2 s while queued/running.
 
-Boundary: STT is NOT connected — a valid job reaches `transcribe` then
-`failed / transcription_unavailable`; `result_version_id` stays null,
-`succeeded` is never published. Real STT + ResultVersion land in #11.
+STT IS wired: worker runs `tools/transcribe/transcribe.py` in its own
+venv/image (`saint-tibo-processing:local`), faster-whisper-small CT2
+int8 CPU via private JSONL pipe; model dir `/models` mounted read-only
+(`STT_MODELS_PATH`). Success path: transcribe → `publish_transcript` →
+`result_version` + segments, job `succeeded`. If the STT runtime/model
+is absent → `failed / transcription_unavailable`; oversized transcript →
+422 `transcript_too_large`. Languages `auto|ru|kk|mixed`.
+
+Read-back (owner-scoped, 404 foreign): `GET …/recordings/{r}/results`,
+`GET …/results/{result_version_id}`, `GET …/results/{result_version_id}/segments`.
+`target_stage` column exists (only "transcribe" implemented);
+`speaker_id` on segments stays null until #12 diarization.
 
 ## Known gaps / next
 
-ResultVersion/Speaker/Segment/ActionItem are contract-only —
-they arrive with #11–#13. Recording.status is a string
+Speaker/ActionItem are contract-only — they arrive with #12/#13;
+acceptance for #11 still needs manual RU/KK/mixed samples
+(`docs/stt-feasibility.md`). Recording.status is a string
 (`receiving`/…) — UI must treat unknown status as unsupported, not "done".
 `modules/exports/` renders the reviewed protocol to DOCX+PDF from a
 contract-shaped payload (vendored DejaVu fonts, RU/KK safe); its HTTP
