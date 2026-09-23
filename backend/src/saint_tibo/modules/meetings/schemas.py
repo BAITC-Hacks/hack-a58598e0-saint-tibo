@@ -4,7 +4,15 @@ from typing import Annotated, ClassVar
 from uuid import UUID
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from pydantic import AfterValidator, AwareDatetime, BaseModel, ConfigDict, Field, StringConstraints
+from pydantic import (
+    AfterValidator,
+    AwareDatetime,
+    BaseModel,
+    ConfigDict,
+    Field,
+    StringConstraints,
+    field_validator,
+)
 
 from saint_tibo.core.schemas import PartialUpdate, ReadModel
 
@@ -72,6 +80,47 @@ class MeetingRead(ReadModel):
     updated_at: datetime
 
 
+class CanvasWrite(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    base_revision: int = Field(ge=0)
+    purpose: str | None = Field(max_length=5000)
+    inputs: str | None = Field(max_length=5000)
+    expected_outputs: str | None = Field(max_length=5000)
+    facilitation_flow: str | None = Field(max_length=5000)
+    agenda_structure: str | None = Field(max_length=5000)
+    participants: str | None = Field(max_length=5000)
+    expected_artifacts: str | None = Field(max_length=5000)
+
+    @field_validator(
+        "purpose",
+        "inputs",
+        "expected_outputs",
+        "facilitation_flow",
+        "agenda_structure",
+        "participants",
+        "expected_artifacts",
+    )
+    @classmethod
+    def no_nul(cls, value: str | None) -> str | None:
+        if value is not None and "\x00" in value:
+            raise ValueError("NUL is not allowed")
+        return value
+
+
+class CanvasRead(ReadModel):
+    id: UUID
+    meeting_id: UUID
+    revision: int
+    purpose: str | None
+    inputs: str | None
+    expected_outputs: str | None
+    facilitation_flow: str | None
+    agenda_structure: str | None
+    participants: str | None
+    expected_artifacts: str | None
+    created_at: datetime
+
+
 class ParticipantCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
     display_name: Title
@@ -125,6 +174,7 @@ class RecordingFinalize(BaseModel):
 class RecordingRead(ReadModel):
     id: UUID
     meeting_id: UUID
+    canvas_version_id: UUID | None
     source: RecordingSource
     original_filename: str
     content_type: str

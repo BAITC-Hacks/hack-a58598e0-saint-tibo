@@ -18,6 +18,8 @@ from saint_tibo.core.pagination import Page, Pagination
 from saint_tibo.db.session import DatabaseSession
 from saint_tibo.modules.meetings import service, storage
 from saint_tibo.modules.meetings.schemas import (
+    CanvasRead,
+    CanvasWrite,
     MediaType,
     MeetingCreate,
     MeetingRead,
@@ -94,6 +96,30 @@ async def delete_meeting(
 ) -> Response:
     await service.delete_meeting(session, settings(request), user.id, meeting_id)
     return Response(status_code=204)
+
+
+@router.get("/{meeting_id}/canvas", operation_id="getMeetingCanvas")
+async def get_meeting_canvas(
+    meeting_id: UUID, session: DatabaseSession, user: ReadUser
+) -> CanvasRead | None:
+    row = await service.latest_canvas(session, user.id, meeting_id)
+    return CanvasRead.model_validate(row) if row else None
+
+
+@router.put("/{meeting_id}/canvas", operation_id="saveMeetingCanvas")
+async def save_meeting_canvas(
+    meeting_id: UUID, body: CanvasWrite, session: DatabaseSession, user: WriteUser
+) -> CanvasRead:
+    return CanvasRead.model_validate(await service.save_canvas(session, user.id, meeting_id, body))
+
+
+@router.get("/{meeting_id}/canvas/{canvas_id}", operation_id="getMeetingCanvasVersion")
+async def get_meeting_canvas_version(
+    meeting_id: UUID, canvas_id: UUID, session: DatabaseSession, user: ReadUser
+) -> CanvasRead:
+    return CanvasRead.model_validate(
+        await service.canvas_version(session, user.id, meeting_id, canvas_id)
+    )
 
 
 @router.get("/{meeting_id}/participants", operation_id="listParticipants")

@@ -10,6 +10,7 @@ import { useLocale } from "#/shared/lib/locales";
 type CopyKey = Extract<keyof typeof m, `workspace_${string}`>;
 export function useWorkspaceText() {
   const locale = useLocale();
+  // oxlint-disable-next-line import/namespace -- the type limits keys to workspace messages
   return (key: CopyKey) => m[key]({}, { locale });
 }
 
