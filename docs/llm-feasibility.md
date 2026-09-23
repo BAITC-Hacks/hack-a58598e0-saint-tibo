@@ -79,7 +79,7 @@ The bounded transcript travels over stdin. The child starts its own local
 llama-server, uses schema-constrained JSON, validates every reference and
 requires a normal completion. The supervisor cancels the entire process
 group on stop/lease loss/timeout. Model stdout/stderr never enters logs.
-Limits: input 64 KiB, runtime context 8,192, output 2,048 tokens / 1 MiB,
+Limits: input 64 KiB, runtime context 8,192, output 3,072 tokens / 1 MiB,
 64 action items, 16 entries per summary category, 64 refs per statement.
 Oversized/truncated/invalid output fails explicitly; no empty-success fallback.
 The runtime uses 4 threads, one slot, batch 256/ubatch 128, no weight repacking,
@@ -120,8 +120,10 @@ Ten focused schema/client rejection cases cover foreign/boolean references,
 extra keys, duplicate keys, invented dates, missing evidence and nonlocal URLs.
 No repository test or linter suite was run.
 
-The constrained case-2 CPU run **failed** with `extraction_incomplete`; no
-live API extraction success is claimed. See the exact result below.
+The first constrained case-2 CPU run (2,048 output tokens) **failed** with
+`extraction_incomplete`. The authorized 3,072-token rerun below completed and
+its actual artifact passed the private storage/review flow. No deployed HTTPS
+full-job success is claimed.
 The exact pinned launcher also runs inside the existing processing Docker image
 (`--version`: build 11120, commit `08b1d2aea`, GNU 11.4.0, Linux x86_64),
 and the model bind is readable as the image's unprivileged application user.
@@ -169,8 +171,108 @@ No retry, second model, or model sweep was run.
 
 The adapter and draft persistence are implemented on the feature branch, but
 this profile is **not ready for automatic protocol delivery or release**.
-Current blockers are a bounded complete response, semantic acceptance of both
-case recordings (especially corrected/event deadlines and assignee vs speaker),
-and a real deployed `target_stage=extract` success. A future focused run may
+That first run left three blockers: a bounded complete response, semantic
+acceptance of both case recordings, and a deployed `target_stage=extract`
+success. The following rerun resolves the complete-response blocker only. A future focused run may
 adjust the output budget or reduce requested summary volume after the owner
 allocates another CPU slot; this task does not claim that change was measured.
+
+## Authorized bounded correction
+
+Tools-only commit `f0fbc96` raises the completion budget from 2,048 to 3,072;
+the model, system/user prompt construction, context, four threads, no-repack
+and no-thinking settings are unchanged. No 4,096-token profile, six-thread
+variant or prompt rewrite was introduced. At the measured 2,977-token prompt,
+2,977 + 3,072 fits inside the existing 8,192-token context.
+
+The client now retains only an allowlisted finish reason and nonnegative
+integer prompt/completion counts when refusing a response. The CLI snapshots
+VmHWM before stopping the runtime and writes error metrics with mode 0600.
+A focused synthetic loopback scenario verified `finish_reason=length` and
+numeric usage survive an error, while a raw response canary is absent from
+stdout/stderr/result files. This is transport evidence, not model-quality proof.
+
+Exactly one same-case-2 rerun started at 2026-09-23 11:23:16 UTC in
+`saint-extract-69-case2-r2`, with the same CPU/memory/time/network limits.
+Its artifacts are separate under `/opt/saint-llm-bench/continuation-69-r2/private`.
+The original failed run remains preserved. Evaluation compares the supplied
+six-row protocol reference separately from the documented audio corrections;
+both critical final-deadline phrases are present in the source STT segments.
+Only counts and boolean checks leave the private directory. Full semantic
+acceptance still requires audio review; reference matching heuristics alone
+must not be described as a passing quality grade.
+
+## 3,072-token result and actual-artifact review flow
+
+The single authorized rerun finished successfully:
+
+| Signal | Measured value |
+| --- | --- |
+| Process / finish reason | exit 0 / `stop` |
+| Wall time, including load | 925.271 seconds (15 min 25 s) |
+| Prompt / completion tokens | 2,977 / 2,435 |
+| Final server VmHWM | 6,369,689,600 bytes (~5.93 GiB) |
+| Extracted action items | 16 |
+| Transcript source segments | 76 |
+| Schema and same-input numeric references | Validated |
+
+The response exceeds the original 2,048-token cap. Raising only that budget
+allowed completion without changing the prompt, model, context, threads or
+repacking. This remains a warm-file-cache, shared-host measurement; it does
+not establish a cold-start container memory margin. The model was stopped
+and the CPU slot released immediately after completion.
+
+The **actual** generated payload, its provenance and the same 76 source
+segments then passed one isolated PostgreSQL flow using the feature's
+publisher and API routes: allocate UUIDs → publish existing ResultVersion +
+segments + automatic draft v1 → read review → save one explicit review edit
+as v2 → reload both revisions. The original AI revision and provenance were
+preserved, stale v1 returned 409, and an unreviewed export returned 409.
+`reviewed` stayed **false throughout**. No AI fields were hand-filled and
+no completion or approval was invented.
+
+This was an ASGI storage/API scenario with a private fixture identity, not
+an authenticated HTTPS full processing job. It used a uniquely owned temporary
+database and role on the existing PostgreSQL service, never existing app/auth
+data. Both were dropped; a separate catalog query confirmed zero remaining
+database/role entries and no remaining temporary credential file.
+
+### Semantic limitations found privately
+
+The supplied six-row protocol and the audio corrections in `docs/case.md`
+were treated as separate references. Counts are not a quality score; a source
+row can legitimately contain several obligations. No source/output text or
+personal names were exported to logs/Git.
+
+- The model emitted an initial supplier-related task with the earlier two-week
+  deadline and a separate final ten-day correction. Their references cover
+  the earlier assignment and final correction separately; it failed to merge
+  them into one final task with both sets of evidence.
+- The event-based deadline after the meeting was absent from extracted due
+  fields, despite being part of the documented case acceptance.
+- One unknown deadline was written as a text sentinel instead of `null`.
+- Only 9 of 16 due phrases occur literally in their cited source text after
+  whitespace/case normalization. The other seven require inspection; this
+  literal check is not itself a semantic accuracy score.
+- Reference-based checks found the legal-role assignment, separate estimate
+  week / training month obligations, and no misuse of the invoice five-day
+  rule as the contract-preparation deadline. Some owner-name comparisons
+  against reference rows 3/4 remain unresolved: ASR spellings and context may
+  differ, and the heuristic does not establish speaker identity.
+- Every automatic ISO date is null and every cited ID belongs to the input;
+  those structural invariants do not prove that each citation supports its task.
+
+The result is a **working local-model draft → manual-correction persistence
+path**, suitable for continued integration as explicitly unreviewed content.
+It is not an accepted automatic protocol, nor a semantic pass for #69.
+Both-case audio-grounded acceptance and a deployed full `target_stage=extract`
+job remain outstanding. Shared STT/config/backend ownership transferred to
+other workers; integration must consume their final model-provenance contract
+and resolve the 0006/0007 migration order into one head.
+
+Private evidence in `continuation-69-r2/private`: `case2-metrics.json`,
+`case2-private-quality.json`, `case2-safe-field-audit.json`, `db-proof.json`
+and `db-proof-cleanup.json`. Raw output and reference stay there. The initial
+failed run and original Devin files remain unchanged. Exactly two inference
+runs occurred in this continuation: the initial bounded failure and the
+explicitly authorized one-variable correction.
