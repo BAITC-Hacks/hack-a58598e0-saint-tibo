@@ -7,6 +7,8 @@
   "brand_subtitle": "meeting minutes and assignments",
   "nav_today": "Today",
   "nav_meetings": "Meetings",
+  "nav_capture": "Record meeting",
+  "nav_player": "Recording player",
   "nav_calendar": "Calendar",
   "nav_agenda": "Upcoming",
   "nav_tasks": "Tasks",
