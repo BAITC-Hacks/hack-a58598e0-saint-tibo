@@ -118,12 +118,24 @@ export const proxyRecordingMedia = async (
     }
   }
 
+  const upstreamController = new AbortController();
+  const abortUpstream = () => {
+    upstreamController.abort(request.signal.reason);
+    request.signal.removeEventListener("abort", abortUpstream);
+  };
+  request.signal.addEventListener("abort", abortUpstream, { once: true });
+  if (request.signal.aborted) {
+    abortUpstream();
+  }
+  const detachAbort = () =>
+    request.signal.removeEventListener("abort", abortUpstream);
+
   try {
     const path = `/api/v1/meetings/${params.meetingId}/recordings/${params.recordingId}/media`;
     const upstream = await fetch(new URL(path, serverEnv.backendInternalUrl), {
       method: request.method,
       headers,
-      signal: request.signal,
+      signal: upstreamController.signal,
       redirect: "error",
       cache: "no-store",
     });
@@ -134,12 +146,57 @@ export const proxyRecordingMedia = async (
         responseHeaders.set(name, value);
       }
     }
-    // Passing the stream preserves backpressure and downstream cancellation.
-    return new Response(request.method === "HEAD" ? null : upstream.body, {
+    if (request.method === "HEAD" || !upstream.body) {
+      detachAbort();
+      if (upstream.body) {
+        void upstream.body.cancel().catch(() => {});
+      }
+      return new Response(null, {
+        status: upstream.status,
+        headers: responseHeaders,
+      });
+    }
+
+    const reader = upstream.body.getReader();
+    let cancelled = false;
+    const body = new ReadableStream<Uint8Array>({
+      async pull(controller) {
+        try {
+          const { done, value } = await reader.read();
+          if (cancelled) {
+            return;
+          }
+          if (done) {
+            detachAbort();
+            controller.close();
+          } else {
+            controller.enqueue(value);
+          }
+        } catch (error) {
+          detachAbort();
+          if (cancelled) {
+            return;
+          }
+          if (request.signal.aborted) {
+            controller.close();
+          } else {
+            controller.error(error);
+          }
+        }
+      },
+      async cancel(reason) {
+        cancelled = true;
+        detachAbort();
+        upstreamController.abort(reason);
+        await reader.cancel(reason).catch(() => {});
+      },
+    });
+    return new Response(body, {
       status: upstream.status,
       headers: responseHeaders,
     });
   } catch {
+    detachAbort();
     return mediaError(
       request,
       503,
