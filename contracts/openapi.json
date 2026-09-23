@@ -262,6 +262,47 @@
         "title": "ErrorResponse",
         "type": "object"
       },
+      "ExtractionProvenance": {
+        "additionalProperties": false,
+        "properties": {
+          "model_id": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Model Id",
+            "type": "string"
+          },
+          "model_revision": {
+            "pattern": "^[0-9a-f]{40}$",
+            "title": "Model Revision",
+            "type": "string"
+          },
+          "model_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Model Sha256",
+            "type": "string"
+          },
+          "prompt_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Prompt Sha256",
+            "type": "string"
+          },
+          "runtime_id": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Runtime Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "model_id",
+          "model_revision",
+          "model_sha256",
+          "runtime_id",
+          "prompt_sha256"
+        ],
+        "title": "ExtractionProvenance",
+        "type": "object"
+      },
       "HealthResponse": {
         "properties": {
           "status": {
@@ -745,10 +786,11 @@
           },
           "target_stage": {
             "default": "transcribe",
-            "description": "Diarize also produces anonymous speaker intervals.",
+            "description": "Diarize adds anonymous speaker intervals; extract also adds an unreviewed local-model draft.",
             "enum": [
               "transcribe",
-              "diarize"
+              "diarize",
+              "extract"
             ],
             "title": "Target Stage",
             "type": "string"
@@ -898,7 +940,8 @@
           "target_stage": {
             "enum": [
               "transcribe",
-              "diarize"
+              "diarize",
+              "extract"
             ],
             "title": "Target Stage",
             "type": "string"
@@ -1121,7 +1164,8 @@
           "completed_stage": {
             "enum": [
               "transcribe",
-              "diarize"
+              "diarize",
+              "extract"
             ],
             "title": "Completed Stage",
             "type": "string"
@@ -1444,6 +1488,16 @@
             },
             "title": "Action Items",
             "type": "array"
+          },
+          "extraction_provenance": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExtractionProvenance"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "is_incomplete": {
             "title": "Is Incomplete",

@@ -27,6 +27,7 @@ class ResultVersion(UUIDPrimaryKey, Timestamps, Base):
     model_id: Mapped[str] = mapped_column(String(120))
     model_revision: Mapped[str] = mapped_column(String(40))
     segment_count: Mapped[int]
+    extraction_draft: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
     diarization: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
 
 

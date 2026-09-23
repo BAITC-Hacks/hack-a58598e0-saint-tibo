@@ -23,6 +23,8 @@ COPY --from=builder /app/stt/.venv /app/stt/.venv
 COPY --from=builder /app/diarize/.venv /app/diarize/.venv
 COPY tools/transcribe/transcribe.py tools/transcribe/prepare_model.py /app/stt/
 COPY tools/diarize/diarize.py tools/diarize/bundle.py /app/diarize/
+COPY tools/extract/extract /app/extract/extract
+COPY tools/extract/run.py /app/extract/run.py
 ENV PATH="/app/api/.venv/bin:$PATH" PYTHONUNBUFFERED=1 \
     HF_HUB_OFFLINE=1 HF_HUB_DISABLE_TELEMETRY=1 DO_NOT_TRACK=1 OMP_NUM_THREADS=4
 USER app
