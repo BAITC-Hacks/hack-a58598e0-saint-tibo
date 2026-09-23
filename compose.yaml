@@ -8,6 +8,14 @@ x-backend: &backend
     BACKEND_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-saint_tibo}:${POSTGRES_PASSWORD:-saint_tibo}@postgres:5432/${POSTGRES_DB:-saint_tibo}
     BACKEND_AUTH_JWKS_URL: ${BACKEND_DOCKER_AUTH_JWKS_URL:-http://frontend:3000/api/auth/jwks}
     BACKEND_AUTH_ISSUER: ${BACKEND_AUTH_ISSUER:-http://localhost:3000}
+    BACKEND_RECORDING_STORAGE_PATH: /var/lib/saint-tibo/recordings
+    BACKEND_RECORDING_MAX_BYTES: ${BACKEND_RECORDING_MAX_BYTES:-536870912}
+    BACKEND_RECORDING_CHUNK_MAX_BYTES: ${BACKEND_RECORDING_CHUNK_MAX_BYTES:-8388608}
+    BACKEND_RECORDING_MAX_DURATION_MS: ${BACKEND_RECORDING_MAX_DURATION_MS:-14400000}
+    BACKEND_RECORDING_MAX_CHUNKS: ${BACKEND_RECORDING_MAX_CHUNKS:-4096}
+    BACKEND_RECORDING_UPLOAD_TIMEOUT_SECONDS: ${BACKEND_RECORDING_UPLOAD_TIMEOUT_SECONDS:-600}
+    BACKEND_RECORDING_MEDIA_TIMEOUT_SECONDS: ${BACKEND_RECORDING_MEDIA_TIMEOUT_SECONDS:-600}
+    BACKEND_RECORDING_STALE_SECONDS: ${BACKEND_RECORDING_STALE_SECONDS:-900}
     BACKEND_AUTH_AUDIENCE: ${BACKEND_AUTH_AUDIENCE:-saint_tibo-api}
     BACKEND_CORS_ORIGINS: '${BACKEND_CORS_ORIGINS:-["http://localhost:3000"]}'
   extra_hosts:
@@ -42,6 +50,8 @@ services:
   backend:
     profiles: [app]
     <<: *backend
+    volumes:
+      - recordings_data:/var/lib/saint-tibo/recordings
     restart: unless-stopped
     ports:
       - "127.0.0.1:${BACKEND_PORT:-8000}:8000"
@@ -77,6 +87,7 @@ services:
         VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
     environment:
       FRONTEND_PORT: 3000
+      BACKEND_INTERNAL_URL: http://backend:8000
       AUTH_DATABASE_URL: postgresql://${POSTGRES_USER:-saint_tibo}:${POSTGRES_PASSWORD:-saint_tibo}@postgres:5432/${POSTGRES_DB:-saint_tibo}
       BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:3000}
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?run `bun run setup` first}
@@ -114,6 +125,7 @@ services:
         condition: service_healthy
 
 volumes:
+  recordings_data:
   postgres_data:
   caddy_data:
   caddy_config:
