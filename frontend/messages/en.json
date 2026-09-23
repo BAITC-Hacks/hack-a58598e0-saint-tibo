@@ -78,5 +78,18 @@
   "player_local_help": "The selected file plays only in this browser and is not uploaded. Processing and transcription do not run here.",
   "player_choose": "Choose audio or video",
   "player_clear": "Remove recording",
-  "player_empty": "Choose a file to listen to a recording."
+  "player_empty": "Choose a file to listen to a recording.",
+  "transcript_title": "Transcript",
+  "transcript_follow": "Follow playback",
+  "transcript_follow_on": "Following the current segment. Scroll the text to pause following.",
+  "transcript_follow_off": "Following is off. Enable it to return to the current segment.",
+  "transcript_empty": "No timed segments for this recording and result version.",
+  "transcript_source": "Source at {time}",
+  "transcript_source_missing": "Source unavailable",
+  "transcript_demo_title": "Transcript synchronization demo",
+  "transcript_demo_help": "Synthetic data only. Eight tones start every four seconds; each lasts three seconds, followed by silence. Click a segment or task source to seek without changing play/pause. No audio or text is uploaded.",
+  "transcript_demo_audio": "Synthetic tones · 32 seconds",
+  "transcript_demo_segment": "Signal {number} · {frequency} Hz. This is a synthetic transcript marker.",
+  "transcript_demo_action": "Example action item",
+  "transcript_demo_action_text": "Compare signals 3 and 7. The buttons use source_segment_ids; an unavailable reference is disabled."
 }
