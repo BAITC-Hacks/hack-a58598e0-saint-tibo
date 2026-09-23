@@ -27,6 +27,7 @@ import type {
   MediaSource,
   MeetingPlayerHandle,
   PlaybackPosition,
+  SpeakerInterval,
   TimelineMarker,
 } from "./types";
 
@@ -37,9 +38,13 @@ type Controller = {
   select: (source: ServerSource) => void;
   clear: () => void;
   seek: (positionMs: number) => void;
+  soloSpeakerId: string | null;
+  listenSpeaker: (speakerId: string, startMs: number) => void;
+  stopSolo: () => void;
   setDetails: (
     markers: readonly TimelineMarker[],
-    waveform: readonly number[] | null
+    waveform: readonly number[] | null,
+    speakerIntervals?: readonly SpeakerInterval[]
   ) => void;
 };
 
@@ -58,10 +63,12 @@ export function PersistentPlayerProvider({
 }) {
   const [source, setSource] = useState<ServerSource | null>(null);
   const [position, setPosition] = useState<PlaybackPosition | null>(null);
+  const [soloSpeakerId, setSoloSpeakerId] = useState<string | null>(null);
   const [details, setDetailsState] = useState<{
     markers: readonly TimelineMarker[];
     waveform: readonly number[] | null;
-  }>({ markers: [], waveform: null });
+    speakerIntervals: readonly SpeakerInterval[];
+  }>({ markers: [], waveform: null, speakerIntervals: [] });
   const [remembered] = useState<ReturnType<typeof savedRecording>>(() =>
     typeof window === "undefined" ? undefined : savedRecording()
   );
@@ -135,7 +142,8 @@ export function PersistentPlayerProvider({
     player.current?.pause();
     saveSelectedRecording(next.meetingId, next.id);
     setPosition(null);
-    setDetailsState({ markers: [], waveform: null });
+    setDetailsState({ markers: [], waveform: null, speakerIntervals: [] });
+    setSoloSpeakerId(null);
     setSource(next);
   };
   const clear = () => {
@@ -143,6 +151,7 @@ export function PersistentPlayerProvider({
     forgetSelectedRecording();
     setSource(null);
     setPosition(null);
+    setSoloSpeakerId(null);
   };
   const onPositionChange = (next: PlaybackPosition) => {
     if (!source || next.sourceId !== source.id) return;
@@ -152,9 +161,10 @@ export function PersistentPlayerProvider({
   const setDetails = useCallback(
     (
       markers: readonly TimelineMarker[],
-      waveform: readonly number[] | null
+      waveform: readonly number[] | null,
+      speakerIntervals: readonly SpeakerInterval[] = []
     ) => {
-      setDetailsState({ markers, waveform });
+      setDetailsState({ markers, waveform, speakerIntervals });
     },
     []
   );
@@ -167,6 +177,13 @@ export function PersistentPlayerProvider({
         select,
         clear,
         seek: (ms) => player.current?.seek(ms),
+        soloSpeakerId,
+        listenSpeaker: (speakerId, startMs) => {
+          player.current?.seek(startMs);
+          setSoloSpeakerId(speakerId);
+          player.current?.play();
+        },
+        stopSolo: () => setSoloSpeakerId(null),
         setDetails,
       }}
     >
@@ -186,6 +203,10 @@ export function PersistentPlayerProvider({
             onPositionChange={onPositionChange}
             markers={details.markers}
             waveform={details.waveform}
+            speakerIntervals={details.speakerIntervals}
+            soloSpeakerId={soloSpeakerId}
+            onSoloEnd={() => setSoloSpeakerId(null)}
+            onManualSeek={() => setSoloSpeakerId(null)}
           />
           {pathname !== "/player" && (
             <Link

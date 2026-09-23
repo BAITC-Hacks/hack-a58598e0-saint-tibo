@@ -103,23 +103,33 @@ export const en: Record<keyof typeof ru, string> = {
   receiving: "Receiving file",
   incomplete: "Incomplete recording",
   unavailableStatus: "Unknown status",
-  processingSaveFirst: "Save your result edits before starting another processing job.",
+  processingSaveFirst:
+    "Save your result edits before starting another processing job.",
   fullPipeline: "Transcript, speakers and draft minutes",
   extracting: "Creating draft minutes",
-  extractionHelp: "The full pipeline runs locally. Creating the draft on CPU currently takes about 15 minutes and may take longer. The result appears after processing finishes and requires manual review and confirmation.",
+  extractionHelp:
+    "The full pipeline runs locally. Creating the draft on CPU currently takes about 15 minutes and may take longer. The result appears after processing finishes and requires manual review and confirmation.",
   processingMode: "Processing mode",
   transcriptionOnly: "Transcript only",
   transcriptionSpeakers: "Transcript and speakers",
-  diarizationHelp: "The system will separate voices in the recording. After processing, listen to the samples and identify participants manually.",
+  diarizationHelp:
+    "The system will separate voices in the recording. After processing, listen to the samples and identify participants manually.",
   diarizing: "Identifying speakers",
-  diarizationUnavailable: "The voice separation model is not available yet. You can choose “Transcript only”.",
-  speakerHelp: "Labels represent different voices. Listen to a sample in the player and choose a participant if you recognize the voice. Action item owners are set separately.",
+  diarizationUnavailable:
+    "The voice separation model is not available yet. You can choose “Transcript only”.",
+  speakerHelp:
+    "Labels represent different voices. Listen to a sample in the player and choose a participant if you recognize the voice. Action item owners are set separately.",
   speakerSample: "Go to sample",
+  listenSpeaker: "Listen",
+  stopSolo: "All voices",
   speakerMerged: "Merged into",
   noSpeakers: "No distinct voices were found in this recording.",
   speakersUnavailable: "Run “Transcript and speakers” to identify voices.",
-  reviewConflict: "Another session saved a newer revision. Your edits remain in the form.",
+  reviewConflict:
+    "Another session saved a newer revision. Your edits remain in the form.",
   reviewReload: "Load server revision",
-  reviewReloadHelp: "This replaces unsaved fields. Keep a separate copy of any edits you need before loading.",
-  reviewReloadError: "Could not load the revision. Your edits remain in the form.",
+  reviewReloadHelp:
+    "This replaces unsaved fields. Keep a separate copy of any edits you need before loading.",
+  reviewReloadError:
+    "Could not load the revision. Your edits remain in the form.",
 };
