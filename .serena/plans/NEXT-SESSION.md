@@ -16,7 +16,8 @@ Last commit: `420aac5df7f0f764fb8ddbbbd6d1b710d0f1ea7a` (release source; prod1ad
   Both UI owners finished; coordinator confirms disposable dev QA cleanup0.
   Permanent demo/user data remain untouched; do not clean unrelated data.
 - Artem owns canonical /meetings UI; Ivan owns player/capture/Honcho tools.
-  #107 fallback b095035 stays UNMERGED; never add a second workspace.
+  User explicitly requested PR124/#107 fallback merge; separate worker resolves
+  conflicts. Follow-up is pending and must not be attributed to release1adbcb5.
 
 ## Released code and bounded evidence
 
@@ -28,8 +29,8 @@ Last commit: `420aac5df7f0f764fb8ddbbbd6d1b710d0f1ea7a` (release source; prod1ad
   Original Devin sources 590aaf4 are preserved in its ancestry.
 - Dev420 is deployed/healthy; final UI receipt confirms the combined release.
   Exact prod1adbcb5 symlink/deploy exit0/services/HTTPS health PASS per coordinator.
-- [Historical prod7d5b481 LIVE-OK](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/94#issuecomment-5794357831): ordinary auth→RU turbo→manual r2→PDF/DOCX;
-  own app/auth rows 0/media absent. Browser6ed evidence remains in TEST-01.
+- [Prod1adbcb5 extraction PASS](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/113#issuecomment-5794927457):23900ms mixed→39.07s,4segments/2speakers/4turns;
+  CUDA/new prompt, empty draft/manualr2/export409, ACL/auth PASS, both QAcleanup0; #113 CLOSED.
 - [#113 GPU](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/113#issuecomment-5794753625): actual L4, pinned provenance, cancel/heartbeat cleanup 0;
   case2 observed STT ~16.871s vs CPU149.41095s (~8.9×), Sherpa ~59.060s.
 - [#12 browser](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/12#issuecomment-5794699275): mappings/approval/assignee immutability and #101 resume PASS.
@@ -43,8 +44,8 @@ Last commit: `420aac5df7f0f764fb8ddbbbd6d1b710d0f1ea7a` (release source; prod1ad
 ## Remaining limits
 
 1. GPU case2 semantic FAIL: late ten-day/event deadlines still absent; no prompt loops.
-2. #70 TTS KK100s/mixed82s full jobs run separately; real human accuracy unverified.
-3. Prod health/UI PASS is not production inference proof; dev timings stay dev evidence.
+2. #70 KK TTS27 segments/seven actions has quality misses; mixed82s running, human unverified.
+3. Prod smoke proves operation, not semantics/performance isolation; dev timings stay dev evidence.
 4. External extraction/Honcho settings checked empty on dev; code/default-disabled
    capability is not permission or activation. Do not claim external consent.
 

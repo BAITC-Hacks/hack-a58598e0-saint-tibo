@@ -16,8 +16,7 @@
   CUDA float16 on one Brev L4 ($25 cap). App host retains DB/queue/ACL/publication.
   Forced-command SSH, verified host key and allowed/blocked egress probes passed.
 - Synthetic19.621s→10.160s/nine segments. Cancel cleanup0.753s; missing heartbeat
-  stops in20.415s, zero containers/job directories. Non-root/network-none/read-only,
-  dropped capabilities and disabled container logs bound the remote runtime.
+  stops in20.415s, zero leftovers; non-root/network-none/read-only, dropped caps/logs off.
 - Same206.032s case2: CPU STT149.41095s vs observed GPU16.871s (~8.9× shorter,
   including transport/poll uncertainty). This is operational, not pure inference.
   Prior GPU-STT+CPU-Qwen full pipeline663.806196s: 45 segments/seven anonymous
@@ -29,7 +28,6 @@
   image fcfc72fa1a1fc15a80851dcbdd44325eec00aeeb1db65f5641cbfdd13a30249c.
   Actual CUDA5872MiB/97% utilization; containers/job directories0 after completion.
   CPU manualv2 is unchanged; GPUv1 stays unreviewed and export returns409.
-  Earlier runner validJSON21.917s/EOFcleanup0.164s was a separate bounded check.
 - [#12 mapping/immutability](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/12#issuecomment-5794699275): human mapping→unknown→restore clears approval,
   persists on save/reload and does not rewrite action assignees. Clusters are anonymous.
 - [Final dev420/prod UI receipt](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/94#issuecomment-5794894930): #101 diarize four segments visible;
@@ -44,15 +42,18 @@
   23900ms→four segments/two speakers/four turns,25.42s including polling.
 - Both UI owners finished; coordinator confirms exact dev QA cleanup0 after
   FINAL-CLEANUP. Permanent demo and user test1/Совещание №1 remain untouched.
+- [Prod extraction PASS](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/113#issuecomment-5794927457): ONE23900ms mixed target=extract
+  completed39.07s incl queue/poll on shared L4: four segments/two speakers/four turns,
+  exact CUDA/new prompt/provenance, empty automatic draft. Manualr2 unreviewed/export409.
+  Outsider ACL404/anonymous401/dev-login404; both disposable accounts/app/media cleanup0.
+  #113 CLOSED. This is operational acceptance, not fixture semantic approval.
 
 ## Known Gaps
 
 - GPU case2 still misses the late ten-day correction and event deadline: semantic
   FAIL despite faster completion/18 actions. No example leakage; no more prompt loops.
-- #70 TTS KK100s/mixed82s full jobs are running separately. Real human Kazakh/mixed
-  accuracy remains unverified; speed, TTS and clustering cannot establish it.
-- Prod health/UI PASS does not transfer dev GPU case2 timings/semantic results
-  to a production inference proof. Retain the exact environment of each receipt.
+- #70 KK TTS completed27 segments/seven actions with quality misses; mixed82s runs.
+  Real human Kazakh/mixed accuracy remains unverified; TTS does not establish it.
 - Root owns the GPU and release. Serena starts no resources, inference or audits.
   Never delete/interrupt user recordings or persistent demo identities/data.
 
