@@ -9,12 +9,14 @@ from saint_tibo.core.errors import ErrorResponse
 from saint_tibo.modules.exports.router import router as exports_router
 from saint_tibo.modules.extraction.router import router as extraction_router
 from saint_tibo.modules.meetings.router import router as meetings_router
+from saint_tibo.modules.org_questions.router import router as org_questions_router
 from saint_tibo.modules.processing.router import router as processing_router
 from saint_tibo.modules.reminders.router import router as reminders_router
 from saint_tibo.modules.results.router import router as results_router
 
 router = APIRouter(prefix="/api/v1")
 router.include_router(meetings_router)
+router.include_router(org_questions_router)
 router.include_router(processing_router)
 router.include_router(results_router)
 router.include_router(extraction_router)

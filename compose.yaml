@@ -20,6 +20,8 @@ x-backend: &backend
     BACKEND_RECORDING_STALE_SECONDS: ${BACKEND_RECORDING_STALE_SECONDS:-900}
     BACKEND_AUTH_AUDIENCE: ${BACKEND_AUTH_AUDIENCE:-saint_tibo-api}
     BACKEND_CORS_ORIGINS: '${BACKEND_CORS_ORIGINS:-["http://localhost:3000"]}'
+    BACKEND_HONCHO_URL: ${BACKEND_HONCHO_URL:-}
+    BACKEND_HONCHO_JWT_SECRET: ${BACKEND_HONCHO_JWT_SECRET:-}
   extra_hosts:
     - host.docker.internal:host-gateway
 
@@ -109,7 +111,8 @@ services:
       - ${EXTRACT_MODELS_PATH:-./models/qwen3-8b}:/extract-model:ro
     networks: [processing]
     cpus: 4
-    mem_limit: 6g
+    # Measured Qwen3-8B RSS is about 5.93 GiB; leave room for the worker and CLI.
+    mem_limit: 8g
     extra_hosts: []
     depends_on:
       migrate:
