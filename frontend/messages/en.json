@@ -157,5 +157,6 @@
   "capture_playback": "Local recording playback",
   "capture_playback_error": "The browser could not play this recording. Download the file; an incomplete container may need server recovery.",
   "capture_download": "Download audio",
-  "capture_limits": "Local mode: up to 30 minutes, 64 MiB and 4096 chunks. Recording continues locally if the network drops. Changing source requires a new recording."
+  "capture_limits": "Local mode: up to 30 minutes, 64 MiB and 4096 chunks. Recording continues locally if the network drops. Changing source requires a new recording.",
+  "nav_notifications": "Reminders"
 }
