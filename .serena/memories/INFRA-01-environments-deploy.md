@@ -40,7 +40,11 @@ The auth server additionally requires an exact configured HTTPS dev origin.
 Only the Caddy gateway is public (pinned digest in stack-pin.json);
 Postgres/API/frontend bind loopback, talk over a Docker network.
 Same HTTPS origin serves `/api/v1/*`, `/health/*`, `/docs`, and
-`/api/auth/*` (Better Auth inside frontend).
+`/api/auth/*` (Better Auth inside frontend). `processing-worker`
+(`saint-tibo-processing:local` from `tools/transcribe/Dockerfile`)
+runs the STT subprocess; it mounts `recordings_data` and
+`${STT_MODELS_PATH:-./models}` read-only — populate `models/` on the
+server via `tools/transcribe/prepare_model.py` before jobs can succeed.
 
 Server secrets generated on first run → `/opt/saint-tibo/.env` (mode
 600), preserved on redeploy. Root `.env` is local-only and gitignored.
