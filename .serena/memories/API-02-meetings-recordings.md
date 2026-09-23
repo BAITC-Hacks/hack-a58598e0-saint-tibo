@@ -23,11 +23,11 @@ All endpoints live in `contracts/openapi.json`. Files:
 Prod deploys manually from `main` only — see INFRA-01.
 
 Endpoints `/api/v1`: meetings CRUD; participants CRUD;
-`PUT /meetings/{m}/recordings/{r}` raw stream (≤512 MiB, source=file);
-`PUT …/chunks/{seq}` live chunks (≤8 MiB, ≤4096, idempotent resend);
+`PUT …/recordings/{r}/file` raw stream (≤512 MiB, source=file);
+`PUT …/chunks/{sequence}` live chunks (≤8 MiB, ≤4096, idempotent resend);
 `POST …/finalize` (marks incomplete if chunks missing);
 `GET/HEAD …/media` Range/If-Range → 206/416, serves normalized `audio/wav`;
-`DELETE` recording cascades stored files. Decode picks audio stream
+`DELETE` recording cascades stored files and its jobs. Decode picks audio stream
 explicitly (MP3 cover art safe); normalization keeps timeline.
 Owner-only access; foreign id → 404.
 
@@ -39,10 +39,29 @@ Needed because HTMLMediaElement can't set Authorization headers.
 Env: `BACKEND_INTERNAL_URL` (`frontend/scripts/setup.ts` seeds it;
 Compose passes `http://backend:8000`; `.env.example` documents it).
 
+## Processing jobs (#10) — on `dev`, not yet `main`
+
+`modules/processing/` + migration `0003_processing_jobs` +
+`docs/processing-jobs.md`. `POST …/recordings/{r}/jobs` → 202,
+`GET` page, `GET /{job_id}` — same owner rules. Client `request_key`
+makes retries idempotent (same key+params → same job; changed params →
+409 `idempotency_conflict`; other key while active → 409
+`processing_in_progress`); `retry_of_job_id` only on failed/interrupted.
+Only `ready` or playable `incomplete`+`allow_incomplete` recordings enter.
+
+Queue = Postgres `FOR UPDATE SKIP LOCKED`; separate `processing-worker`
+compose service claims jobs (lease ~60 s, heartbeat ~20 s, attempt cap
+2 h, no auto-retry; lease loss/SIGTERM → `interrupted`). Logs IDs/stage/
+error_code only. Polling client: 2 s while queued/running.
+
+Boundary: STT is NOT connected — a valid job reaches `transcribe` then
+`failed / transcription_unavailable`; `result_version_id` stays null,
+`succeeded` is never published. Real STT + ResultVersion land in #11.
+
 ## Known gaps / next
 
-ProcessingJob/ResultVersion/Speaker/Segment/ActionItem are contract-only —
-#10 builds jobs on top of this slice. Recording.status is a string
+ResultVersion/Speaker/Segment/ActionItem are contract-only —
+they arrive with #11–#13. Recording.status is a string
 (`receiving`/…) — UI must treat unknown status as unsupported, not "done".
 `modules/exports/` renders the reviewed protocol to DOCX+PDF from a
 contract-shaped payload (vendored DejaVu fonts, RU/KK safe); its HTTP
