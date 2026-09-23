@@ -36,16 +36,13 @@
 
 - Current wave integration and deployment scheduling belong to the parent
   coordinator; no worker should replace another worker's live version.
-- Dev `97e804e` integrates review/export and migration 0005; coordinator
-  reports DEPLOY-OK/healthy/readiness there. Independent LIVE-OK is pending.
-  Dev34062c4 additionally changes only player/frontend docs; deploy/UI gate
-  precedes the user-authorized current-wave release to main/prod.
-- Last independent Danil runtime evidence is `58ee537` in
-  [#94](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/94#issuecomment-5793355510).
-  Through `f8cf4da` only docs/memories changed; dev `a2cfe28` also adds player
-  code and is not proven deployed on Danil. Ivan's [#95 report](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/95#issuecomment-5793559235)
-  claims that exact commit deployed on his dev with HTTP probes, no interactive QA.
+- Exact `97e804e` has DEPLOY-OK plus independent [review/export LIVE-OK](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/14#issuecomment-5793710152)
+  on Danil dev, including migration 0005 and real JWT downloads/ACL.
+- Dev `34062c4` adds synthetic player; `ab3d331` adds marker overflow fix.
+  Those frontend changes still need scheduled dev deploy/browser proof.
+  The user authorized current-wave main/prod release after QA without #69;
+  fetched main remains 62b137d. Parent records exact release receipts in #94.
 - Organizational controls, retention/backup proof and enterprise hardening
   remain separate issues; local model egress isolation is not total certification.
 
-Last commit: `97e804ed7c941408ecf22145d72497214b5002c4` (audited tree, 2026-09-23; not a live assertion).
+Last commit: `ab3d3312c3bafb3892bde93539383cea9e48b6de` (audited tree, 2026-09-23; live evidence is separate).

@@ -22,12 +22,18 @@
   and HTTP/UI downloads were outside that proof.
 - Later [#13/#14 local evidence](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/14#issuecomment-5793605774)
   reports builds, PostgreSQL+HTTP review/conflict/ACL/export scenarios and
-  visual RU/KK/long-table PDF/DOCX checks. Identity was substituted locally;
-  independent live JWT review/export acceptance at 97e804e is still pending.
+  visual RU/KK/long-table PDF/DOCX checks. Identity was substituted locally.
+- Independent [review/export LIVE-OK 97e804e](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/14#issuecomment-5793710152):
+  real JWT, anonymous401, foreign-admin404, stale409, invalid/cross-version
+  source/assignee422, r2 save/reload and immutable JSON/decoded PDF/DOCX through
+  metadata/content edits, r3 draft export409, r4 approved current content.
+  First run: 54 passes stopped on QA-only PDF whitespace assertion; targeted
+  normalized continuation: 57/57 passed. Own app/auth cleanup counts 0; no product bug.
+  #14 closed; UI buttons and #13 automatic extraction are separate acceptance.
 - Browser proof covered logout/manual login/root dev-login; it is not a
   claim that the complete meeting UI or real player integration is finished.
-- Later [Ivan #95 report](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/95#issuecomment-5793559235) deploys `a2cfe28`, readiness/player HTTP 200;
-  waveform/marker/selector/browser-console interaction proof remains pending.
+- Ivan's earlier #95 report gives a2cfe28 deploy/HTTP200 only. Later synthetic
+  player 34062c4/overflow fix ab3d331 still require dev/browser proof.
 - QA removed its own temporary data; historic cleanup is not authorization
   to delete other users' meetings/jobs/accounts.
 
@@ -35,10 +41,10 @@
 
 - RU functional success is not manual accuracy measurement for RU/KK/mixed.
   #11/#70/#89, diarization, extraction and product-level end-to-end acceptance
-  remain separate work.
+  remain separate work. CT2 small synthetic mixed smoke exposed omissions (MODELS-01).
 - Real protected player, browser capture upload and external participant
   acceptance remain under their own issue owners.
 - Evidence must include exact SHA, scenario, observed result and limitations.
   Never publish tokens, meeting text/audio or raw private logs as proof.
 
-Last commit: `97e804ed7c941408ecf22145d72497214b5002c4` (audited tree, 2026-09-23; not a live assertion).
+Last commit: `ab3d3312c3bafb3892bde93539383cea9e48b6de` (audited tree, 2026-09-23; live evidence is separate).

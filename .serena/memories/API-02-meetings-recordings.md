@@ -32,7 +32,7 @@
   are not implemented by this owner JWT upload API.
 - Speaker remains unimplemented; action items now persist in bounded JSONB
   review snapshots (API-13), not a separate table. Jobs/transcripts: API-10.
-- Latest shared functional proof is the [#94 LIVE-OK report](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/94#issuecomment-5793355510)
-  on `58ee537`; it does not make all current branch tips live.
+- Storage/STT functional proof is the [#94 LIVE-OK report](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/94#issuecomment-5793355510)
+  on `58ee537`; later review/export LIVE-OK 97e804e is recorded in API-13.
 
-Last commit: `97e804ed7c941408ecf22145d72497214b5002c4` (audited tree, 2026-09-23; not a live assertion).
+Last commit: `ab3d3312c3bafb3892bde93539383cea9e48b6de` (audited tree, 2026-09-23; live evidence is separate).

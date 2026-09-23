@@ -30,9 +30,11 @@
 
 - Manual reference-based RU/KK/mixed quality/error assessment (#11/#70/#89)
   remains open; upstream model-card claims are not team measurements.
-- Preliminary local MLX small synthetic KK/mixed checks raised concerns;
-  server CT2 comparison is pending. Keep runtimes and synthetic/reference
-  evidence distinct; no multilingual quality pass is established.
+- Coordinator's server CT2 small INT8 synthetic smoke reports RU CER 7.11%
+  (6.19s), KK 12.60% (9.50s), mixed with multilingual=true: 53.16% (7.17s)
+  and omitted Kazakh phrases. Mixed quality is a blocker, not a pass.
+  This differs from local MLX checks and is not real-meeting reference acceptance.
+  A stronger candidate is planned separately; no model deployment change yet.
 - #12 diarization and participant confirmation are absent; speaker UUID is
   not identity and not an action-item executor.
 - #69 continues in `feat/69-extraction-continuation`; original Devin WIP
@@ -44,4 +46,4 @@
   extraction → human review. Retain original deadline wording; normalize
   relatives only with meeting date/timezone, never invent missing facts.
 
-Last commit: `97e804ed7c941408ecf22145d72497214b5002c4` (audited tree, 2026-09-23; not a live assertion).
+Last commit: `ab3d3312c3bafb3892bde93539383cea9e48b6de` (audited tree, 2026-09-23; live evidence is separate).

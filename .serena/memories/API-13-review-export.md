@@ -36,11 +36,15 @@
 - PDF embeds vendored DejaVu; DOCX specifies the font without embedding TTF.
   Incomplete source is marked; local table/page/character checks are linked
   in [#14 evidence](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/14#issuecomment-5793605774).
+- Independent [LIVE-OK 97e804e](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/14#issuecomment-5793710152)
+  proves real JWT/save/reload/conflict/ACL/422 validation and authenticated
+  PDF/DOCX downloads; historical r2 JSON/decoded documents stayed immutable.
+  Targeted continuation passed 57/57, own app/auth cleanup counts=0.
 
 ## Known Gaps
 
-- Independent live JWT/download acceptance on 97e804e is pending the
-  coordinator's GO; local HTTP proof substituted identity at the boundary.
+- #14 is closed for backend downloads/renderer; UI button integration stays
+  with Artem. Local identity-substituted proof and real live proof are separate.
 - completed_stage stays transcribe after human review. Automatic extraction
   (#69), diarization/speaker confirmation (#12), STT text edits and reminders
   (#15) are separate work. #13 is only partially delivered.
@@ -49,4 +53,4 @@
 - #85 meeting-level review/export mock paths are not real API. Select a
   recording/result and use the version routes; fetch transcript separately.
 
-Last commit: `97e804ed7c941408ecf22145d72497214b5002c4` (audited tree, 2026-09-23; not a live assertion).
+Last commit: `ab3d3312c3bafb3892bde93539383cea9e48b6de` (audited tree, 2026-09-23; live evidence is separate).

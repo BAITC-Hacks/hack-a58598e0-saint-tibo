@@ -39,4 +39,4 @@
 - Never infer server migration version from a Git branch tip. Read the
   coordinator's deployment and runtime evidence separately (NEXT-SESSION).
 
-Last commit: `97e804ed7c941408ecf22145d72497214b5002c4` (audited tree, 2026-09-23; not a live assertion).
+Last commit: `ab3d3312c3bafb3892bde93539383cea9e48b6de` (audited tree, 2026-09-23; live evidence is separate).

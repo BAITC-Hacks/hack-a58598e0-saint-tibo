@@ -20,7 +20,7 @@
   app operation must not require an external font/image CDN.
 - Baseline UI/branding contract: `docs/product-baseline.md`,
   `docs/conventions.md`. Static examples must not masquerade as real results.
-- Dev34062c4 adds an explicitly synthetic `/player` sample (#98); all three
+- Dev 34062c4 adds an explicitly synthetic `/player` sample (#98); all three
   locales distinguish generated tones/fictional dialogue from recorded speech.
 
 ## Known Gaps
@@ -35,4 +35,4 @@
   `a2cfe28`; reported Ivan deploy passed HTTP probes, interactive QA is pending.
   Server transcript fetching and the full review/export flow remain separate.
 
-Last commit: `34062c4726f8ca5647b3159ac3b26e92023aee57` (audited origin/dev, 2026-09-23; not a live assertion).
+Last commit: `ab3d3312c3bafb3892bde93539383cea9e48b6de` (audited tree, 2026-09-23; live evidence is separate).

@@ -32,4 +32,4 @@
 - #12 speaker identity and #13 reviewed source data remain backend
   dependencies; don't treat local demo fields as persisted product data.
 
-Last commit: `34062c4726f8ca5647b3159ac3b26e92023aee57` (audited origin/dev, 2026-09-23; not a live assertion).
+Last commit: `ab3d3312c3bafb3892bde93539383cea9e48b6de` (audited tree, 2026-09-23; live evidence is separate).

@@ -30,4 +30,4 @@
 - Auth is database-backed on each request; no copied app user table or
   independent five-minute logout window exists (AUTH-01, DB-01).
 
-Last commit: `97e804ed7c941408ecf22145d72497214b5002c4` (audited tree, 2026-09-23; not a live assertion).
+Last commit: `ab3d3312c3bafb3892bde93539383cea9e48b6de` (audited tree, 2026-09-23; live evidence is separate).

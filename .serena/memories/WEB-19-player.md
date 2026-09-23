@@ -26,6 +26,8 @@
   fictional speakers/dialogue and a source jump at 0:08. RU/KK/EN labels
   explicitly say tones are not speech/transcription and nothing is uploaded.
   Code: `lib/synthetic-recording.ts`; documentation: `docs/player.md`.
+- Dev `ab3d331` adds `w-full min-w-0` to keep the marker strip in its viewport
+  (fix 4775b8c); this does not by itself prove responsive/browser acceptance.
 
 ## Known Gaps
 
@@ -35,11 +37,11 @@
   reports Ivan dev at a2cfe28 with readiness/player HTTP 200. Interactive
   waveform/marker seek, protected selector/playback and browser logs were
   explicitly not verified in that run; #19/#20/#95 remain open.
-- Earlier local playback/STT proof cannot establish the new selector's
-  acceptance. Current Danil LIVE-OK58ee537 predates this feature.
+- Earlier local playback/STT proof and backend review/export LIVE-OK 97e804e
+  cannot establish the new selector's interactive acceptance.
 - The #98 synthetic walkthrough is integrated; its browser acceptance is
   pending. Fictional text/tone synchronization proves no STT or diarization.
 - Ivan owns player code; Artem owns global navigation/meeting workspace.
   Full server result/action-source/editor integration is still separate.
 
-Last commit: `34062c4726f8ca5647b3159ac3b26e92023aee57` (audited origin/dev, 2026-09-23; not a live assertion).
+Last commit: `ab3d3312c3bafb3892bde93539383cea9e48b6de` (audited tree, 2026-09-23; live evidence is separate).

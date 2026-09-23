@@ -1,56 +1,55 @@
 # NEXT-SESSION — Saint Tibo synchronization wave
 
 Snapshot: 2026-09-23. Refresh GitHub refs/claims before acting.
-Last commit: `97e804ed7c941408ecf22145d72497214b5002c4` (audited dev, live pending).
+Last commit: `ab3d3312c3bafb3892bde93539383cea9e48b6de` (audited tree; live evidence below).
 
 ## Current law and ownership
 
-- Scope: Saint Tibo only. Preserve other worktrees/WIP; no secrets, user audio
-  or transcripts in git/issues. No repository test/linter suites this wave.
+- Saint Tibo only. Preserve other worktrees/WIP; no private data in git/issues.
+  No repository test/linter suites this wave.
 - Feature → personal lane → dev with --no-ff; no history rewriting.
-  Parent coordinator exclusively schedules this wave's shared merges/deploys.
-  Current-wave main/prod release is user-authorized after QA; #69 is not a gate.
-  Keep internal task IDs/local paths out of issue comments.
+  Parent coordinator schedules shared merges/deploys. Current-wave main/prod
+  Release is user-authorized after QA; #69 is not a gate. No internal task IDs/local paths in issue comments.
 - Serena writer: `feat/94-serena-reviewed-export`, only memories and this
-  explicitly tracked index; broad ignore rules remain unchanged.
-- #13/#14 implementation worker handed off completed feature0203111.
-  #69 continuation `feat/69-extraction-continuation` owns extractor/benchmark,
-  coordinated processing/results integration and generated contract updates;
-  original Devin WIP remains preserved. Personal user chat is not a worker.
-- Parent owns `docs/current-state.md`, `docs/integration-plan.md` and
-  deployment scheduling. Independent verifier owns the targeted live receipt.
-- Artem owns UI/design/#83–85; Ivan owns player/capture/#95/#96.
+  deliberately tracked index; broad ignore rules remain unchanged.
+- #13/#14 feature `0203111` is handed off. #69 continuation
+  `feat/69-extraction-continuation` owns extractor/benchmark and coordinated
+  processing/results/codegen updates; original Devin WIP remains preserved.
+- Parent owns current-state/integration-plan docs and release scheduling;
+  independent verifier owns live receipts. Personal user chat is not a worker.
+- Artem owns UI/design/#83–85; Ivan owns player/capture/#95/#96/#98.
   API-03-mock.md name is reserved by #85. Recheck current issue claims.
 - Finish bounded slices and narrow remaining acceptance; avoid new subsystems.
 
 ## Done and evidence boundaries
 
-- Fetched main `62b137d`, danil `5427d19`; dev34062c4 adds synthetic player
-  frontend/docs only after backend integration97e804e.
-- Main has recording/media API. Dev includes jobs `bcc02e5`, local STT
-  `b7d7a52`, protected player/timeline through `a2cfe28`, first Serena sync
-  `2ae91bc` and reviewed results/export `0203111` with migration0005.
-- Last independent Danil LIVE-OK is still `58ee537`
-  ([earlier receipt](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/94#issuecomment-5793355510)).
-  Coordinator reports DEPLOY-OK97e804e/healthy/readiness; final live GO pending.
-- [#14 local proof](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/14#issuecomment-5793605774):
-  builds, real local DB/HTTP scenarios and rendered RU/KK/long-table documents.
-  Identity substitution means this is not live JWT/download acceptance.
-- Human review preserves completed_stage=transcribe; no automatic extraction
-  or completed #13 quality claim. #95 reported Ivan deploy/HTTP probes only.
+- Fetched main `62b137d`, danil `5427d19`, dev `ab3d331`.
+  Dev includes #13/#14/migration 0005 at `97e804e`, synthetic player
+  `34062c4` and marker overflow fix `4775b8c` integrated at `ab3d331`.
+- Independent [review/export LIVE-OK](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/14#issuecomment-5793710152)
+  is exact `97e804ed7c941408ecf22145d72497214b5002c4` on Danil dev.
+  Real JWT/ACL/save/conflict/422 validation and immutable historical JSON/
+  decoded PDF/DOCX passed; r3 draft blocked, r4 approved current exported.
+  First run: 54 passes stopped on QA-only whitespace; continuation: 57/57 passed;
+  own app/auth cleanup counts 0. RU/KK/multipage layout also visually checked.
+- #14 CLOSED for backend download/renderer; UI buttons remain Artem's work.
+  Human review keeps completed_stage=transcribe; #13 auto-extraction stays open.
+- Earlier RU STT/storage proof remains `58ee537`; it is a separate scenario.
+  CT2 small synthetic mixed CER 53.16%/Kazakh omissions block a quality pass;
+  RU 7.11%/KK 12.60% smoke is not reference-based real-meeting acceptance.
+- New player frontend still needs scheduled dev/browser proof before release.
+  No production deployment or current-wave UI success is claimed here.
 
 ## Critical next work
 
-1. Independent verifier exercises exact97e804e JWT review/save/conflict/owner
-   ACL/export and scoped cleanup; parent sends bounded live GO/evidence.
-2. Parent schedules34062c4 deploy/UI proof then current-wave main/prod release.
-   Serena adds exact receipts and pushes only this feature; no deployment here.
-3. #69 evaluates local extraction on preserved case material and integrates
-   only an accepted draft through existing result flow; no cloud fallback.
-4. #12 diarization, #15 reminders, #81 trusted sink, #11/#70/#89 quality and
-   server transcript/UI integration remain separate work under their owners.
-5. Keep #96 outside minimum scope until its recorded gaps are resolved.
-   Current docs and #94 supersede old session claims; no user input needed.
+1. Parent deploys the selected current player tip, verifies browser behavior,
+   then integrates/releases the authorized wave to main/prod and records #94.
+2. Serena refreshes final release receipts only on that signal; feature-only
+   push, no deployment or shared-branch merge from this memory worktree.
+3. #69 local extraction continues separately; stronger STT candidate evaluation
+   must not be confused with accepted model deployment or delay this release.
+4. #12 diarization, #15 reminders, #81 sink, #11/#70/#89 quality and server
+   transcript/UI integration remain scoped work. Keep #96 outside the minimum.
 
 ## Domain index
 
