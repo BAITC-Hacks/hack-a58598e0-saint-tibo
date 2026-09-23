@@ -14,7 +14,11 @@ API-клиент и сборка. Загрузка записей, STT, диар
 
 ## Запуск
 
-Нужны Git, Bun **1.4.2**, uv **0.12.13+**, Docker с Compose.
+Основной рабочий цикл — ручная проверка на личном dev-сервере, без CI/CD.
+[Инструкция](docs/dev-server.md): `sh scripts/dev-deploy.sh saint-dev-danil`
+(каждый использует свой сервер).
+
+Для полного локального запуска нужны Git, Bun **1.4.2**, uv **0.12.13+**, Docker с Compose.
 uv установит Python 3.13 по `backend/.python-version`.
 
 ```sh
