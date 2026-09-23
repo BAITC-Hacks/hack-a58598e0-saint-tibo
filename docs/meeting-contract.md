@@ -4,8 +4,10 @@
 Схемы ниже предназначены для совместной разработки backend, UI и плеера.
 Наличие примера **не означает наличие endpoint**. Реализованные операции публикуются
 только через FastAPI → `contracts/openapi.json` → сгенерированный TS SDK.
-На исходном `25b062f` существуют только auth, `/api/v1/me`, `/api/v1/admin/access`
-и health; предметных endpoints ещё нет. Принятие потребителями фиксируется в #8.
+После первого среза #9 реализованы совещания, участники, файлы/части, finalize,
+удаление и защищённое медиа; фактическая схема — в OpenAPI, ограничения — в
+[описании хранилища](recording-storage.md). Задания/результаты и подключения платформ
+ниже остаются проектом. Принятие потребителями фиксируется в #8.
 
 ## Общие правила
 
@@ -286,10 +288,10 @@ platform, status, error_code, started_at, ended_at. Терминальное с�
 | 403 | forbidden | У пользователя отсутствует permission |
 | 404 | not_found | Объект отсутствует или недоступен владельцу |
 | 409 | chunk_conflict, missing_chunks, recording_finalized, recording_not_playable | Проверить актуальную запись/очередь |
-| 413 | recording_too_large, chunk_too_large | Не повторять тот же объём |
-| 415 | unsupported_media | Выбрать поддерживаемый формат |
-| 422 | validation_error, invalid_media | Исправить метаданные/файл; тело validation_error использует details |
-| 503 | processing_unavailable | Ограниченный повтор с задержкой, состояние не «готово» |
+| 400 / 408 | empty_recording, upload_interrupted / upload_timeout | Повторить разрешённую незавершённую загрузку |
+| 413 | recording_too_large | Не повторять тот же объём файла/части |
+| 422 | validation_error, invalid_recording, recording_too_long | Исправить метаданные/файл; тело validation_error использует details |
+| 503 | media_tool_unavailable, recording_storage_unavailable, recording_cleanup_failed | Ограниченный повтор с задержкой, состояние не «готово» |
 
 Конкретные коды/схемы реализованных ошибок фиксируются в OpenAPI и документации #9;
 сырой stderr декодера никогда не возвращается клиенту.
