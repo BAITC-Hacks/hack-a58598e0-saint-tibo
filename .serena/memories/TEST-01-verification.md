@@ -1,12 +1,15 @@
 # TEST-01 Verification — how "done" is proven
 
 No CI pipeline; manual gates only.
+The owner's current verification instructions and `docs/development.md`
+take precedence over the command catalogue below. Do not automatically
+run test suites when the owner has asked for build + a short live scenario.
 
 ## Local gates
 
-- `bun run verify` — types, existing checks, build (the pre-push gate).
+- `bun run verify` — types, existing checks, build when full checks are requested.
 - `bun run test:integration` — auth + migrations on disposable PG (Docker).
-- `frontend/src/shared/auth/permissions.test.ts` — only unit test so far.
+- Existing tests live under frontend auth and backend test directories.
 - `bun run fix && bun run check` after frontend changes (conventions.md).
 
 ## Live gate (the real one)
