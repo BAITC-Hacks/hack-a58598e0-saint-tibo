@@ -22,7 +22,17 @@ export function transcriptTime(timeMs: number) {
 }
 
 /** Optional read-only view; an editor can consume the hook without this component. */
-export function TranscriptPanel({ sync }: { sync: TranscriptSync }) {
+export function TranscriptPanel({
+  sync,
+  speakerFilter = "",
+  speakers = [],
+  canonicalSpeaker = (id: string) => id,
+}: {
+  sync: TranscriptSync;
+  speakerFilter?: string;
+  speakers?: readonly { id: string; label: string; color: string }[];
+  canonicalSpeaker?: (id: string) => string;
+}) {
   const locale = useLocale();
   const id = useId();
   const viewport = useRef<HTMLElement>(null);
@@ -100,28 +110,52 @@ export function TranscriptPanel({ sync }: { sync: TranscriptSync }) {
           </p>
         ) : (
           <ol className="space-y-2">
-            {sync.segments.map((segment) => (
-              <li key={segment.id}>
-                <button
-                  ref={(element) => {
-                    if (element) rows.current.set(segment.id, element);
-                    else rows.current.delete(segment.id);
-                  }}
-                  type="button"
-                  aria-current={
-                    activeSegmentId === segment.id ? "true" : undefined
-                  }
-                  onClick={() => sync.seekSegment(segment.id)}
-                  className="w-full rounded-md border border-transparent p-3 text-start focus-visible:outline-2 focus-visible:outline-ring aria-current:border-primary aria-current:bg-accent"
-                >
-                  <span className="block text-xs text-muted-foreground tabular-nums">
-                    {transcriptTime(segment.start_ms)}–
-                    {transcriptTime(segment.end_ms)}
-                  </span>
-                  <span className="block text-sm">{segment.text}</span>
-                </button>
-              </li>
-            ))}
+            {sync.segments
+              .filter(
+                (segment) =>
+                  !speakerFilter ||
+                  (segment.speaker_id &&
+                    canonicalSpeaker(segment.speaker_id) === speakerFilter)
+              )
+              .map((segment) => {
+                const speaker = segment.speaker_id
+                  ? speakers.find(
+                      (row) => row.id === canonicalSpeaker(segment.speaker_id!)
+                    )
+                  : null;
+                return (
+                  <li key={segment.id}>
+                    <button
+                      ref={(element) => {
+                        if (element) rows.current.set(segment.id, element);
+                        else rows.current.delete(segment.id);
+                      }}
+                      type="button"
+                      aria-current={
+                        activeSegmentId === segment.id ? "true" : undefined
+                      }
+                      onClick={() => sync.seekSegment(segment.id)}
+                      className="w-full rounded-md border border-transparent p-3 text-start focus-visible:outline-2 focus-visible:outline-ring aria-current:border-primary aria-current:bg-accent"
+                    >
+                      <span className="block text-xs text-muted-foreground tabular-nums">
+                        {transcriptTime(segment.start_ms)}–
+                        {transcriptTime(segment.end_ms)}
+                      </span>
+                      {speaker && (
+                        <span className="mb-1 block text-xs font-semibold">
+                          <span
+                            className="me-1 inline-block size-2 rounded-full"
+                            style={{ backgroundColor: speaker.color }}
+                            aria-hidden="true"
+                          />
+                          {speaker.label}
+                        </span>
+                      )}
+                      <span className="block text-sm">{segment.text}</span>
+                    </button>
+                  </li>
+                );
+              })}
           </ol>
         )}
       </section>

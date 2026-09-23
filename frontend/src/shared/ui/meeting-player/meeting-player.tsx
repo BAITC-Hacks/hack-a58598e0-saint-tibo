@@ -6,11 +6,13 @@ import { m } from "#/shared/lib/i18n/messages";
 import { useLocale } from "#/shared/lib/locales";
 import { Button } from "#/shared/ui/shadcn/button";
 
+import { mergeSpeakerIntervals } from "./speaker-intervals";
 import type {
   MediaSource,
   MeetingPlayerHandle,
   PlaybackPosition,
   PlaybackStatus,
+  SpeakerInterval,
   TimelineMarker,
 } from "./types";
 
@@ -24,6 +26,10 @@ type Props = {
   markers?: readonly TimelineMarker[];
   /** Peaks are decoded in the browser from the user's local file. */
   waveform?: readonly number[] | null;
+  speakerIntervals?: readonly SpeakerInterval[];
+  soloSpeakerId?: string | null;
+  onSoloEnd?: () => void;
+  onManualSeek?: () => void;
 };
 
 const rates = [0.5, 0.75, 1, 1.25, 1.5, 2];
@@ -53,6 +59,10 @@ function PlayerSession({
   initialPositionMs = 0,
   markers = [],
   waveform,
+  speakerIntervals = [],
+  soloSpeakerId,
+  onSoloEnd,
+  onManualSeek,
 }: Props) {
   const locale = useLocale();
   const id = useId();
@@ -88,7 +98,7 @@ function PlayerSession({
     });
   };
 
-  const seek = (timeMs: number) => {
+  const seekInternal = (timeMs: number) => {
     const audio = audioRef.current;
     if (!audio || !Number.isFinite(timeMs)) return;
     const requested = Math.max(0, timeMs / 1000);
@@ -101,10 +111,41 @@ function PlayerSession({
       : requested;
     reportPosition();
   };
+  const seek = (timeMs: number) => {
+    onManualSeek?.();
+    seekInternal(timeMs);
+  };
+
+  const soloRanges = soloSpeakerId
+    ? mergeSpeakerIntervals(
+        speakerIntervals.filter(
+          (interval) => interval.speakerId === soloSpeakerId
+        )
+      )
+    : [];
+  const advanceSolo = () => {
+    const audio = audioRef.current;
+    if (!audio || audio.paused || !soloSpeakerId || soloRanges.length === 0)
+      return;
+    const nowMs = audio.currentTime * 1000;
+    const current = soloRanges.find(
+      (range) => nowMs >= range.startMs - 80 && nowMs < range.endMs - 80
+    );
+    if (current) return;
+    const next = soloRanges.find((range) => range.startMs > nowMs + 80);
+    if (next) seekInternal(next.startMs);
+    else {
+      audio.pause();
+      onSoloEnd?.();
+    }
+  };
 
   useImperativeHandle(ref, () => ({
     seek,
     pause: () => audioRef.current?.pause(),
+    play: () => {
+      void audioRef.current?.play().catch(() => setPlayBlocked(true));
+    },
   }));
 
   useEffect(() => {
@@ -173,17 +214,20 @@ function PlayerSession({
           }
           if (pendingSeek.current !== null) {
             restorePending.current = false;
-            seek(pendingSeek.current * 1000);
+            seekInternal(pendingSeek.current * 1000);
             pendingSeek.current = null;
           } else if (initialPositionMs > 0) {
             restorePending.current = false;
-            seek(initialPositionMs);
+            seekInternal(initialPositionMs);
           }
           reportPosition();
           setStatus("ready");
         }}
         onDurationChange={reportPosition}
-        onTimeUpdate={reportPosition}
+        onTimeUpdate={() => {
+          reportPosition();
+          advanceSolo();
+        }}
         onLoadStart={() => setStatus("loading")}
         onPlaying={() => {
           setPlaying(true);
@@ -346,6 +390,39 @@ function PlayerSession({
             onChange={(event) => seek(Number(event.target.value) * 1000)}
             className="h-6 w-full accent-primary"
           />
+          {speakerIntervals.length > 0 && duration !== null && (
+            <div
+              className="relative h-5 overflow-hidden rounded-md bg-muted"
+              role="group"
+              aria-label={
+                locale === "ru"
+                  ? "Говорящие на записи"
+                  : locale === "kk"
+                    ? "Жазбадағы сөйлеушілер"
+                    : "Speakers on recording"
+              }
+            >
+              {speakerIntervals.map((interval, index) => (
+                <button
+                  key={`${interval.speakerId}-${interval.startMs}-${index}`}
+                  type="button"
+                  aria-label={`${interval.label} · ${timeLabel(interval.startMs / 1000)}`}
+                  title={`${interval.label} · ${timeLabel(interval.startMs / 1000)}`}
+                  onClick={() => seek(interval.startMs)}
+                  className="absolute inset-y-0 min-w-[2px] border-e border-background/20 focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-ring"
+                  style={{
+                    left: `${Math.max(0, Math.min(100, interval.startMs / (duration * 10)))}%`,
+                    width: `${Math.max(0.12, Math.min(100, (interval.endMs - interval.startMs) / (duration * 10)))}%`,
+                    backgroundColor: interval.color,
+                    opacity:
+                      soloSpeakerId && soloSpeakerId !== interval.speakerId
+                        ? 0.25
+                        : 1,
+                  }}
+                />
+              ))}
+            </div>
+          )}
           {markers.length > 0 && duration !== null && (
             <fieldset
               className="flex w-full min-w-0 gap-px overflow-x-auto rounded-md border"
