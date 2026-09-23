@@ -23,6 +23,7 @@ def main():
     parser.add_argument(
         "--language", choices=("auto", "ru", "kk", "mixed"), required=True
     )
+    parser.add_argument("--device", choices=("cpu", "cuda"), default="cpu")
     args = parser.parse_args()
     stage = "stt_model_unavailable"
     try:
@@ -41,10 +42,15 @@ def main():
         from faster_whisper import WhisperModel
 
         ctranslate2.set_log_level(logging.ERROR)
+        if args.device == "cuda" and (
+            ctranslate2.get_cuda_device_count() < 1
+            or "float16" not in ctranslate2.get_supported_compute_types("cuda")
+        ):
+            raise RuntimeError("CUDA float16 unavailable")
         model = WhisperModel(
             str(args.model_dir),
-            device="cpu",
-            compute_type="int8",
+            device=args.device,
+            compute_type="float16" if args.device == "cuda" else "int8",
             cpu_threads=4,
             num_workers=1,
             local_files_only=True,

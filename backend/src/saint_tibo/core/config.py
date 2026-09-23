@@ -34,3 +34,13 @@ class Settings(BaseSettings):
     stt_python_path: Path = Path("/app/stt/.venv/bin/python")
     stt_script_path: Path = Path("/app/stt/transcribe.py")
     stt_model_path: Path = Path("/models/small")
+
+    stt_remote_enabled: bool = False
+    stt_remote_host: str = Field(default="", pattern=r"^[A-Za-z0-9.:-]*$")
+    stt_remote_user: str = Field(default="saint-stt", pattern=r"^[a-z_][a-z0-9_-]*$")
+    stt_remote_port: int = Field(default=22, ge=1, le=65535)
+    stt_remote_identity_file: Path = Path("/run/stt-ssh/id_ed25519")
+    stt_remote_known_hosts_file: Path = Path("/run/stt-ssh/known_hosts")
+    stt_remote_runner_path: str = Field(
+        default="/opt/saint-tibo/stt/remote_runner.py", pattern=r"^/[A-Za-z0-9_./-]+$"
+    )

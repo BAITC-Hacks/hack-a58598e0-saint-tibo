@@ -11,7 +11,7 @@ COPY tools/transcribe/pyproject.toml tools/transcribe/uv.lock ./
 RUN --mount=type=cache,target=/root/.cache/uv uv sync --locked --no-dev
 
 FROM python:3.13-slim-bookworm
-RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 \
+RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 openssh-client \
     && rm -rf /var/lib/apt/lists/* \
     && useradd --create-home --uid 10001 app
 WORKDIR /app/api
