@@ -15,12 +15,14 @@ ActionItem(id, result_version_id, source segments).
 Timeline = integer ms from THAT recording start; `started_at`+`timezone`
 required or relative deadlines stay unnormalized. Names/labels are never IDs.
 
-## Implemented — `codex/9-meeting-storage` @ e9a9f75
+## Implemented — IN `main` since 62b137d (PR #80)
 
-Status 2026-09-23: code done, deployed on `saint-dev-danil`,
-NOT yet merged into `danil`/`dev`/`main`. Files:
+Status 2026-09-23: shipped. Path was codex/9-meeting-storage e9a9f75 →
+`danil` eca53f9 (verified on saint-dev-danil) → `dev` 23e1207 → `main`.
+All endpoints live in `contracts/openapi.json`. Files:
 `backend/src/saint_tibo/modules/meetings/*`, `api/router.py`,
 `auth/policy.py`, `core/config.py`, migration `0002_meetings`.
+Prod deploy is manual — `main` updated ≠ saint-tibo.win redeployed.
 
 Endpoints `/api/v1`: meetings CRUD; participants CRUD;
 `PUT /meetings/{m}/recordings/{r}` raw stream (≤512 MiB, source=file);
@@ -31,13 +33,13 @@ Endpoints `/api/v1`: meetings CRUD; participants CRUD;
 explicitly (MP3 cover art safe); normalization keeps timeline.
 Owner-only access; foreign id → 404.
 
-## Media proxy — `codex/9-media-proxy` @ b538b1e (also pending merge)
+## Media proxy — also IN `main`
 
 Same-origin `GET/HEAD /api/media/meetings/{m}/recordings/{r}` in
 frontend: Better Auth cookie → server-minted JWT → backend `/media`.
 Needed because HTMLMediaElement can't set Authorization headers.
-New env: `BACKEND_INTERNAL_URL` (`frontend/scripts/setup.ts` seeds it;
-Compose passes `http://backend:8000`).
+Env: `BACKEND_INTERNAL_URL` (`frontend/scripts/setup.ts` seeds it;
+Compose passes `http://backend:8000`; `.env.example` documents it).
 
 ## Known gaps / next
 
