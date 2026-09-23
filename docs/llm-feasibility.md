@@ -87,7 +87,7 @@ Limits: input 64 KiB, runtime context 8,192, output 3,072 tokens / 1 MiB,
 Oversized/truncated/invalid output fails explicitly; no empty-success fallback.
 The runtime uses 4 threads, one slot, batch 256/ubatch 128, no weight repacking,
 no warmup and no context shifting. The worker stays on its internal network
-and keeps its existing 4 CPU / 6 GiB container cap.
+and keeps its existing 4 CPU / 8 GiB container cap.
 
 Segment UUIDs are allocated before extraction. Small numeric prompt IDs map
 only to this new result's UUIDs. The final transaction rechecks the lease,

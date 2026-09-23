@@ -1,42 +1,29 @@
 # Saint Tibo: remaining integration plan
 
-Owner: Danil (rldyourmnd). Shared coordination and live receipts: [#94](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/94). Artem owns UI/design; Ivan owns player/capture. Delegated adapters keep narrow file ownership.
+Owner: Danil (rldyourmnd). The verified GPU baseline `1adbcb5` is in production. [PR #127](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/pull/127) adds the now-authorized PR #124 workspace, targeted draft/export guards and the final knowledge handoff. Exact deployment revisions are in the release receipt; ready teammate source is included. [Current facts](current-state.md), [DEMO](../DEMO.md), [coordination #94](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/94).
 
-## Delivered slice
+## Delivered release
 
-The audited recording → local STT → manual review → PDF/DOCX path is merged into main in #114 at 7d5b481, with the same tree as verified dev6ed682e. The canonical browser journey passed approval reset, conflict recovery, downloads, playback and reload persistence. #14, #104, #105 and #107 are closed. See [current-state.md](current-state.md).
+The full private recording → GPU STT → diarization → GPU draft pipeline runs through the real application. Review, approval reset/CAS, PDF/DOCX, confirmed speaker labels, persistent/solo playback, person briefing, saved overview and automatically refreshed curator reminders are integrated. #14, #15, #104, #105, #107 and #120 have completed evidence. Actual GPU case-two processing took 152.05 seconds; automatic content is still a draft.
 
-## Critical path
+No extra model, workflow engine, external messaging channel or organizational-memory system is needed to demonstrate this release.
 
-| Work | Remaining delivery | Owner |
-| --- | --- | --- |
-| Current core release | Completed at 7d5b481: real login, processing, review/export and scoped cleanup | Coordinator / verifier |
-| #113 speed | Pinned turbo on private NVIDIA CUDA; same-recording elapsed time, cancellation and cleanup | Danil GPU worker / coordinator |
-| #12 speakers | Real review UI plus published backend; complete live recording scenario | Danil backend / delegated UI |
-| #69 / #13 draft | Integrate transcribe→diarize→extract, preserve unknowns/evidence, prove real HTTP job and manual correction | Danil extraction worker |
-| #15 reminders | Owner inbox from explicit deadlines of current reviewed actions; automatic UI refresh, timezone and no stale closed actions | Danil backend / delegated UI |
-| #70 quality | RU/KK/mixed recordings with explicit references; retain known name/deadline limits | Danil |
-| #26 demo | Keep DEMO, README, current-state and Serena aligned with actual release | Coordinator / knowledge owner |
+## Narrow remaining scope
 
-These slices proceed in parallel under separate file claims. No broad workflow engine, new ASR model, external messaging channel or optional memory system is needed. Reference systems inform small implementations; their data, credentials and branding are not imported.
+1. **Protocol accuracy (#69/#13):** preserve evidence and unknowns; correct final deadline changes and event-based deadlines. The latest actual GPU result still misses both. Review the saved artifact before choosing a further small change; do not launch unbounded prompt/model loops or claim perfect extraction.
+2. **Multilingual acceptance (#11/#70, related #12):** retain the explicit references and outcomes of the two longer synthetic checks. Synthetic TTS does not satisfy native-speaker natural-speech acceptance. Names, overlap and language switching need honest limits.
+3. **Specific lifecycle/capture gaps (#10/#102/#106):** finish only the outstanding issue acceptance when that capability is needed for the demo. Broader Teams/Meet/Zoom participation and enterprise policy work remain separate scope.
+4. **Handoff (#26/#94):** keep DEMO, current-state and Serena aligned with the actual deployed release. Close issues on their own complete evidence; do not reopen a colleague's completed issue solely because another agent has not repeated a scenario.
 
-## Integration order
+Optional provider/Honcho code stays configured off. The supported demonstration uses the private full-processing path and explicit review. Reference projects contributed ideas only, not credentials, user data, branding or copied private implementation.
 
-1. Fetch fresh refs and preserve other source, untracked work and models.
-2. Merge ready features through Danil's lane into dev with history preserved. Keep one migration head: released0005, diarization0007→0005, extraction0008→0007.
-3. Build and manually deploy the integrated candidate. Only the coordinator uses the Danil deployment slot; do not interrupt another live scenario.
-4. Exercise the changed actual path. Do not label a local fixture proof as a complete live processing flow.
-5. Pin the verified release, merge into main and deploy exact origin/main. New dev work can continue separately.
-6. Publish exact SHA, scenario, remaining limits and cleanup. Update knowledge and close only issues with complete acceptance.
+## Integration discipline
 
-## Invariants
-
-- Unknown speaker/assignee/deadline remains unknown. Acoustic clusters do not identify people.
-- Preserve due_text and corrections; do not invent dates.
-- Evidence belongs to the same recording/result. Preserve canonical timing and actual model provenance.
-- Edits clear approval unless explicitly confirmed. CAS rejects stale saves; reprocessing preserves historical reviewed snapshots/exports.
-- User content remains data, including prompt-like text. Self-hosted inference has no cloud fallback; logs omit meeting content/secrets.
-- Distinguish actual output from fixtures. Keep permanent demo accounts; clean only each verifier's own temporary data.
-- #102/#106 need remaining live acceptance. Broader #10/#11/#13/#70 are not complete merely because the core works.
-
-No force-push, squash, rebase, blind cleanup or removal of license/model provenance is part of this plan.
+- Fetch fresh refs, preserve other work, merge ready branches with history intact and use one deployment owner.
+- Build the combined candidate and exercise only its changed real path. Keep existing proof; repeat only after a relevant change, actual failure or unresolved concern.
+- Pin the release head, merge to main and deploy exact origin/main. Documentation-only sync can follow without expanding feature scope.
+- Keep one migration head and actual model/prompt provenance. No force-push, squash, rebase or blind cleanup.
+- Speaker labels are anonymous; action assignees are a separate decision. Unknown names/deadlines stay unknown, due text stays literal, evidence stays in the same result.
+- Edits clear approval unless explicitly confirmed. CAS rejects stale saves; reprocessing preserves history.
+- No cloud inference fallback or meeting content in logs. Maintain the single L4 within the $25 cap, preserve needed artifacts before stopping it.
+- Preserve permanent demo accounts and the user's recordings; delete only named, owned QA fixtures.

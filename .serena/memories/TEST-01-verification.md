@@ -1,5 +1,8 @@
 # TEST-01 Verification and bounded receipts
 
+Latest release: [GPU/speakers/extraction/inbox delta](RELEASE-94-runtime-wave.md).
+The core snapshot below retains its original audit boundary.
+
 ## Current Behavior
 
 - Current wave uses builds and focused runtime/browser scenarios; no repository
