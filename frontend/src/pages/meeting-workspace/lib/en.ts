@@ -103,4 +103,8 @@ export const en: Record<keyof typeof ru, string> = {
   receiving: "Receiving file",
   incomplete: "Incomplete recording",
   unavailableStatus: "Unknown status",
+  reviewConflict: "Another session saved a newer revision. Your edits remain in the form.",
+  reviewReload: "Load server revision",
+  reviewReloadHelp: "This replaces unsaved fields. Keep a separate copy of any edits you need before loading.",
+  reviewReloadError: "Could not load the revision. Your edits remain in the form.",
 };

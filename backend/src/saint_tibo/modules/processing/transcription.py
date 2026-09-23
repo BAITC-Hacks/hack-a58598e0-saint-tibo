@@ -72,8 +72,8 @@ async def transcribe(
                 if not isinstance(value, str) or not 1 <= len(value) <= 16:
                     raise ValueError("Invalid detected language")
                 reported_duration = event.get("duration_ms")
-                # WAV frame rounding can differ from stored media metadata by 1 ms.
-                if type(reported_duration) is not int or abs(reported_duration - duration_ms) > 1:
+                # All producers use the same integer ceil of normalized WAV frames.
+                if type(reported_duration) is not int or reported_duration != duration_ms:
                     raise ValueError("STT duration mismatch")
                 model = event.get("model_id")
                 revision = event.get("model_revision")
