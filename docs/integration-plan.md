@@ -1,6 +1,6 @@
 # Saint Tibo: remaining integration plan
 
-Owner: Danil (rldyourmnd). The verified GPU baseline `1adbcb5` is in production. [PR #127](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/pull/127) adds the now-authorized PR #124 workspace, targeted draft/export guards and the final knowledge handoff. Exact deployment revisions are in the release receipt; ready teammate source is included. [Current facts](current-state.md), [DEMO](../DEMO.md), [coordination #94](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/94).
+Owner: Danil (rldyourmnd). The verified GPU baseline is `1adbcb5`; [PR #127](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/pull/127) subsequently shipped the authorized PR #124 editor and draft/export guards to both hosts as `3676470`. Ivan's follow-up `12abf23` integrates that editor into /player and redirects /workspace. Exact final deployment revisions and the changed-screen proof are in the [coordination #94 receipt](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/94); ready teammate source is included. [Current facts](current-state.md), [DEMO](../DEMO.md).
 
 ## Delivered release
 
