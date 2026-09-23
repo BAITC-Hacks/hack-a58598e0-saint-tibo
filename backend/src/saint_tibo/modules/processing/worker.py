@@ -92,10 +92,11 @@ def validate_audio(path: Path, expected_duration_ms: int | None, config: Setting
             ):
                 raise APIError(422, "invalid_recording", "Expected normalized PCM16 mono audio")
             frames = source.getnframes()
-            duration_ms = round(frames * 1000 / 16000)
+            sample_rate = source.getframerate()
+            duration_ms = (frames * 1000 + sample_rate - 1) // sample_rate
             if not frames or duration_ms > config.recording_max_duration_ms:
                 raise APIError(422, "invalid_recording", "Invalid audio duration")
-            if expected_duration_ms is None or abs(duration_ms - expected_duration_ms) > 1:
+            if expected_duration_ms is None or duration_ms != expected_duration_ms:
                 raise APIError(422, "invalid_recording", "Audio duration differs from metadata")
             remaining = frames * 2
             while remaining > 0:
