@@ -11,6 +11,7 @@ import { transcriptTime, useTranscriptSync } from "#/shared/ui/transcript-sync";
 
 import {
   downloadReview,
+  extractReview,
   reloadReview,
   ReviewConflictError,
   saveReview,
@@ -50,6 +51,7 @@ export function ReviewPanel({
   const [saveError, setSaveError] = useState("");
   const [conflict, setConflict] = useState(false);
   const [exportError, setExportError] = useState("");
+  const [extractError, setExtractError] = useState(false);
   const player = useRef<MeetingPlayerHandle>(null);
   const transcriptBox = useRef<HTMLDivElement>(null);
   const sync = useTranscriptSync({
@@ -75,6 +77,24 @@ export function ReviewPanel({
     mutationFn: (format: "pdf" | "docx") =>
       downloadReview(meetingId, format, review),
   });
+  const extract = useMutation({
+    mutationFn: () => extractReview(meetingId, review),
+    onSuccess: (saved) => {
+      setExtractError(false);
+      client.setQueryData(["review", meetingId], saved);
+    },
+    onError: () => setExtractError(true),
+  });
+  const canExtract =
+    review.source === "real" &&
+    review.revision === 1 &&
+    !review.reviewed &&
+    !review.has_extraction_draft &&
+    review.segments.length > 0 &&
+    review.action_items.length === 0 &&
+    review.summary.topics.length === 0 &&
+    review.summary.decisions.length === 0 &&
+    review.summary.open_questions.length === 0;
   function editDraft(update: (current: ReviewDocument) => ReviewDocument) {
     setDraft((current) => ({ ...update(current), reviewed: false }));
   }
@@ -224,6 +244,40 @@ export function ReviewPanel({
           </Button>
         </div>
       </div>
+      {canExtract && (
+        <div className="rounded-lg border bg-muted/40 p-4">
+          <Button
+            disabled={dirty || save.isPending || reload.isPending || extract.isPending}
+            onClick={() => {
+              setExtractError(false);
+              extract.mutate();
+            }}
+          >
+            {extract.isPending ? t.extractingDraft : t.extractDraft}
+          </Button>
+          <p className="mt-2 text-sm text-muted-foreground">{t.extractDisclosure}</p>
+          {extractError && (
+            <div role="alert" className="mt-2 space-y-2 text-sm text-destructive">
+              <p>{t.extractError}</p>
+              <Button
+                variant="outline"
+                disabled={reload.isPending}
+                onClick={() =>
+                  reload.mutate(undefined, {
+                    onSuccess: (loaded) => {
+                      setDraft(loaded);
+                      setExtractError(false);
+                      client.setQueryData(["review", meetingId], loaded);
+                    },
+                  })
+                }
+              >
+                {reload.isPending ? t.loading : t.extractRefresh}
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
       {(saveError || exportError) && (
         <p role="alert" className="text-sm text-destructive">
           {saveError || exportError}
