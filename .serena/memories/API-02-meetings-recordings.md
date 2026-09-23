@@ -44,3 +44,6 @@ Compose passes `http://backend:8000`; `.env.example` documents it).
 ProcessingJob/ResultVersion/Speaker/Segment/ActionItem are contract-only —
 #10 builds jobs on top of this slice. Recording.status is a string
 (`receiving`/…) — UI must treat unknown status as unsupported, not "done".
+`modules/exports/` renders the reviewed protocol to DOCX+PDF from a
+contract-shaped payload (vendored DejaVu fonts, RU/KK safe); its HTTP
+endpoint and ACL arrive once #13 persists result versions.
