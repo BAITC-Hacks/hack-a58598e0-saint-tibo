@@ -22,6 +22,10 @@ import { readAudioWaveform } from "../lib/audio-waveform";
 import { readLocalTranscript } from "../lib/local-transcript";
 import type { LocalTranscriptError } from "../lib/local-transcript";
 import {
+  allTranscriptSegments,
+  latestCompletedResult,
+} from "../lib/server-transcript";
+import {
   createSyntheticRecording,
   syntheticIntervals,
 } from "../lib/synthetic-recording";
@@ -46,12 +50,6 @@ export const PlayerPage = () => {
   const input = useRef<HTMLInputElement>(null);
   const transcriptInput = useRef<HTMLInputElement>(null);
   const generation = useRef(0);
-  const sync = useTranscriptSync({
-    recordingId: source?.id ?? "",
-    resultVersionId: "local-stt",
-    segments: transcript?.segments ?? [],
-    seek: (positionMs) => player.current?.seek(positionMs),
-  });
   const meetingsQuery = useQuery({
     queryKey: ["player", "meetings"],
     queryFn: async ({ signal }) => {
@@ -104,11 +102,62 @@ export const PlayerPage = () => {
         title: `${selectedServerSource.meetingTitle} — ${selectedServerSource.original_filename}`,
       }
     : null;
-  const markers: TimelineMarker[] = transcript
-    ? transcript.segments
+  const resultVersionQuery = useQuery({
+    queryKey: [
+      "player",
+      "result-version",
+      selectedServerSource?.meeting_id,
+      selectedServerRecording,
+    ],
+    enabled: Boolean(selectedServerSource),
+    queryFn: ({ signal }) =>
+      selectedServerSource
+        ? latestCompletedResult(
+            {
+              meeting_id: selectedServerSource.meeting_id,
+              recording_id: selectedServerSource.id,
+            },
+            signal
+          )
+        : null,
+  });
+  const segmentsQuery = useQuery({
+    queryKey: [
+      "player",
+      "segments",
+      selectedServerSource?.meeting_id,
+      selectedServerRecording,
+      resultVersionQuery.data?.id,
+    ],
+    enabled: Boolean(selectedServerSource && resultVersionQuery.data),
+    queryFn: ({ signal }) =>
+      selectedServerSource && resultVersionQuery.data
+        ? allTranscriptSegments(
+            {
+              meeting_id: selectedServerSource.meeting_id,
+              recording_id: selectedServerSource.id,
+              result_version_id: resultVersionQuery.data.id,
+            },
+            signal
+          )
+        : [],
+  });
+  const activeSegments = selectedServerMedia
+    ? (segmentsQuery.data ?? [])
+    : (transcript?.segments ?? []);
+  const sync = useTranscriptSync({
+    recordingId: selectedServerMedia?.id ?? source?.id ?? "",
+    resultVersionId: selectedServerMedia
+      ? (resultVersionQuery.data?.id ?? "")
+      : "local-stt",
+    segments: activeSegments,
+    seek: (positionMs) => player.current?.seek(positionMs),
+  });
+  const markers: TimelineMarker[] = activeSegments.length
+    ? activeSegments
         .filter(
           (_, index) =>
-            index % Math.max(1, Math.ceil(transcript.segments.length / 8)) === 0
+            index % Math.max(1, Math.ceil(activeSegments.length / 8)) === 0
         )
         .slice(0, 8)
         .map((segment) => ({
@@ -319,12 +368,38 @@ export const PlayerPage = () => {
         </div>
       </div>
       {selectedServerMedia ? (
-        <MeetingPlayer
-          key={selectedServerMedia.id}
-          source={selectedServerMedia}
-          ref={player}
-          onPositionChange={sync.onPositionChange}
-        />
+        <div className="space-y-7">
+          <MeetingPlayer
+            key={selectedServerMedia.id}
+            source={selectedServerMedia}
+            ref={player}
+            onPositionChange={sync.onPositionChange}
+            markers={markers}
+          />
+          {resultVersionQuery.isPending ? (
+            <output className="block text-sm text-muted-foreground">
+              {m.player_server_transcript_loading({}, { locale })}
+            </output>
+          ) : resultVersionQuery.isError || segmentsQuery.isError ? (
+            <p role="alert" className="text-sm text-destructive">
+              {m.player_server_transcript_error({}, { locale })}
+            </p>
+          ) : !resultVersionQuery.data ? (
+            <p className="text-sm text-muted-foreground">
+              {m.player_server_transcript_missing({}, { locale })}
+            </p>
+          ) : segmentsQuery.isPending ? (
+            <output className="block text-sm text-muted-foreground">
+              {m.player_server_transcript_loading({}, { locale })}
+            </output>
+          ) : segmentsQuery.data?.length ? (
+            <TranscriptPanel key={resultVersionQuery.data.id} sync={sync} />
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              {m.player_server_transcript_empty({}, { locale })}
+            </p>
+          )}
+        </div>
       ) : source ? (
         <div className="space-y-7">
           <MeetingPlayer

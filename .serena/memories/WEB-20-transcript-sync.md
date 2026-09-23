@@ -11,8 +11,12 @@
   are excluded. Repeated reveal requests carry a sequence number.
 - Follow toggle respects wheel/touch/keyboard/native scrolling; automatic
   scrolling preserves keyboard focus.
-- Parent keys hook owner by `recordingId:resultVersionId`; load the full
-  selected version's segment list before using this client hook.
+- `/player` now requests the latest completed result version for the selected
+  protected recording via generated `listResultVersions`, then fetches every
+  `SegmentRead` page via `listTranscriptSegments` before rendering the panel.
+  Query keys include meeting/recording/version; source switching clears stale
+  text. Server markers and the transcript use those same segments. No result,
+  empty result, loading and errors are distinct states.
 - `/transcript-demo` is explicitly public and synthetic: generated
   32-second WAV/eight markers, no meeting API or private uploaded data.
   The local player can also provide validated STT JSON (WEB-19).
@@ -23,10 +27,9 @@
 
 ## Known Gaps
 
-- No automatic paginated result fetch is implemented inside the hook.
-- The player now selects protected server media, but server result fetching
-  and editor/action-source integration remain #19/#20 and Artem's UI work.
-  Local markers and the synthetic demo do not prove those scenarios.
+- The sync hook remains a UI primitive; pagination lives in the player page.
+- Server action-source navigation and editor integration remain #20 and Artem's
+  UI work. No action items or speakers are inferred from transcript text.
 - #12 speaker identity and #13 reviewed source data remain backend
   dependencies; don't treat local demo fields as persisted product data.
 
