@@ -59,8 +59,9 @@ bun run dev
 | `bun run demo` / `demo:stop` | Собрать и запустить / остановить весь стек в Docker |
 
 `demo` требует `.env`, подготовленный `setup`. Порты Compose привязаны
-к loopback. Для серверного развёртывания нужны HTTPS reverse proxy,
-собственные пароли и корректные публичные URL. Production настраивается отдельно.
+к loopback. Ручной серверный запуск добавляет Caddy с HTTPS и отдельное
+окружение. Production: https://saint-tibo.win; адреса личных dev-серверов
+и команды — в [инструкции](docs/dev-server.md).
 
 ## Структура
 
