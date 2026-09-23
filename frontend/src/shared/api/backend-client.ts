@@ -46,6 +46,18 @@ if (isMockApi) {
       url.pathname.startsWith("/api/v1/meetings/")
     ) {
       const mockUrl = new URL(url.pathname + url.search, env.VITE_MOCK_API_URL);
+      if (
+        typeof window !== "undefined" &&
+        request.method === "GET" &&
+        url.pathname === "/api/v1/meetings"
+      ) {
+        const scenario = new URLSearchParams(window.location.search).get(
+          "mock"
+        );
+        if (scenario && ["empty", "loading", "error"].includes(scenario)) {
+          mockUrl.searchParams.set("scenario", scenario);
+        }
+      }
       return new Request(mockUrl, request);
     }
     return request;
