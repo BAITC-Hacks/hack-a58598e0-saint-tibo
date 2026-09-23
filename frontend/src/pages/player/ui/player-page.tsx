@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 
 import {
@@ -422,6 +423,94 @@ export const PlayerPage = () => {
                 );
               })}
             </div>
+          )}
+          {resultVersionQuery.data && selectedServerSource && (
+            <section className="space-y-4 rounded-2xl border bg-card p-5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 className="text-xl font-semibold">
+                  {m.player_summary_title({}, { locale })}
+                </h2>
+                <Link
+                  to="/meetings/$meetingId"
+                  params={{ meetingId: selectedServerSource.meeting_id }}
+                  className="text-sm text-primary underline underline-offset-4"
+                >
+                  {m.player_open_review({}, { locale })}
+                </Link>
+              </div>
+              {reviewQuery.isPending ? (
+                <output className="block text-sm text-muted-foreground">
+                  {m.player_summary_loading({}, { locale })}
+                </output>
+              ) : reviewQuery.isError ? (
+                <p role="alert" className="text-sm text-destructive">
+                  {m.player_summary_error({}, { locale })}
+                </p>
+              ) : reviewQuery.data ? (
+                <>
+                  <span className="inline-block rounded-full bg-muted px-2.5 py-1 text-xs">
+                    {reviewQuery.data.reviewed
+                      ? m.player_summary_confirmed({}, { locale })
+                      : m.player_summary_draft({}, { locale })}
+                  </span>
+                  {(reviewQuery.data.summary.topics?.length ?? 0) > 0 && (
+                    <p className="text-sm leading-relaxed">
+                      {reviewQuery.data.summary.topics?.join(" · ")}
+                    </p>
+                  )}
+                  {(reviewQuery.data.summary.decisions?.length ?? 0) > 0 && (
+                    <div className="text-sm">
+                      <h3 className="font-medium">
+                        {m.player_summary_decisions({}, { locale })}
+                      </h3>
+                      <ul className="mt-1 list-disc space-y-1 ps-5">
+                        {reviewQuery.data.summary.decisions?.map(
+                          (decision, index) => (
+                            <li key={index}>{decision}</li>
+                          )
+                        )}
+                      </ul>
+                    </div>
+                  )}
+                  {reviewQuery.data.action_items.length > 0 && (
+                    <div className="text-sm">
+                      <h3 className="font-medium">
+                        {m.player_summary_actions({}, { locale })} (
+                        {reviewQuery.data.action_items.length})
+                      </h3>
+                      <ul className="mt-1 list-disc space-y-1 ps-5">
+                        {reviewQuery.data.action_items.map((item) => (
+                          <li key={item.id ?? item.text}>{item.text}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {(reviewQuery.data.summary.open_questions?.length ?? 0) >
+                    0 && (
+                    <div className="text-sm">
+                      <h3 className="font-medium">
+                        {m.player_summary_questions({}, { locale })}
+                      </h3>
+                      <ul className="mt-1 list-disc space-y-1 ps-5">
+                        {reviewQuery.data.summary.open_questions?.map(
+                          (question, index) => (
+                            <li key={index}>{question}</li>
+                          )
+                        )}
+                      </ul>
+                    </div>
+                  )}
+                  {!reviewQuery.data.summary.topics?.length &&
+                    !reviewQuery.data.summary.decisions?.length &&
+                    !reviewQuery.data.action_items.length &&
+                    !reviewQuery.data.summary.open_questions?.length && (
+                      <p className="text-sm text-muted-foreground">
+                        {m.player_summary_empty({}, { locale })}
+                      </p>
+                    )}
+                </>
+              ) : null}
+            </section>
           )}
           {resultVersionQuery.isPending ? (
             <output className="block text-sm text-muted-foreground">
