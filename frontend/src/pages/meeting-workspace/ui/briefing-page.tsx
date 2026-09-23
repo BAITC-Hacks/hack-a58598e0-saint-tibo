@@ -14,7 +14,7 @@ import { reviewQuery, type ReviewDocument } from "../api/review";
 const copy = {
   ru: {
     title: "Брифинг перед встречей",
-    help: "Выберите участников. Брифинг собирается из сохранённых протоколов и поручений доступных вам встреч.",
+    help: "Выберите участников, добавленных во встречи. Имена, извлечённые ИИ из поручений, не считаются подтверждёнными до добавления участника в карточку встречи.",
     search: "Имя или роль…",
     latest: "Участники последней встречи",
     overdue: "С просроченными поручениями",
@@ -29,7 +29,8 @@ const copy = {
     decisions: "Решения",
     questions: "Открытые вопросы",
     topics: "Темы",
-    emptyPeople: "Пока нет участников или ответственных в доступных встречах.",
+    emptyPeople:
+      "Пока нет добавленных участников в доступных встречах. Добавьте их в карточке встречи.",
     noMatch: "По запросу никого не найдено.",
     emptySelection: "Выберите хотя бы одного участника.",
     emptyBrief:
@@ -44,7 +45,7 @@ const copy = {
   },
   kk: {
     title: "Кездесу алдындағы брифинг",
-    help: "Қатысушыларды таңдаңыз. Брифинг сізге қолжетімді кездесулердің сақталған хаттамалары мен тапсырмаларынан құралады.",
+    help: "Кездесулерге қосылған қатысушыларды таңдаңыз. ЖИ тапсырмалардан тапқан есімдер қатысушы кездесу картасына қосылғанша расталған болып саналмайды.",
     search: "Аты немесе рөлі…",
     latest: "Соңғы кездесудің қатысушылары",
     overdue: "Мерзімі өткен тапсырмалар",
@@ -60,7 +61,7 @@ const copy = {
     questions: "Ашық сұрақтар",
     topics: "Тақырыптар",
     emptyPeople:
-      "Қолжетімді кездесулерде қатысушылар немесе жауаптылар әзірге жоқ.",
+      "Қолжетімді кездесулерде қосылған қатысушылар әзірге жоқ. Оларды кездесу картасына қосыңыз.",
     noMatch: "Сұрау бойынша ешкім табылмады.",
     emptySelection: "Кемінде бір қатысушыны таңдаңыз.",
     emptyBrief:
@@ -75,7 +76,7 @@ const copy = {
   },
   en: {
     title: "Pre-meeting briefing",
-    help: "Select participants. The briefing uses saved minutes and assignments from meetings you can access.",
+    help: "Select people added to meetings. Names extracted from assignments by AI are unverified until the participant is added to the meeting.",
     search: "Name or role…",
     latest: "Latest meeting participants",
     overdue: "Overdue assignments",
@@ -91,7 +92,7 @@ const copy = {
     questions: "Open questions",
     topics: "Topics",
     emptyPeople:
-      "No participants or assignees in your accessible meetings yet.",
+      "No participants have been added to your accessible meetings yet. Add them in a meeting.",
     noMatch: "No people match your search.",
     emptySelection: "Select at least one participant.",
     emptyBrief:
@@ -176,18 +177,11 @@ export function BriefingPage() {
         person.meetingIds.add(meeting.id);
         person.participantIds.add(item.id);
       });
-      reviews[index]?.data?.action_items.forEach((item) => {
-        if (!item.assignee_text) return;
-        const person = ensure(item.assignee_text);
-        person?.meetingIds.add(meeting.id);
-        if (item.assignee_participant_id)
-          person?.participantIds.add(item.assignee_participant_id);
-      });
     });
     return [...byName.values()].toSorted((a, b) =>
       a.name.localeCompare(b.name, locale)
     );
-  }, [recent, participants, reviews, locale]);
+  }, [recent, participants, locale]);
 
   const meetingData: MeetingData[] = recent.map((meeting, index) => ({
     meeting,
@@ -395,20 +389,21 @@ export function BriefingPage() {
                   const related = meetingData.filter(({ meeting }) =>
                     person.meetingIds.has(meeting.id)
                   );
-                  const assignments = related.flatMap(({ meeting, review }) =>
-                    (review?.action_items ?? [])
-                      .filter(
-                        (item) =>
-                          (item.status === "open" ||
-                            item.status === "in_progress") &&
-                          ((!!item.assignee_participant_id &&
-                            person.participantIds.has(
-                              item.assignee_participant_id
-                            )) ||
-                            (!!item.assignee_text &&
-                              personKey(item.assignee_text) === person.key))
-                      )
-                      .map((item) => ({ meeting, item }))
+                  const assignments = meetingData.flatMap(
+                    ({ meeting, review }) =>
+                      (review?.action_items ?? [])
+                        .filter(
+                          (item) =>
+                            (item.status === "open" ||
+                              item.status === "in_progress") &&
+                            ((!!item.assignee_participant_id &&
+                              person.participantIds.has(
+                                item.assignee_participant_id
+                              )) ||
+                              (!!item.assignee_text &&
+                                personKey(item.assignee_text) === person.key))
+                        )
+                        .map((item) => ({ meeting, item }))
                   );
                   const sections = [
                     {
