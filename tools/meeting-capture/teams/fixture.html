@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><title>Synthetic meeting transport</title>
+<body><input data-tid="prejoin-display-name-input" aria-label="Name">
+<button data-tid="prejoin-join-button">Join now</button><main></main>
+<script>
+// Local synthetic media only. No Teams requests, microphones, camera or speech.
+const mode = new URL(location.href).searchParams.get('fixture') || 'normal';
+const main = document.querySelector('main');
+window.fixture = { left: false, named: false, ready: false };
+document.querySelector('button').onclick = async () => {
+  window.fixture.named = document.querySelector('input').value === 'Local recorder (notice confirmed)';
+  document.querySelector('input').remove(); document.querySelector('button').remove();
+  main.textContent = 'Someone will let you in';
+  if (mode === 'timeout') return;
+  await new Promise(resolve => setTimeout(resolve, 500));
+  if (mode === 'denied') { main.textContent = 'You were denied access to the meeting'; return; }
+  if (mode === 'auth') { main.textContent = 'We need to verify your info'; return; }
+  if (mode === 'forbidden') { main.textContent = 'Recording is not allowed'; return; }
+  main.innerHTML = '<button data-tid="hangup-button">Leave</button>';
+  const audio = new AudioContext({ sampleRate: 48000 });
+  await audio.resume();
+  const peers = [];
+  const tones = [];
+  if (mode !== 'no-media') {
+    // Two independent incoming WebRTC audio tracks. This exercises the actual
+    // browser track event and mixer; directly injecting bridge bytes would not.
+    for (const frequency of [440, 660]) {
+      const source = audio.createMediaStreamDestination();
+      const tone = audio.createOscillator(); tone.frequency.value = frequency;
+      const gain = audio.createGain(); gain.gain.value = 0.12;
+      tone.connect(gain).connect(source); tone.start(); tones.push(tone);
+      const sender = new RTCPeerConnection({ iceServers: [] });
+      const receiver = new RTCPeerConnection({ iceServers: [] });
+      peers.push(sender, receiver);
+      sender.onicecandidate = event => { if (event.candidate) receiver.addIceCandidate(event.candidate).catch(() => {}); };
+      receiver.onicecandidate = event => { if (event.candidate) sender.addIceCandidate(event.candidate).catch(() => {}); };
+      source.stream.getTracks().forEach(track => sender.addTrack(track, source.stream));
+      await sender.setLocalDescription(await sender.createOffer());
+      await receiver.setRemoteDescription(sender.localDescription);
+      await receiver.setLocalDescription(await receiver.createAnswer());
+      await sender.setRemoteDescription(receiver.localDescription);
+    }
+  }
+  // An unrelated tab-output tone must NOT be in the captured remote audio.
+  const unrelated = audio.createOscillator(); unrelated.frequency.value = 880;
+  const unrelatedGain = audio.createGain(); unrelatedGain.gain.value = 0.12;
+  unrelated.connect(unrelatedGain).connect(audio.destination); unrelated.start(); tones.push(unrelated);
+  window.fixture.ready = true;
+  const end = () => {
+    tones.forEach(tone => tone.stop()); peers.forEach(peer => peer.close());
+    audio.close(); main.innerHTML = '<div data-tid="meeting-ended">Meeting ended</div>';
+  };
+  main.querySelector('button').onclick = () => {
+    if (mode === 'stuck-leave') return;
+    window.fixture.left = true;
+    window.fixtureResult?.(window.fixture);
+    end();
+  };
+  if (mode === 'lost-media') setTimeout(() => peers.forEach(peer => peer.close()), 4500);
+  if (mode === 'ended') setTimeout(end, 5600);
+  if (mode === 'revoked') setTimeout(() => { main.textContent = 'Recording is not allowed'; }, 4500);
+};
+</script></body></html>
