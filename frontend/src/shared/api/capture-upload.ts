@@ -33,12 +33,14 @@ export async function createCaptureTarget(
   title: string,
   signal: AbortSignal
 ): Promise<CaptureTarget> {
-  const timezone =
-    Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Almaty";
   const meeting = expectData(
     await createMeeting({
       client: backendClient,
-      body: { title, started_at: new Date().toISOString(), timezone },
+      body: {
+        title,
+        started_at: result.started_at,
+        timezone: result.timezone,
+      },
       signal,
     })
   );
