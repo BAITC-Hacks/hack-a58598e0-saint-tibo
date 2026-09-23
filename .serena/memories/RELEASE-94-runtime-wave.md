@@ -52,9 +52,9 @@
 
 - GPU case2 still misses the late ten-day correction and event deadline: semantic
   FAIL despite faster completion/18 actions. No example leakage; no more prompt loops.
-- #70 KK TTS completed27 segments/seven actions with quality misses; mixed82s runs.
-  Real human Kazakh/mixed accuracy remains unverified; TTS does not establish it.
-- Root owns the GPU and release. Serena starts no resources, inference or audits.
-  Never delete/interrupt user recordings or persistent demo identities/data.
+- Both #70 TTS runs finished: KK27 segments/seven actions has quality misses;
+  mixed11 segments/zero actions missed all five expected tasks. Human quality unverified.
+- Coordinator: PR124 merged4c67498, dev6db1807 (+cd5fbdb/841); runtime stays1adbcb5.
+  User authorized /workspace, prior hold revoked; preserve source, compatibility check pending.
 
 Last commit: `420aac5df7f0f764fb8ddbbbd6d1b710d0f1ea7a` (release source; prod1adbcb5 health and GPU case2 reported by coordinator).

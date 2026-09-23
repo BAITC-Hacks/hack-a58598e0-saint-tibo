@@ -16,8 +16,9 @@ Last commit: `420aac5df7f0f764fb8ddbbbd6d1b710d0f1ea7a` (release source; prod1ad
   Both UI owners finished; coordinator confirms disposable dev QA cleanup0.
   Permanent demo/user data remain untouched; do not clean unrelated data.
 - Artem owns canonical /meetings UI; Ivan owns player/capture/Honcho tools.
-  User explicitly requested PR124/#107 fallback merge; separate worker resolves
-  conflicts. Follow-up is pending and must not be attributed to release1adbcb5.
+  PR124 merged4c67498; user authorized /workspace and revoked the prior hold.
+  Coordinator reports dev6db1807 (+briefing identitycd5fbdb/docs models841).
+  Preserve source; compatibility guard pending, runtime remains1adbcb5.
 
 ## Released code and bounded evidence
 
@@ -44,7 +45,8 @@ Last commit: `420aac5df7f0f764fb8ddbbbd6d1b710d0f1ea7a` (release source; prod1ad
 ## Remaining limits
 
 1. GPU case2 semantic FAIL: late ten-day/event deadlines still absent; no prompt loops.
-2. #70 KK TTS27 segments/seven actions has quality misses; mixed82s running, human unverified.
+2. #70 both TTS runs complete: KK27segments/7actions has quality misses; mixed11/0
+   misses all five expected tasks (FAIL). Real human accuracy remains unverified.
 3. Prod smoke proves operation, not semantics/performance isolation; dev timings stay dev evidence.
 4. External extraction/Honcho settings checked empty on dev; code/default-disabled
    capability is not permission or activation. Do not claim external consent.
