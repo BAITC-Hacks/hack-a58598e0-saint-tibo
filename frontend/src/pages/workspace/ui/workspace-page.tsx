@@ -611,6 +611,7 @@ function ResultWorkspace({
   const review = useQuery({
     ...getResultReviewOptions({ client: backendClient, path }),
     refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
   const sync = useTranscriptSync({
     recordingId: recording.id,
