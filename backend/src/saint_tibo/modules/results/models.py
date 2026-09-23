@@ -27,6 +27,7 @@ class ResultVersion(UUIDPrimaryKey, Timestamps, Base):
     model_id: Mapped[str] = mapped_column(String(120))
     model_revision: Mapped[str] = mapped_column(String(40))
     segment_count: Mapped[int]
+    diarization: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
 
 
 class Segment(UUIDPrimaryKey, Base):
