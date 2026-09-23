@@ -13,6 +13,7 @@ import type {
 import { Button } from "#/shared/ui/shadcn/button";
 import {
   TranscriptPanel,
+  transcriptTime,
   useTranscriptSync,
 } from "#/shared/ui/transcript-sync";
 import type { TranscriptSegment } from "#/shared/ui/transcript-sync";
@@ -20,6 +21,10 @@ import type { TranscriptSegment } from "#/shared/ui/transcript-sync";
 import { readAudioWaveform } from "../lib/audio-waveform";
 import { readLocalTranscript } from "../lib/local-transcript";
 import type { LocalTranscriptError } from "../lib/local-transcript";
+import {
+  createSyntheticRecording,
+  syntheticIntervals,
+} from "../lib/synthetic-recording";
 
 /** Local playback lets the media component be exercised before server ingestion lands. */
 export const PlayerPage = () => {
@@ -34,6 +39,7 @@ export const PlayerPage = () => {
     useState<LocalTranscriptError | null>(null);
   const [transcriptLoading, setTranscriptLoading] = useState(false);
   const [waveform, setWaveform] = useState<number[] | null>(null);
+  const [isSample, setIsSample] = useState(false);
   const [selectedServerRecording, setSelectedServerRecording] = useState("");
   const ownedUrl = useRef<string | null>(null);
   const player = useRef<MeetingPlayerHandle>(null);
@@ -133,12 +139,53 @@ export const PlayerPage = () => {
     setTranscriptError(null);
     setTranscriptLoading(false);
     setWaveform(null);
+    setIsSample(false);
     if (transcriptInput.current) transcriptInput.current.value = "";
     if (file) {
       void readAudioWaveform(file).then((peaks) => {
         if (generation.current === currentGeneration) setWaveform(peaks);
       });
     }
+    return url;
+  };
+
+  const loadSample = () => {
+    const lines = [
+      m.player_sample_line_1,
+      m.player_sample_line_2,
+      m.player_sample_line_3,
+      m.player_sample_line_4,
+      m.player_sample_line_5,
+      m.player_sample_line_6,
+      m.player_sample_line_7,
+      m.player_sample_line_8,
+    ];
+    const file = new File(
+      [createSyntheticRecording()],
+      "synthetic-meeting.wav",
+      {
+        type: "audio/wav",
+      }
+    );
+    const url = replaceFile(file);
+    if (!url) return;
+    setIsSample(true);
+    if (input.current) input.current.value = "";
+    setTranscript({
+      name: m.player_sample_transcript({}, { locale }),
+      segments: syntheticIntervals.map((segment, index) => ({
+        id: segment.id,
+        recording_id: url,
+        result_version_id: "local-stt",
+        start_ms: segment.start_ms,
+        end_ms: segment.end_ms,
+        text: `${
+          index % 2 === 0
+            ? m.player_sample_speaker_a({}, { locale })
+            : m.player_sample_speaker_b({}, { locale })
+        }: ${lines[index]?.({}, { locale }) ?? ""}`,
+      })),
+    });
   };
 
   const importTranscript = async (file: File | null) => {
@@ -179,6 +226,21 @@ export const PlayerPage = () => {
         <p className="text-sm text-muted-foreground">
           {m.player_local_help({}, { locale })}
         </p>
+      </div>
+      <div className="space-y-3 rounded-2xl border bg-card p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="space-y-1">
+            <h2 className="font-medium">
+              {m.player_sample_title({}, { locale })}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {m.player_sample_help({}, { locale })}
+            </p>
+          </div>
+          <Button onClick={loadSample}>
+            {m.player_sample_load({}, { locale })}
+          </Button>
+        </div>
       </div>
       <div className="grid gap-5 rounded-2xl border bg-card p-5 lg:grid-cols-2">
         <div className="space-y-2">
@@ -272,6 +334,25 @@ export const PlayerPage = () => {
             markers={markers}
             waveform={waveform}
           />
+          {isSample && transcript && (
+            <section className="space-y-2 rounded-2xl border bg-card p-5">
+              <h2 className="font-medium">
+                {m.player_sample_source_title({}, { locale })}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {m.player_sample_source_help({}, { locale })}
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => sync.seekSegment("synthetic-segment-3")}
+              >
+                {m.player_sample_source_jump(
+                  { time: transcriptTime(8000) },
+                  { locale }
+                )}
+              </Button>
+            </section>
+          )}
           <div className="space-y-3 rounded-2xl border bg-card p-5">
             <label
               htmlFor="local-transcript"
