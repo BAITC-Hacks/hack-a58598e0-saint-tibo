@@ -1,42 +1,33 @@
 # API-01 Backend architecture
 
-Canonical patterns: `docs/conventions.md` — read it before a new domain;
-this note is the map, not a duplicate.
+## Current Behavior
 
-## Request path
+- FastAPI lives in `backend/src/saint_tibo/`: shared `api/`, `auth/`,
+  `core/`, `db/`, then `modules/{meetings,processing,results,exports}/`.
+- `infra/Caddyfile` sends same-origin `/api/v1/*`, health and OpenAPI/docs
+  directly to FastAPI. Other routes reach TanStack Start, including Better
+  Auth and the cookie-authenticated media proxy (AUTH-01, API-02).
+- `api/router.py` mounts meetings, processing and read-only results.
+  Exports currently provides render functions; it has no mounted HTTP router.
+- Pattern: module `models/schemas/service/router.py`, module service functions,
+  permissions in `auth/policy.py`, model registration in `migrations/env.py`.
+  See `docs/conventions.md` before adding a domain; no repository layer.
+- Wire truth: `contracts/openapi.json` and generated frontend SDK.
+  Regenerate via `bun run api:generate`; never hand-edit generated types.
+- UUID IDs, snake_case JSON, camelCase operation IDs; UTC RFC3339 timestamps.
+  Errors use `{"error":{"code","message","details"}}`; codes are snake_case.
+- Lists use `{items,total,limit,offset}`, default limit 20/max 100.
+  Entity lists are newest-first; transcript segments are timeline-ordered.
+- PATCH conventions use `PartialUpdate` with nonnullable-field guards.
+  Resource ownership stays server-side; foreign resources return 404,
+  including when the caller is an admin.
 
-Browser → same origin → TanStack server routes (`/api/auth/*` → Better
-Auth; `/api/v1/*` + media → FastAPI). Better Auth cookie → short-lived
-JWT (5 min) → FastAPI verifies JWKS signature AND re-checks
-role/ban/session via `auth/identity.py` every request — revoked session
-dies on next API call. `BETTER_AUTH_SECRET` protects JWT keys in DB.
-Auth surface details (permissions, dev-login, seeding) — AUTH-01.
+## Known Gaps
 
-## Module recipe (per `docs/conventions.md`)
+- Drafts in `docs/meeting-contract.md` and UI mocks are not shipped endpoints.
+- Processing/results details: [API-10](API-10-processing-results.md).
+  Reviewed persistence and HTTP export: [API-13](API-13-review-export.md).
+- Auth is database-backed on each request; no copied app user table or
+  independent five-minute logout window exists (AUTH-01, DB-01).
 
-`modules/<domain>/{models,schemas,service,router}.py` → permission in
-`auth/policy.py` → mount in `api/router.py` → import models in
-`migrations/env.py` → `alembic revision --autogenerate` → `bun run migrate`
-→ `bun run api:generate`. Service = module functions, no repository layer;
-writer ends `await session.commit()`.
-
-## Contracts
-
-- Errors: `APIError(status, code, message)` → `{"error":{code,message,details}}`,
-  codes snake_case; `responses={401,403,404}` in decorator.
-- Lists: `{items,total,limit,offset}`, limit default 20 max 100,
-  order `created_at DESC, id DESC`.
-- IDs all UUID; `operation_id` camelCase; JSON snake_case;
-  PATCH via `PartialUpdate` + `NON_NULLABLE` + `.changes()`.
-- Ownership enforced server-side; other user's object → 404, admin does
-  NOT bypass ownership. Timestamps RFC 3339, server returns UTC.
-- Unauthorized → 401. Mixins: `UUIDPrimaryKey`, `OwnedByUser`, `Timestamps`.
-
-## State
-
-`main`: auth, `/api/v1/me`, `/api/v1/admin/access`, `/health/*`, plus
-the full meetings surface — see API-02. `dev` additionally carries
-processing jobs + real STT + transcript results (#10/#11, `modules/
-processing` + `modules/results`) and the exports renderers (#14).
-`contracts/openapi.json` is the truth of what's implemented;
-docs drafts ≠ endpoints.
+Last commit: `f8cf4dae60e29c64a35a477e46673379c834cadd` (audited tree, 2026-09-23; not a live assertion).

@@ -1,36 +1,38 @@
-# TEST-01 Verification — how "done" is proven
+# TEST-01 Verification and evidence
 
-No CI pipeline; manual gates only.
-The owner's current verification instructions and `docs/development.md`
-take precedence over the command catalogue below. Do not automatically
-run test suites when the owner has asked for build + a short live scenario.
+## Current Behavior
 
-## Local gates
+- Current wave explicitly forbids repository test/linter suites.
+  Use appropriate builds and short actual runtime/browser scenarios for code;
+  memory-only changes use source/contract/link/scope review.
+- Root `bun run build` builds frontend+backend.
+  `verify` includes tests/checks; `check`, `test` and `test:integration`
+  exist but are not the commands for this wave.
+- No repository CI workflow is present. Deployment is manual and requires
+  a clean commit, ancestry-safe server update and coordinator scheduling.
+- Always distinguish code audit, local build, synthetic behavior, deployed
+  commit and independently verified live behavior.
+- [#94 independent LIVE-OK](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/94#issuecomment-5793355510)
+  covers runtime `58ee537`: 30 HTTPS checks, auth/revocation, meeting/upload/
+  normalized WAV, media Range, job idempotency, result linkage, owner ACL,
+  deletion, fresh RU STT (274250ms → 71.03s → 76 segments).
+- Controlled restart produced interrupted/no result; retry was accepted
+  idempotently, but its completion was not proven after QA logger failure.
+- Renderer produced PDF/DOCX and preserved tested DOCX characters; layout
+  and HTTP/UI downloads were outside that proof.
+- Browser proof covered logout/manual login/root dev-login; it is not a
+  claim that the complete meeting UI or real player integration is finished.
+- QA removed its own temporary data; historic cleanup is not authorization
+  to delete other users' meetings/jobs/accounts.
 
-- `bun run verify` — types, existing checks, build when full checks are requested.
-- `bun run test:integration` — auth + migrations on disposable PG (Docker).
-- Existing tests live under frontend auth and backend test directories.
-- `bun run fix && bun run check` after frontend changes (conventions.md).
+## Known Gaps
 
-## Live gate (the real one)
+- RU functional success is not manual accuracy measurement for RU/KK/mixed.
+  #11/#70/#89, diarization, extraction and product-level end-to-end acceptance
+  remain separate work.
+- Real protected player, browser capture upload and external participant
+  acceptance remain under their own issue owners.
+- Evidence must include exact SHA, scenario, observed result and limitations.
+  Never publish tokens, meeting text/audio or raw private logs as proof.
 
-1. From a clean checkout: `sh scripts/dev-deploy.sh saint-dev-<you>`.
-2. Exercise the actual flow on your dev server (register → meeting →
-   upload → …). No fake/static proof counts.
-3. Comment on the issue: `done: <sha>` after merging to your lane;
-   `integrated: <sha>` after your lane → `dev` + redeploy from `dev`
-   + live check; `LIVE-OK <sha>` closes it.
-4. `dev` is shared: after merging, everyone redeploys their own server
-   from fresh `dev` — breakage on dev is on the merger.
-
-## Acceptance style (per issues #9–#26)
-
-Checkboxes demand evidence: resend-no-dup, foreign-access 404,
-seek on long file, offline-after-bundle STT, corrupt file ≠ "done",
-no replica text/tokens in logs. UI must distinguish empty / processing /
-error / ready — never show "done" on unknown status.
-
-## Prod
-
-Danil only: deploy.sh `saint-prod` from `main` == `origin/main`,
-after the same flow is green on dev. Then verify prod live.
+Last commit: `f8cf4dae60e29c64a35a477e46673379c834cadd` (audited tree, 2026-09-23; not a live assertion).

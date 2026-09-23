@@ -1,55 +1,45 @@
-# INFRA-01 Environments and manual deploy
+# INFRA-01 Environments and manual deployment
 
-No CI/CD. Push deploys nothing. Doc: `docs/dev-server.md`.
+## Current Behavior
 
-## Servers
+- Push deploys nothing; no repository CI workflow is present in this tree.
+  Commands and topology: `scripts/{dev-deploy,deploy}.sh`,
+  `compose.yaml`, `infra/Caddyfile`, `docs/dev-server.md`.
 
-| Env | SSH alias | URL |
-| --- | --- | --- |
-| Production | `saint-prod` | https://saint-tibo.win |
-| Danil | `saint-dev-danil` | https://dev-danil.saint-tibo.win |
-| Ivan | `saint-dev-ivan` | https://dev-ivan.saint-tibo.win |
-| Artem | `saint-dev-artem` | https://dev-artem.saint-tibo.win |
+| SSH alias | HTTPS domain |
+| --- | --- |
+| `saint-prod` | `saint-tibo.win` |
+| `saint-dev-danil` | `dev-danil.saint-tibo.win` |
+| `saint-dev-ivan` | `dev-ivan.saint-tibo.win` |
+| `saint-dev-artem` | `dev-artem.saint-tibo.win` |
 
-Independent DBs, secrets, sessions, TLS. Session on one env ≠ access
-to another. Dev-server CPU/RAM inventory for model sizing lives in
-`docs/stt-feasibility.md`.
+- Each environment has independent DB, secrets and sessions.
+- Dev deployment ships the current clean committed tree through
+  `sh scripts/dev-deploy.sh saint-dev-<member>`. Redeploy integrated dev
+  explicitly; an ancestry guard refuses unknown/divergent deployed history.
+- Prod is Danil's operation: `sh scripts/deploy.sh saint-prod` requires
+  checked-out `main` exactly equal to fetched `origin/main`.
+- Only gateway ports 80/443 are public; app/DB host ports bind loopback.
+  Caddy sends API/health/OpenAPI directly to backend; frontend owns auth/media.
+- `processing-worker` has only internal `processing` network, read-only
+  recording/model mounts, 4 CPU/6 GiB limits and a separate STT image.
+  Prepare `models/small` before offline processing; see MODELS-01.
+- Three exact dev domains enable guarded dev-login and the dedicated
+  `auth-seed-dev` service. Production forces the flag off and skips seed.
+- Server secrets live in `/opt/saint-tibo/.env` with mode 600 and are
+  preserved on redeploy. `BETTER_AUTH_SECRET` protects persisted signing
+  keys; don't casually replace it. Root `.env`, models and user data stay private.
+- Authoritative deployed commit is the target of
+  `/opt/saint-tibo/current`, not GitHub dev/main or a successful build.
 
-## Deploy flow
+## Known Gaps
 
-Dev: `sh scripts/dev-deploy.sh saint-dev-<you>` from a clean checkout —
-ships tracked files of the current commit, builds images, runs
-migrations, waits for health, checks HTTPS. After merging to `dev`,
-redeploy from fresh `dev` manually.
-Deployment refuses unknown/diverged current-server commits: publish and
-merge that history before replacing a colleague's running version.
+- Current wave integration and deployment scheduling belong to the parent
+  coordinator; no worker should replace another worker's live version.
+- Last independent Danil runtime evidence is `58ee537` in
+  [#94](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/94#issuecomment-5793355510).
+  Audited dev `f8cf4da` differs only in docs/memories; this is not a new deploy.
+- Organizational controls, retention/backup proof and enterprise hardening
+  remain separate issues; local model egress isolation is not total certification.
 
-The three dev aliases enable `DEV_LOGIN_ENABLED=true` and run the guarded
-`auth-seed-dev` Compose service. It creates only the two dedicated dev
-identities; account collisions fail without resetting real users.
-Credentials and browser entry points: `docs/browser-testing.md`.
-
-Prod (Danil only): `git switch main && git pull --ff-only origin main`
-then `sh scripts/deploy.sh saint-prod`. Script requires local `main` ==
-`origin/main`; it never merges or pushes.
-Production forces `DEV_LOGIN_ENABLED=false` and never runs dev seed.
-The auth server additionally requires an exact configured HTTPS dev origin.
-
-## Topology and secrets
-
-Only the Caddy gateway is public (pinned digest in stack-pin.json);
-Postgres/API/frontend bind loopback, talk over a Docker network.
-Same HTTPS origin serves `/api/v1/*`, `/health/*`, `/docs`, and
-`/api/auth/*` (Better Auth inside frontend). `processing-worker`
-(`saint-tibo-processing:local` from `tools/transcribe/Dockerfile`)
-runs the STT subprocess; it mounts `recordings_data` and
-`${STT_MODELS_PATH:-./models}` read-only — populate `models/` on the
-server via `tools/transcribe/prepare_model.py` before jobs can succeed.
-
-Server secrets generated on first run → `/opt/saint-tibo/.env` (mode
-600), preserved on redeploy. Root `.env` is local-only and gitignored.
-`BETTER_AUTH_SECRET` encrypts JWT keys in DB — never lose/rotate casually.
-
-User-uploaded recordings: `recording_storage_path`
-(default `backend/../.data/recordings`), on server inside the app env —
-not in git, not world-readable (incoming dir 0700).
+Last commit: `f8cf4dae60e29c64a35a477e46673379c834cadd` (audited tree, 2026-09-23; not a live assertion).

@@ -1,56 +1,41 @@
-# MODELS-01 STT and ML pipeline
+# MODELS-01 Local speech and extraction pipeline
 
-Hard constraint (case): audio/text processed ONLY by local/self-hosted
-models. No external API, no hidden fallback, no transcript to external
-LLM. Must work with egress disabled after model bundle is prepared.
-`models/` is gitignored — weights never enter git.
+## Current Behavior
 
-## Feasibility (per `docs/stt-feasibility.md`)
+- Case constraint: audio/text processing only by local/self-hosted models.
+  No external STT/LLM fallback; offline operation after bundle preparation.
+- `tools/transcribe/` has its own Python environment, lock and Dockerfile:
+  faster-whisper 1.2.1 / CTranslate2 4.8.2; CPU INT8, 4 threads, beam 5,
+  one worker job at a time; no VAD or word alignment.
+- `prepare_model.py` pins `Systran/faster-whisper-small` at
+  `536b0662742c02347bc0e980a01041f333bce120`, verifies weights SHA256
+  and saves manifest/license. Model preparation downloads before processing.
+- `transcribe.py` uses local-only model loading and private JSONL output.
+  Worker launches a separate process, discards stderr and bounds output
+  (32 MiB / about 20k segments); cancellation kills the process group.
+- Runtime network is internal-only; models and recordings mount read-only.
+  API-10 describes result publication and provenance; operational recipe:
+  `docs/transcription.md`. Model weights/transcripts do not belong in Git.
+- Languages auto/ru/kk/mixed are accepted; mixed enables multilingual mode.
+  These options are not proof of multilingual recognition accuracy.
+- [#11 independent functional proof](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/11#issuecomment-5793356155)
+  at `58ee537`: 274250ms RU audio → 71.03s → 76 persisted nonempty
+  timecoded segments. Earlier 81.06s run and offline-network evidence are
+  separate observations, not one benchmark average.
+- `scripts/benchmark-stt.py` and `docs/stt-feasibility.md` support further
+  evaluation. Owner-approved `input-audio/` fixtures contain MP3 cover art;
+  decoder must select audio. Written protocols are not verbatim transcripts.
 
-- First CPU baseline: `Systran/faster-whisper-small` (MIT), CTranslate2,
-  `device=cpu`, `compute_type=int8`, 4 threads, one file at a time.
-- STT runs in a SEPARATE worker process — never inside FastAPI/uvicorn.
-- KK candidate: `shyngys879/kazakh-whisper-large-v3-turbo`
-  (author claims Apache-2.0, ~0.8B params, needs CT2 conversion);
-  control: `openai/whisper-large-v3-turbo` (MIT). Author-reported
-  FLEURS WER (11.8% vs 70.45%) is NOT our measurement.
-- Upstream reference only: small INT8 ~102 s / ~1.5 GB RAM on 13-min
-  audio (i7-12700K). Our AMD CPU needs own RTF/RSS numbers.
-- `scripts/benchmark-stt.py` = reproducible offline benchmark;
-  run RU/KK/mixed matrix on `saint-dev-danil` before choosing prod model.
+## Known Gaps
 
-## Integrated STT (#11) — on `dev`
+- Manual reference-based RU/KK/mixed quality/error assessment (#11/#70/#89)
+  remains open; upstream model-card claims are not team measurements.
+- #12 diarization and participant confirmation are absent; speaker UUID is
+  not identity and not an action-item executor.
+- #69 local LLM selection/extraction is separate preserved WIP, not integrated
+  into dev. Do not touch its checkout/models or claim automatic summary.
+- Intended downstream order is transcription → diarization/alignment →
+  extraction → human review. Retain original deadline wording; normalize
+  relatives only with meeting date/timezone, never invent missing facts.
 
-Ops doc: `docs/transcription.md` (model prep path, one worker/one job at
-a time, CPU INT8 4 threads).
-
-`tools/transcribe/` is a separate Python env with its own Dockerfile:
-`prepare_model.py` pins `Systran/faster-whisper-small` by revision +
-model.bin SHA256 into `models/`; `transcribe.py` loads it CPU/int8,
-4 threads, `local_files_only=True`, streams segments as JSONL to the
-worker. `processing-worker` builds `saint-tibo-processing:local`,
-mounts `recordings_data` + `${STT_MODELS_PATH:-./models}` read-only.
-Worker supervises the subprocess via bounded pipe (≤32 MB, ≤20k
-segments → 422 `transcript_too_large`; missing runtime/model →
-503 `transcription_unavailable`). stderr/logs never carry transcript
-text. Success writes ResultVersion + segments (API-02).
-
-Still open for #11 acceptance: manual RU/KK/mixed sample review per
-`docs/stt-feasibility.md` (all samples pending); KK model swap and
-RTF/RSS numbers on our AMD box unproven.
-
-## Fixtures
-
-`input-audio/Совещание №1.mp3` 274.25 s and `№2` 206.03 s — 48 kHz mono
-MP3 with embedded PNG cover → decoder must select the audio stream
-explicitly. Text protocols ≠ verbatim transcripts of the audio
-(#13 note: recording №2 changes supplier-search deadline at the end).
-Case audio in git is a one-off owner exception (#32).
-
-## Pipeline order (#10→#13)
-
-decode (explicit audio stream) → STT → diarize/align → extract →
-ResultVersion. #12 diarization is self-hosted; `speaker_id` ≠ identity,
-human confirms participant mapping; NO voiceprint DB this task.
-#13: keep original deadline phrasing; normalize relatives only with
-meeting date+timezone; never invent assignee/date/year.
+Last commit: `f8cf4dae60e29c64a35a477e46673379c834cadd` (audited tree, 2026-09-23; not a live assertion).

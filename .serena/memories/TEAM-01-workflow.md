@@ -1,40 +1,37 @@
-# TEAM-01 Team, lanes, and issue workflow
+# TEAM-01 Team, ownership and integration
 
-Repo: github.com/BAITC-Hacks/hack-a58598e0-saint-tibo (private —
-still: no secrets, tokens, or credentials in git/issues).
-Exception explicitly requested by the owner: disposable dev-account
-credentials in `docs/browser-testing.md`; never production/server secrets.
+## Current Behavior
 
-## Roles
+- Project: BAITC-Hacks/hack-a58598e0-saint-tibo only. Repository privacy
+  does not authorize secrets, credentials or user data in commits/issues.
+- Danil (`rldyourmnd`): backend/ML and prod integration.
+  Ivan (`R3flector`): recording/player/platform integrations.
+  Artem (`letya999`): UI/UX, branding, design system and landing.
+- Live issue assignees and claim comments own the queue. Danil agents work
+  only his issues; unassigned backlog is not permission to implement it.
+- Claim exact files before editing. One writer per file, separate worktrees
+  from fresh origin/dev; preserve others' tracked/untracked/ignored WIP.
+- Feature work: `feat/<issue>-<slug>` → personal lane → dev → main.
+  Existing `codex/<issue>-*` features remain valid; Ivan uses `ivan/lane`.
+  Named/shared branches are integration targets, not implementation checkouts.
+- Merge with `--no-ff`; never squash/rebase/force or rewrite shared history.
+  Normal members integrate their own lanes; this wave explicitly centralizes
+  integration and deployment in the parent coordinator.
+- Lifecycle evidence: implemented branch → `done: SHA` personal lane →
+  `integrated: SHA` dev → `LIVE-OK SHA` → issue closure when scope is met.
+  A partial delivered slice does not close broader acceptance.
+- Push is not deployment. Danil alone releases agreed dev→main/prod.
+  See `docs/development.md`, `docs/session-handoff.md`, INFRA-01.
+- Memories have one explicitly assigned writer. Record current ownership
+  in NEXT-SESSION; historical session prose is evidence, not fresh authority.
 
-- Danil `rldyourmnd` — backend + ML pipeline; also the integrator:
-  only he merges `dev` → `main` and deploys prod.
-- Ivan `R3flector` — task owner: authors and assigns issues.
-  Own lanes: recordings, player, meeting-platform integrations.
-- Artem `letya999` — UI/UX, branding, design system, landing.
+## Known Gaps
 
-## Issue = source of truth
+- #94 remains open until consolidation/knowledge handoff scope is complete.
+  Current wave tasks and pending integration are in NEXT-SESSION.
+- UI, player/capture, local LLM WIP and backend review/export have distinct
+  owners; don't take their files because a dependent screen is missing.
+- Do not archive/remove worktrees or clean ignored files without checking
+  unique commits, local materials and active ownership.
 
-Assignments and priorities live in issues — check
-`gh issue list --assignee @me`, never this file. No issue, no work.
-Claim files in an issue comment before editing; one owner per file.
-Danil's agents take only `rldyourmnd` issues and check current claims.
-
-Lifecycle in comments: `implemented` (branch pushed) → `done: <sha>`
-(merged to personal lane) → `integrated: <sha>` (merged to dev) →
-`LIVE-OK <sha>` (verified live) → closed. Never close on "code written".
-
-## Lanes
-
-`feat/<issue>-<slug>` → personal branch (`danil`/`ivan`/`artem`) →
-`dev` → `main`. `--no-ff` merges only; no squash/rebase; never rewrite
-shared history. `main` is protected — integrator-only. Each member
-merges own lane → `dev` themselves and verifies on own dev server.
-Flow detail: `docs/development.md`; cross-session handoff and
-memory-ownership notes: `docs/session-handoff.md`.
-
-Work happens in separate worktrees off `origin/dev`; never edit inside
-a checkout another session is using.
-Features and housekeeping both originate in feature branches; personal,
-dev and main branches are integration targets only. Existing `codex/<issue>`
-features remain valid; new work uses `feat/<issue>-<slug>`.
+Last commit: `f8cf4dae60e29c64a35a477e46673379c834cadd` (audited tree, 2026-09-23; not a live assertion).
