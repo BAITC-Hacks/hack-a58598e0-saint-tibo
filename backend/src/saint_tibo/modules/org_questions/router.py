@@ -58,6 +58,8 @@ async def _honcho(
     path: str,
     token: str,
     body: dict[str, Any] | None = None,
+    *,
+    expect_list: bool = False,
 ) -> dict[str, Any]:
     try:
         response = await client.request(
@@ -70,7 +72,9 @@ async def _honcho(
         raise APIError(
             503, "honcho_unavailable", "Organizational questions are temporarily unavailable"
         ) from exc
-    if not isinstance(payload, dict):
+    if expect_list and isinstance(payload, list):
+        return {"items": payload}
+    if not isinstance(payload, dict) or expect_list:
         raise APIError(
             503, "honcho_invalid_response", "Organizational questions are temporarily unavailable"
         )
@@ -183,6 +187,7 @@ async def ask_organization_question(
                     f"/v3/workspaces/{workspace}/sessions/{meeting_key}/messages",
                     scoped,
                     {"messages": pending},
+                    expect_list=True,
                 )
         reply = await _honcho(
             client,
