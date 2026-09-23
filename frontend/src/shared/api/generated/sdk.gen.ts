@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { CreateMeetingData, CreateMeetingErrors, CreateMeetingResponses, CreateParticipantData, CreateParticipantErrors, CreateParticipantResponses, CreateRecordingData, CreateRecordingErrors, CreateRecordingResponses, DeleteMeetingData, DeleteMeetingErrors, DeleteMeetingResponses, DeleteParticipantData, DeleteParticipantErrors, DeleteParticipantResponses, DeleteRecordingData, DeleteRecordingErrors, DeleteRecordingResponses, FinalizeRecordingData, FinalizeRecordingErrors, FinalizeRecordingResponses, GetAccessPolicyData, GetAccessPolicyErrors, GetAccessPolicyResponses, GetCurrentUserData, GetCurrentUserErrors, GetCurrentUserResponses, GetLivenessData, GetLivenessErrors, GetLivenessResponses, GetMeetingData, GetMeetingErrors, GetMeetingResponses, GetReadinessData, GetReadinessErrors, GetReadinessResponses, GetRecordingData, GetRecordingErrors, GetRecordingMediaData, GetRecordingMediaErrors, GetRecordingMediaResponses, GetRecordingResponses, HeadRecordingMediaData, HeadRecordingMediaErrors, HeadRecordingMediaResponses, ListMeetingsData, ListMeetingsErrors, ListMeetingsResponses, ListParticipantsData, ListParticipantsErrors, ListParticipantsResponses, ListRecordingsData, ListRecordingsErrors, ListRecordingsResponses, UpdateMeetingData, UpdateMeetingErrors, UpdateMeetingResponses, UpdateParticipantData, UpdateParticipantErrors, UpdateParticipantResponses, UploadRecordingChunkData, UploadRecordingChunkErrors, UploadRecordingChunkResponses, UploadRecordingFileData, UploadRecordingFileErrors, UploadRecordingFileResponses } from './types.gen';
+import type { CreateMeetingData, CreateMeetingErrors, CreateMeetingResponses, CreateParticipantData, CreateParticipantErrors, CreateParticipantResponses, CreateProcessingJobData, CreateProcessingJobErrors, CreateProcessingJobResponses, CreateRecordingData, CreateRecordingErrors, CreateRecordingResponses, DeleteMeetingData, DeleteMeetingErrors, DeleteMeetingResponses, DeleteParticipantData, DeleteParticipantErrors, DeleteParticipantResponses, DeleteRecordingData, DeleteRecordingErrors, DeleteRecordingResponses, FinalizeRecordingData, FinalizeRecordingErrors, FinalizeRecordingResponses, GetAccessPolicyData, GetAccessPolicyErrors, GetAccessPolicyResponses, GetCurrentUserData, GetCurrentUserErrors, GetCurrentUserResponses, GetLivenessData, GetLivenessErrors, GetLivenessResponses, GetMeetingData, GetMeetingErrors, GetMeetingResponses, GetProcessingJobData, GetProcessingJobErrors, GetProcessingJobResponses, GetReadinessData, GetReadinessErrors, GetReadinessResponses, GetRecordingData, GetRecordingErrors, GetRecordingMediaData, GetRecordingMediaErrors, GetRecordingMediaResponses, GetRecordingResponses, HeadRecordingMediaData, HeadRecordingMediaErrors, HeadRecordingMediaResponses, ListMeetingsData, ListMeetingsErrors, ListMeetingsResponses, ListParticipantsData, ListParticipantsErrors, ListParticipantsResponses, ListProcessingJobsData, ListProcessingJobsErrors, ListProcessingJobsResponses, ListRecordingsData, ListRecordingsErrors, ListRecordingsResponses, UpdateMeetingData, UpdateMeetingErrors, UpdateMeetingResponses, UpdateParticipantData, UpdateParticipantErrors, UpdateParticipantResponses, UploadRecordingChunkData, UploadRecordingChunkErrors, UploadRecordingChunkResponses, UploadRecordingFileData, UploadRecordingFileErrors, UploadRecordingFileResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -212,6 +212,37 @@ export const finalizeRecording = <ThrowOnError extends boolean = false>(options:
         'Content-Type': 'application/json',
         ...options.headers
     }
+});
+
+/**
+ * List Jobs
+ */
+export const listProcessingJobs = <ThrowOnError extends boolean = false>(options: Options<ListProcessingJobsData, ThrowOnError>): RequestResult<ListProcessingJobsResponses, ListProcessingJobsErrors, ThrowOnError> => (options.client ?? client).get<ListProcessingJobsResponses, ListProcessingJobsErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/meetings/{meeting_id}/recordings/{recording_id}/jobs',
+    ...options
+});
+
+/**
+ * Create Job
+ */
+export const createProcessingJob = <ThrowOnError extends boolean = false>(options: Options<CreateProcessingJobData, ThrowOnError>): RequestResult<CreateProcessingJobResponses, CreateProcessingJobErrors, ThrowOnError> => (options.client ?? client).post<CreateProcessingJobResponses, CreateProcessingJobErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/meetings/{meeting_id}/recordings/{recording_id}/jobs',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Get Job
+ */
+export const getProcessingJob = <ThrowOnError extends boolean = false>(options: Options<GetProcessingJobData, ThrowOnError>): RequestResult<GetProcessingJobResponses, GetProcessingJobErrors, ThrowOnError> => (options.client ?? client).get<GetProcessingJobResponses, GetProcessingJobErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/meetings/{meeting_id}/recordings/{recording_id}/jobs/{job_id}',
+    ...options
 });
 
 /**
