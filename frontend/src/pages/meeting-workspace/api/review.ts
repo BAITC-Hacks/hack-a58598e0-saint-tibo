@@ -64,6 +64,8 @@ export const reviewSchema = z.object({
 
 export type ReviewDocument = z.infer<typeof reviewSchema>;
 
+export class ReviewConflictError extends Error {}
+
 const summaryEntries = (items: string[]) =>
   items.map((text) => ({ text, source_segment_ids: [] as string[] }));
 
@@ -176,6 +178,9 @@ export const reviewQuery = (meetingId: string) =>
   queryOptions({
     queryKey: ["review", meetingId],
     enabled: typeof window !== "undefined",
+    // A background refresh would remount the revision-keyed editor and erase its draft.
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
     queryFn: () => loadReview(meetingId),
   });
 
@@ -212,6 +217,8 @@ export async function saveReview(meetingId: string, review: ReviewDocument) {
         })),
       },
     });
+    if (result.response?.status === 409)
+      throw new ReviewConflictError("Review revision changed");
     if (!result.data)
       throw new Error(apiErrorMessage(result.error, "Could not save review"));
     return realDocument(result.data, review.segments);
@@ -229,9 +236,31 @@ export async function saveReview(meetingId: string, review: ReviewDocument) {
       reviewed: review.reviewed,
     },
   });
+  if (result.response?.status === 409)
+    throw new ReviewConflictError("Review revision changed");
   if (result.error || result.data === undefined)
     throw new Error(apiErrorMessage(result.error, "Could not save review"));
   return reviewSchema.parse(result.data);
+}
+
+export async function reloadReview(meetingId: string, review: ReviewDocument) {
+  if (review.source === "mock") {
+    const loaded = await loadReview(meetingId);
+    if (!loaded) throw new Error("Review unavailable");
+    return loaded;
+  }
+  if (!review.recording_id) throw new Error("Recording unavailable");
+  const result = await getResultReview({
+    client: backendClient,
+    path: {
+      meeting_id: meetingId,
+      recording_id: review.recording_id,
+      result_version_id: review.result_version_id,
+    },
+  });
+  if (!result.data)
+    throw new Error(apiErrorMessage(result.error, "Could not load review"));
+  return realDocument(result.data, review.segments);
 }
 
 export async function downloadReview(

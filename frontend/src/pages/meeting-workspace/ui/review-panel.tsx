@@ -9,7 +9,12 @@ import { Input } from "#/shared/ui/shadcn/input";
 import { Textarea } from "#/shared/ui/shadcn/textarea";
 import { transcriptTime, useTranscriptSync } from "#/shared/ui/transcript-sync";
 
-import { downloadReview, saveReview } from "../api/review";
+import {
+  downloadReview,
+  reloadReview,
+  ReviewConflictError,
+  saveReview,
+} from "../api/review";
 import type { ReviewDocument } from "../api/review";
 import { useCopy } from "../lib/copy";
 
@@ -34,6 +39,7 @@ export function ReviewPanel({
   const [search, setSearch] = useState("");
   const [speakerFilter, setSpeakerFilter] = useState("");
   const [saveError, setSaveError] = useState("");
+  const [conflict, setConflict] = useState(false);
   const [exportError, setExportError] = useState("");
   const player = useRef<MeetingPlayerHandle>(null);
   const transcriptBox = useRef<HTMLDivElement>(null);
@@ -47,11 +53,19 @@ export function ReviewPanel({
   const canEdit = true;
   const save = useMutation({
     mutationFn: (next: ReviewDocument) => saveReview(meetingId, next),
+    onError: () => {}, // Localized errors, including the explicit conflict action below.
+  });
+  const reload = useMutation({
+    mutationFn: () => reloadReview(meetingId, review),
+    onError: () => {},
   });
   const download = useMutation({
     mutationFn: (format: "pdf" | "docx") =>
       downloadReview(meetingId, format, review),
   });
+  function editDraft(update: (current: ReviewDocument) => ReviewDocument) {
+    setDraft((current) => ({ ...update(current), reviewed: false }));
+  }
   const canPlay =
     recording?.status === "ready" || recording?.status === "incomplete";
   const segmentById = new Map(
@@ -131,7 +145,7 @@ export function ReviewPanel({
           <label className="flex items-center gap-2 text-sm">
             <input
               type="checkbox"
-              disabled={!canEdit}
+              disabled={!canEdit || save.isPending || reload.isPending}
               checked={draft.reviewed}
               onChange={(event) =>
                 setDraft((current) => ({
@@ -143,15 +157,20 @@ export function ReviewPanel({
             {t.markReviewed}
           </label>
           <Button
-            disabled={!canEdit || !dirty || save.isPending}
+            disabled={!canEdit || !dirty || save.isPending || reload.isPending}
             onClick={() => {
               setSaveError("");
               save.mutate(draft, {
                 onSuccess: (saved) => {
+                  setConflict(false);
                   setDraft(saved);
                   client.setQueryData(["review", meetingId], saved);
                 },
-                onError: () => setSaveError(t.saveError),
+                onError: (reason) => {
+                  const stale = reason instanceof ReviewConflictError;
+                  setConflict(stale);
+                  setSaveError(stale ? "" : t.saveError);
+                },
               });
             }}
           >
@@ -182,6 +201,29 @@ export function ReviewPanel({
           {saveError || exportError}
         </p>
       )}
+      {conflict && (
+        <div role="alert" className="space-y-2 rounded-lg border border-destructive/40 p-3">
+          <p className="text-sm">{t.reviewConflict}</p>
+          <Button
+            variant="outline"
+            disabled={reload.isPending || save.isPending}
+            onClick={() => {
+              setSaveError("");
+              reload.mutate(undefined, {
+                onSuccess: (loaded) => {
+                  setDraft(loaded);
+                  setConflict(false);
+                  client.setQueryData(["review", meetingId], loaded);
+                },
+                onError: () => setSaveError(t.reviewReloadError),
+              });
+            }}
+          >
+            {reload.isPending ? t.loading : t.reviewReload}
+          </Button>
+          <p className="text-xs text-muted-foreground">{t.reviewReloadHelp}</p>
+        </div>
+      )}
       {(!canEdit || !review.reviewed || dirty) && (
         <p className="text-sm text-muted-foreground">
           {canEdit ? t.exportUnavailable : t.detailsUnavailable}
@@ -196,6 +238,7 @@ export function ReviewPanel({
         />
       )}
 
+      <fieldset disabled={save.isPending || reload.isPending} className="contents">
       <div
         className="flex flex-wrap gap-1 rounded-lg bg-muted p-1"
         role="tablist"
@@ -248,7 +291,7 @@ export function ReviewPanel({
                           aria-label={`${section} ${index + 1}`}
                           value={entry.text}
                           onChange={(event) =>
-                            setDraft((current) => ({
+                            editDraft((current) => ({
                               ...current,
                               summary: {
                                 ...current.summary,
@@ -287,7 +330,7 @@ export function ReviewPanel({
                     size="sm"
                     variant="outline"
                     onClick={() =>
-                      setDraft((current) => ({
+                      editDraft((current) => ({
                         ...current,
                         summary: {
                           ...current.summary,
@@ -316,7 +359,7 @@ export function ReviewPanel({
                     className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
                     value={speaker.participant_id ?? ""}
                     onChange={(event) =>
-                      setDraft((current) => ({
+                      editDraft((current) => ({
                         ...current,
                         speakers: current.speakers.map((item, i) =>
                           i === index
@@ -437,7 +480,7 @@ export function ReviewPanel({
                 <Textarea
                   value={item.text}
                   onChange={(event) =>
-                    setDraft((current) => ({
+                    editDraft((current) => ({
                       ...current,
                       action_items: current.action_items.map((entry, i) =>
                         i === index
@@ -455,7 +498,7 @@ export function ReviewPanel({
                     className="h-9 w-full rounded-md border border-input bg-background px-2"
                     value={item.assignee_participant_id ?? ""}
                     onChange={(event) =>
-                      setDraft((current) => ({
+                      editDraft((current) => ({
                         ...current,
                         action_items: current.action_items.map((entry, i) =>
                           i === index
@@ -486,7 +529,7 @@ export function ReviewPanel({
                     type="date"
                     value={item.due_date ?? ""}
                     onChange={(event) =>
-                      setDraft((current) => ({
+                      editDraft((current) => ({
                         ...current,
                         action_items: current.action_items.map((entry, i) =>
                           i === index
@@ -507,7 +550,7 @@ export function ReviewPanel({
                         (status) => status === event.target.value
                       );
                       if (next)
-                        setDraft((current) => ({
+                        editDraft((current) => ({
                           ...current,
                           action_items: current.action_items.map((entry, i) =>
                             i === index ? { ...entry, status: next } : entry
@@ -543,7 +586,7 @@ export function ReviewPanel({
                 size="sm"
                 variant="ghost"
                 onClick={() =>
-                  setDraft((current) => ({
+                  editDraft((current) => ({
                     ...current,
                     action_items: current.action_items.filter(
                       (_, i) => i !== index
@@ -563,7 +606,7 @@ export function ReviewPanel({
           <Button
             variant="outline"
             onClick={() =>
-              setDraft((current) => ({
+              editDraft((current) => ({
                 ...current,
                 action_items: [
                   ...current.action_items,
@@ -586,6 +629,7 @@ export function ReviewPanel({
           </Button>
         </section>
       )}
+      </fieldset>
     </section>
   );
 }
