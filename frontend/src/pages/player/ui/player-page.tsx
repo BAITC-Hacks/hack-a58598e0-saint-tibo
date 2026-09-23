@@ -1,5 +1,7 @@
+import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 
+import { backendClient, listMeetings, listRecordings } from "#/shared/api";
 import { m } from "#/shared/lib/i18n/messages";
 import { useLocale } from "#/shared/lib/locales";
 import { MeetingPlayer } from "#/shared/ui/meeting-player";
@@ -29,6 +31,7 @@ export const PlayerPage = () => {
   const [transcriptError, setTranscriptError] =
     useState<LocalTranscriptError | null>(null);
   const [transcriptLoading, setTranscriptLoading] = useState(false);
+  const [selectedServerRecording, setSelectedServerRecording] = useState("");
   const ownedUrl = useRef<string | null>(null);
   const player = useRef<MeetingPlayerHandle>(null);
   const input = useRef<HTMLInputElement>(null);
@@ -40,6 +43,58 @@ export const PlayerPage = () => {
     segments: transcript?.segments ?? [],
     seek: (positionMs) => player.current?.seek(positionMs),
   });
+  const meetingsQuery = useQuery({
+    queryKey: ["player", "meetings"],
+    queryFn: async ({ signal }) => {
+      const response = await listMeetings({
+        client: backendClient,
+        query: { limit: 100, offset: 0 },
+        signal,
+        throwOnError: true,
+      });
+      return response.data.items;
+    },
+  });
+  const recordingsQuery = useQuery({
+    queryKey: [
+      "player",
+      "recordings",
+      meetingsQuery.data?.map((meeting) => meeting.id),
+    ],
+    enabled: meetingsQuery.isSuccess,
+    queryFn: async ({ signal }) => {
+      const pages = await Promise.all(
+        (meetingsQuery.data ?? []).map(async (meeting) => {
+          const response = await listRecordings({
+            client: backendClient,
+            path: { meeting_id: meeting.id },
+            query: { limit: 100, offset: 0 },
+            signal,
+            throwOnError: true,
+          });
+          return response.data.items.map((recording) => ({
+            ...recording,
+            meetingTitle: meeting.title,
+          }));
+        })
+      );
+      return pages.flat();
+    },
+  });
+
+  const serverRecordings = (recordingsQuery.data ?? []).filter(
+    (recording) => recording.media_url && recording.media_content_type
+  );
+  const selectedServerSource = serverRecordings.find(
+    (recording) => recording.id === selectedServerRecording
+  );
+  const selectedServerMedia = selectedServerSource?.media_url
+    ? {
+        id: selectedServerSource.id,
+        url: selectedServerSource.media_url,
+        title: `${selectedServerSource.meetingTitle} — ${selectedServerSource.original_filename}`,
+      }
+    : null;
 
   useEffect(
     () => () => {
@@ -55,6 +110,7 @@ export const PlayerPage = () => {
     const url = file ? URL.createObjectURL(file) : null;
     ownedUrl.current = url;
     setSourceFile(file);
+    setSelectedServerRecording("");
     setSource(file && url ? { id: url, url, title: file.name } : null);
     setTranscript(null);
     setTranscriptError(null);
@@ -102,6 +158,52 @@ export const PlayerPage = () => {
         </p>
       </div>
       <div className="space-y-3 rounded-lg border p-4">
+        <div className="space-y-2">
+          <label
+            htmlFor="server-recording"
+            className="block text-sm font-medium"
+          >
+            {m.player_server_recordings({}, { locale })}
+          </label>
+          <select
+            id="server-recording"
+            className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+            value={selectedServerRecording}
+            disabled={
+              recordingsQuery.isPending || serverRecordings.length === 0
+            }
+            onChange={(event) => {
+              const recording = serverRecordings.find(
+                (item) => item.id === event.target.value
+              );
+              setSelectedServerRecording(recording?.id ?? "");
+              replaceFile(null);
+              if (input.current) input.current.value = "";
+            }}
+          >
+            <option value="">
+              {m.player_choose_server_recording({}, { locale })}
+            </option>
+            {serverRecordings.map((recording) => (
+              <option key={recording.id} value={recording.id}>
+                {recording.meetingTitle} — {recording.original_filename}
+              </option>
+            ))}
+          </select>
+          {meetingsQuery.isError || recordingsQuery.isError ? (
+            <p role="alert" className="text-sm text-destructive">
+              {m.player_server_recordings_error({}, { locale })}
+            </p>
+          ) : null}
+          {meetingsQuery.isSuccess &&
+          recordingsQuery.isSuccess &&
+          serverRecordings.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              {m.player_no_server_recordings({}, { locale })}
+            </p>
+          ) : null}
+        </div>
+        <div aria-hidden="true" className="border-t" />
         <label htmlFor="local-recording" className="block text-sm font-medium">
           {m.player_choose({}, { locale })}
         </label>
@@ -127,7 +229,14 @@ export const PlayerPage = () => {
           </Button>
         )}
       </div>
-      {source ? (
+      {selectedServerMedia ? (
+        <MeetingPlayer
+          key={selectedServerMedia.id}
+          source={selectedServerMedia}
+          ref={player}
+          onPositionChange={sync.onPositionChange}
+        />
+      ) : source ? (
         <div className="space-y-5">
           <MeetingPlayer
             source={source}
