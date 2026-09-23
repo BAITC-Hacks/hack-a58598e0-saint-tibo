@@ -8,28 +8,28 @@ Last commit: `420aac5df7f0f764fb8ddbbbd6d1b710d0f1ea7a` (release source; prod1ad
 - Saint Tibo only; preserve other worktrees/WIP. No private audio/transcripts
   or infrastructure secrets in git/issues; no repository test/linter suites.
 - Feature → personal lane → dev/main with --no-ff; no history rewriting.
-  Coordinator owns PR119, integration, deploys and the one Brev L4 ($25 cap).
-- Serena owns memories/this tracked index on `feat/94-serena-gpu-release-delta`.
-  Final receipts received; publish one focused knowledge commit for root integration.
+  Coordinator owns releases, deploys and the one Brev L4 ($25 cap).
+- Serena owns memories/this tracked index on `feat/94-serena-player-handoff`.
+  User authorized immediate NEXT/RELEASE handoff; combined UI proof remains pending.
   Preserve incoming notes; no product/root docs/DEMO edits or new runtime audits.
 - Preserve user test1/Совещание №1 and permanent demo identities/meetings.
   Both UI owners finished; coordinator confirms disposable dev QA cleanup0.
   Permanent demo/user data remain untouched; do not clean unrelated data.
 - Artem owns canonical /meetings UI; Ivan owns player/capture/Honcho tools.
   PR124 merged4c67498; user authorized /workspace and revoked the prior hold.
-  Coordinator reports dev6db1807 (+briefing identitycd5fbdb/docs models841).
-  Compat resolveda389a6a; [release PR127](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/pull/127) pins d675f234e05c4576b519e04299f7e95c07107b61.
+  Compat resolveda389a6a; PR127 shipped to both hosts at3676470, health/deploy PASS.
 
 ## Released code and bounded evidence
 
 - [Runtime wave delta](../memories/RELEASE-94-runtime-wave.md) owns the new facts.
-  Other domain notes remain audited core-6ed682e snapshots unless their footer
-  says otherwise; read this delta before using their old pending/#12/#15 claims.
+  Other notes retain their footer audit boundary; incoming API/DB/WEB-60 snapshots
+  describe isolated work, now merged inb435586 but awaiting combined runtime proof.
 - PR119 merged main1adbcb5 (tree=420aac5): published ready tips, #12 UI, #15 inbox,
   #69 extraction/R3, #113 GPU, #101 and player fixes 89525fa/7d57445, README updates.
   Original Devin sources 590aaf4 are preserved in its ancestry.
-- Historical dev420/prod1adbcb5 health/UI proofs remain valid for that baseline.
-  New deploy/build is in progress; actual new runtime SHA follows PR127/#94 receipt.
+- [Latest runtime receipt: #94](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/94) resolves current hosts;420/1adb remain historical processing proofs.
+  Both hosts3676470 passed; devfd8e936 deployed/healthy. Newb435586 build/deploy in progress; UI proof pending.
+  Includes9197250 canvas0009/session mock/landing/capture and12abf23 player/review integration.
 - [Prod1adbcb5 extraction PASS](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/113#issuecomment-5794927457):23900ms mixed→39.07s,4segments/2speakers/4turns;
   CUDA/new prompt, empty draft/manualr2/export409, ACL/auth PASS, both QAcleanup0; #113 CLOSED.
 - [#113 GPU](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/113#issuecomment-5794753625): actual L4, pinned provenance, cancel/heartbeat cleanup 0;
@@ -53,8 +53,8 @@ Last commit: `420aac5df7f0f764fb8ddbbbd6d1b710d0f1ea7a` (release source; prod1ad
 
 ## Domain index
 
-- [API](../memories/API-01-backend-architecture.md), [recordings](../memories/API-02-meetings-recordings.md), [DEV mocks](../memories/API-03-mock.md), [jobs/results](../memories/API-10-processing-results.md), [review/export](../memories/API-13-review-export.md)
-- [Auth](../memories/AUTH-01-auth-access.md), [DB](../memories/DB-01-schemas-migrations.md), [stack](../memories/STACK-01-stack-layout.md)
+- [API](../memories/API-01-backend-architecture.md), [recordings](../memories/API-02-meetings-recordings.md), [DEV mocks](../memories/API-03-mock.md), [jobs/results](../memories/API-10-processing-results.md), [review/export](../memories/API-13-review-export.md), [canvas API](../memories/API-60-meeting-canvas.md)
+- [Auth](../memories/AUTH-01-auth-access.md), [DB](../memories/DB-01-schemas-migrations.md), [canvas DB](../memories/DB-60-meeting-canvas.md), [stack](../memories/STACK-01-stack-layout.md)
 - [Deploy](../memories/INFRA-01-environments-deploy.md), [capture kernel](../memories/INFRA-22-CAPTURE.md), [connectors/Honcho](../memories/INFRA-23-connectors.md), [models](../memories/MODELS-01-stt-pipeline.md)
-- [Workspace](../memories/WEB-01-frontend.md), [player](../memories/WEB-19-player.md), [transcript](../memories/WEB-20-transcript-sync.md), [capture](../memories/WEB-21-CAPTURE.md), [media cancellation](../memories/WEB-102-media-abort.md)
+- [Workspace](../memories/WEB-01-frontend.md), [canvas UI](../memories/WEB-60-meeting-canvas.md), [player](../memories/WEB-19-player.md), [transcript](../memories/WEB-20-transcript-sync.md), [capture](../memories/WEB-21-CAPTURE.md), [media cancellation](../memories/WEB-102-media-abort.md)
 - [Team](../memories/TEAM-01-workflow.md), [proof](../memories/TEST-01-verification.md)

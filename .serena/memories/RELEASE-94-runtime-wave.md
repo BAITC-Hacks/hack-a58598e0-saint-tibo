@@ -2,10 +2,9 @@
 
 ## Current Behavior
 
-- Historical PR119 proof baseline: `1adbcb5354ae0dd9cf167eade325f047c28454c5`, tree420.
-  Coordinator verified exact prod symlink, deploy exit0, HTTPS health, healthy
-  backend/frontend/Postgres and running worker; dev420 is deployed/healthy.
-  This delta supersedes core-6ed682e snapshots only for the changes listed here.
+- [Latest runtime receipt: #94](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/94); PR127 brought both hosts to
+  36764706c41a628e3bcf177511da20741f11858c with deploy exit0/health PASS.
+  Historical processing proofs below remain tied to dev420/prod1adbcb5.
 - Release includes #12 UI, #15 owner inbox, extract, #101, sentinel→null, optional
   R3/#103 code and general few-shot prompt1e6f61c (10 lines, no case answer).
   Migrations include diarization0007/extraction0008→0007; reminders add none.
@@ -54,7 +53,9 @@
   FAIL despite faster completion/18 actions. No example leakage; no more prompt loops.
 - Both #70 TTS runs finished: KK27 segments/seven actions has quality misses;
   mixed11 segments/zero actions missed all five expected tasks. Human quality unverified.
-- [Latest release PR127](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/pull/127) pins d675f234e05c4576b519e04299f7e95c07107b61; compat resolveda389a6a.
-  Includes authorized PR124/workspace+knowledge; actual new runtime follows PR127/#94 receipt.
+- Combinedb435586 (9197250 +12abf23) build/deploy in progress; UI proof pending.
+  Coordinator: single-head0009 read-only PASS, fresh prod backup verified60041256.
+  Adds canvas0009/API-DB-WEB60, session mock/landing/capture; /workspace→/player,
+  saved review/badge and expandable workspace. Processing receipts remain historical.
 
 Last commit: `420aac5df7f0f764fb8ddbbbd6d1b710d0f1ea7a` (release source; prod1adbcb5 health and GPU case2 reported by coordinator).
