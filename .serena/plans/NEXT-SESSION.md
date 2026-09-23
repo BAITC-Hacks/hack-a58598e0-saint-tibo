@@ -18,7 +18,7 @@ Last commit: `420aac5df7f0f764fb8ddbbbd6d1b710d0f1ea7a` (release source; prod1ad
 - Artem owns canonical /meetings UI; Ivan owns player/capture/Honcho tools.
   PR124 merged4c67498; user authorized /workspace and revoked the prior hold.
   Coordinator reports dev6db1807 (+briefing identitycd5fbdb/docs models841).
-  Preserve source; compatibility guard pending, runtime remains1adbcb5.
+  Compat resolveda389a6a; [release PR127](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/pull/127) pins d675f234e05c4576b519e04299f7e95c07107b61.
 
 ## Released code and bounded evidence
 
@@ -28,8 +28,8 @@ Last commit: `420aac5df7f0f764fb8ddbbbd6d1b710d0f1ea7a` (release source; prod1ad
 - PR119 merged main1adbcb5 (tree=420aac5): published ready tips, #12 UI, #15 inbox,
   #69 extraction/R3, #113 GPU, #101 and player fixes 89525fa/7d57445, README updates.
   Original Devin sources 590aaf4 are preserved in its ancestry.
-- Dev420 is deployed/healthy; final UI receipt confirms the combined release.
-  Exact prod1adbcb5 symlink/deploy exit0/services/HTTPS health PASS per coordinator.
+- Historical dev420/prod1adbcb5 health/UI proofs remain valid for that baseline.
+  New deploy/build is in progress; actual new runtime SHA follows PR127/#94 receipt.
 - [Prod1adbcb5 extraction PASS](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/113#issuecomment-5794927457):23900ms mixed→39.07s,4segments/2speakers/4turns;
   CUDA/new prompt, empty draft/manualr2/export409, ACL/auth PASS, both QAcleanup0; #113 CLOSED.
 - [#113 GPU](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/113#issuecomment-5794753625): actual L4, pinned provenance, cancel/heartbeat cleanup 0;
