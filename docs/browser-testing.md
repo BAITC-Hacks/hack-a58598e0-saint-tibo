@@ -7,7 +7,7 @@
 | Участник | Ветка | Стартовый URL | SSH alias |
 | --- | --- | --- | --- |
 | Данил | `danil` | https://dev-danil.saint-tibo.win | `saint-dev-danil` |
-| Иван | `ivan` | https://dev-ivan.saint-tibo.win | `saint-dev-ivan` |
+| Иван | `ivan/lane` | https://dev-ivan.saint-tibo.win | `saint-dev-ivan` |
 | Артём | `artem` | https://dev-artem.saint-tibo.win | `saint-dev-artem` |
 
 Ветки не развёртываются автоматически: адрес показывает последний вручную

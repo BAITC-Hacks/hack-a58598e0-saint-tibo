@@ -3,7 +3,7 @@
 | Ветка | Участник / назначение |
 | --- | --- |
 | `danil` | [rldyourmnd](https://github.com/rldyourmnd), интеграция и релизы |
-| `ivan` | [R3flector](https://github.com/R3flector) |
+| `ivan/lane` | [R3flector](https://github.com/R3flector) |
 | `artem` | [letya999](https://github.com/letya999) |
 | `dev` | Общая интеграция |
 | `main` | Согласованная стабильная версия |
@@ -52,7 +52,7 @@ git merge --no-ff danil
 git push origin dev
 ```
 
-Участники используют соответственно `ivan` и `artem`.
+Иван использует `ivan/lane` и ветки задач `ivan/*`; Артём — `artem`.
 Конфликты разрешаются до push с проверкой общего результата.
 Историю общих веток не переписывать, force-push и squash не применять.
 Статус реализации и доказательство проверки записывать в issue.

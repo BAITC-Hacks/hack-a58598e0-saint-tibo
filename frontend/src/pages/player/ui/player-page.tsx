@@ -8,14 +8,38 @@ import type {
   MeetingPlayerHandle,
 } from "#/shared/ui/meeting-player";
 import { Button } from "#/shared/ui/shadcn/button";
+import {
+  TranscriptPanel,
+  useTranscriptSync,
+} from "#/shared/ui/transcript-sync";
+import type { TranscriptSegment } from "#/shared/ui/transcript-sync";
+
+import { readLocalTranscript } from "../lib/local-transcript";
+import type { LocalTranscriptError } from "../lib/local-transcript";
 
 /** Local playback lets the media component be exercised before server ingestion lands. */
 export const PlayerPage = () => {
   const locale = useLocale();
   const [source, setSource] = useState<MediaSource | null>(null);
+  const [sourceFile, setSourceFile] = useState<File | null>(null);
+  const [transcript, setTranscript] = useState<{
+    name: string;
+    segments: TranscriptSegment[];
+  } | null>(null);
+  const [transcriptError, setTranscriptError] =
+    useState<LocalTranscriptError | null>(null);
+  const [transcriptLoading, setTranscriptLoading] = useState(false);
   const ownedUrl = useRef<string | null>(null);
   const player = useRef<MeetingPlayerHandle>(null);
   const input = useRef<HTMLInputElement>(null);
+  const transcriptInput = useRef<HTMLInputElement>(null);
+  const generation = useRef(0);
+  const sync = useTranscriptSync({
+    recordingId: source?.id ?? "",
+    resultVersionId: "local-stt",
+    segments: transcript?.segments ?? [],
+    seek: (positionMs) => player.current?.seek(positionMs),
+  });
 
   useEffect(
     () => () => {
@@ -25,11 +49,46 @@ export const PlayerPage = () => {
   );
 
   const replaceFile = (file: File | null) => {
+    generation.current++;
     player.current?.pause();
     if (ownedUrl.current) URL.revokeObjectURL(ownedUrl.current);
     const url = file ? URL.createObjectURL(file) : null;
     ownedUrl.current = url;
+    setSourceFile(file);
     setSource(file && url ? { id: url, url, title: file.name } : null);
+    setTranscript(null);
+    setTranscriptError(null);
+    setTranscriptLoading(false);
+    if (transcriptInput.current) transcriptInput.current.value = "";
+  };
+
+  const importTranscript = async (file: File | null) => {
+    if (!file || !source || !sourceFile) return;
+    const currentGeneration = generation.current;
+    setTranscriptLoading(true);
+    setTranscriptError(null);
+    try {
+      const segments = await readLocalTranscript(file, sourceFile, source.id);
+      if (currentGeneration === generation.current)
+        setTranscript({ name: file.name, segments });
+    } catch (error) {
+      if (currentGeneration === generation.current) {
+        setTranscript(null);
+        const reason = error instanceof Error ? error.message : "invalid";
+        setTranscriptError(
+          reason === "mismatch" || reason === "too_large" ? reason : "invalid"
+        );
+      }
+    } finally {
+      if (currentGeneration === generation.current) setTranscriptLoading(false);
+      if (transcriptInput.current) transcriptInput.current.value = "";
+    }
+  };
+
+  const transcriptErrors = {
+    invalid: m.player_transcript_invalid({}, { locale }),
+    mismatch: m.player_transcript_mismatch({}, { locale }),
+    too_large: m.player_transcript_too_large({}, { locale }),
   };
 
   return (
@@ -69,7 +128,51 @@ export const PlayerPage = () => {
         )}
       </div>
       {source ? (
-        <MeetingPlayer source={source} ref={player} />
+        <div className="space-y-5">
+          <MeetingPlayer
+            source={source}
+            ref={player}
+            onPositionChange={sync.onPositionChange}
+          />
+          <div className="space-y-3 rounded-lg border p-4">
+            <label
+              htmlFor="local-transcript"
+              className="block text-sm font-medium"
+            >
+              {m.player_transcript_choose({}, { locale })}
+            </label>
+            <input
+              ref={transcriptInput}
+              id="local-transcript"
+              type="file"
+              accept="application/json,.json"
+              className="block w-full min-w-0 text-sm file:me-3 file:rounded-md file:border file:bg-background file:px-3 file:py-2 file:text-foreground"
+              onChange={(event) => {
+                void importTranscript(event.target.files?.[0] ?? null);
+              }}
+            />
+            <p className="text-sm text-muted-foreground">
+              {m.player_transcript_help({}, { locale })}
+            </p>
+            {transcriptLoading && (
+              <output>{m.player_transcript_loading({}, { locale })}</output>
+            )}
+            {transcriptError && (
+              <p role="alert" className="text-sm text-destructive">
+                {transcriptErrors[transcriptError]}
+              </p>
+            )}
+            {transcript && (
+              <output className="block text-sm">
+                {m.player_transcript_loaded(
+                  { name: transcript.name, count: transcript.segments.length },
+                  { locale }
+                )}
+              </output>
+            )}
+          </div>
+          {transcript && <TranscriptPanel sync={sync} />}
+        </div>
       ) : (
         <p className="text-sm text-muted-foreground">
           {m.player_empty({}, { locale })}
