@@ -101,7 +101,7 @@ export function WorkspacePage() {
           </Button>
         </div>
         <RequestError error={meetings.error} />
-        {meetings.isPending && <p role="status">{t("workspace_loading")}</p>}
+        {meetings.isPending && <output>{t("workspace_loading")}</output>}
         {meetings.data?.items.length === 0 && (
           <p>{t("workspace_empty_meetings")}</p>
         )}
@@ -333,7 +333,7 @@ function MeetingWorkspace({ meeting }: { meeting: MeetingRead }) {
           {t(upload.isPending ? "workspace_uploading" : "workspace_upload")}
         </Button>
         <RequestError error={upload.error || recordings.error} />
-        {recordings.isPending && <p role="status">{t("workspace_loading")}</p>}
+        {recordings.isPending && <output>{t("workspace_loading")}</output>}
         {recordings.data?.items.length === 0 && (
           <p>{t("workspace_empty_recordings")}</p>
         )}
@@ -408,6 +408,7 @@ function RecordingWorkspace({
       query: { limit: 100 },
     })
   );
+  const refetchResults = results.refetch;
   const latest = jobs.data?.items[0];
   const active =
     jobs.data?.items.some((job) =>
@@ -418,18 +419,21 @@ function RecordingWorkspace({
     onError: () => {},
     onSuccess: async () => {
       requestKey.current = null;
+      setResultId("");
       await jobs.refetch();
     },
   });
+  const selectedResultId =
+    resultId ||
+    (latest?.status === "succeeded" ? latest.result_version_id : "");
   const result =
-    results.data?.items.find((item) => item.id === resultId) ??
+    results.data?.items.find((item) => item.id === selectedResultId) ??
     results.data?.items[0];
   useEffect(() => {
     if (latest?.status === "succeeded" && latest.result_version_id) {
-      setResultId(latest.result_version_id);
-      void results.refetch();
+      void refetchResults();
     }
-  }, [latest?.id, latest?.status, latest?.result_version_id]);
+  }, [latest?.id, latest?.status, latest?.result_version_id, refetchResults]);
   const canProcess =
     !!recording.media_url &&
     (recording.status === "ready" ||
@@ -444,9 +448,9 @@ function RecordingWorkspace({
     <>
       <section className={sectionClass}>
         {recording.status === "incomplete" && (
-          <p role="status" className="font-medium">
+          <output className="block font-medium">
             {t("workspace_incomplete")}
-          </p>
+          </output>
         )}
         {recording.status === "receiving" && <p>{t("workspace_receiving")}</p>}
         {recording.status === "failed" && (
@@ -518,12 +522,12 @@ function RecordingWorkspace({
         )}
         <RequestError error={start.error || jobs.error || results.error} />
         {statusKey && (
-          <p role="status">
+          <output>
             {t(statusKey)}
             {latest?.progress != null && active
               ? ` · ${Math.round(latest.progress * 100)}%`
               : ""}
-          </p>
+          </output>
         )}
         <p className="text-sm text-muted-foreground">
           {t("workspace_manual_notice")}
@@ -632,7 +636,7 @@ function ResultWorkspace({
         />
       )}
       <RequestError error={segments.error || review.error} />
-      {segments.isPending && <p role="status">{t("workspace_loading")}</p>}
+      {segments.isPending && <output>{t("workspace_loading")}</output>}
       {segments.isSuccess && rows.length === 0 && (
         <p>{t("workspace_empty_transcript")}</p>
       )}

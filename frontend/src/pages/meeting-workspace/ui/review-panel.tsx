@@ -832,12 +832,9 @@ export function ReviewPanel({
                         </button>
                       )}
                       {assignmentPending && (
-                        <p
-                          role="status"
-                          className="text-xs font-medium text-amber-700 dark:text-amber-300"
-                        >
+                        <output className="text-xs font-medium text-amber-700 dark:text-amber-300">
                           {t.voiceAssignmentPending}
-                        </p>
+                        </output>
                       )}
                       {speaker.merged_into_speaker_id && (
                         <p className="text-xs text-muted-foreground">

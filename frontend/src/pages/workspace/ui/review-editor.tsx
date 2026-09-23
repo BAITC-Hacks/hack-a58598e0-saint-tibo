@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { useFieldArray, useForm } from "react-hook-form";
+import { useFieldArray, useForm, useWatch } from "react-hook-form";
 
 import {
   backendClient,
@@ -180,6 +180,7 @@ export function ReviewEditor({
     name: "actions",
     keyName: "formId",
   });
+  const watched = useWatch({ control: form.control });
   const save = useMutation({
     mutationFn: async (body: ReviewUpdate) =>
       (
@@ -261,9 +262,9 @@ export function ReviewEditor({
         </span>
       </div>
       {initial.saved_at && (
-        <p role="status" className="text-sm text-muted-foreground">
+        <output className="block text-sm text-muted-foreground">
           {t("workspace_saved")} · {new Date(initial.saved_at).toLocaleString()}
-        </p>
+        </output>
       )}
       {initial.is_incomplete && (
         <p className="text-sm font-medium">{t("workspace_incomplete")}</p>
@@ -300,7 +301,7 @@ export function ReviewEditor({
               {t("workspace_summary_sources")}
             </h3>
             <SourcePicker
-              value={form.watch("sourceIds")}
+              value={watched.sourceIds ?? []}
               onChange={(ids) => {
                 form.setValue("sourceIds", ids, { shouldDirty: true });
                 setApprove(false);
@@ -357,11 +358,11 @@ export function ReviewEditor({
                       {participant.display_name}
                     </option>
                   ))}
-                  {!!form.watch(`actions.${index}.assignee`) &&
+                  {!!watched.actions?.[index]?.assignee &&
                     !knownParticipants.some(
-                      (p) => p.id === form.watch(`actions.${index}.assignee`)
+                      (p) => p.id === watched.actions?.[index]?.assignee
                     ) && (
-                      <option value={form.watch(`actions.${index}.assignee`)}>
+                      <option value={watched.actions[index].assignee}>
                         {t("workspace_no_access")}
                       </option>
                     )}
@@ -415,7 +416,7 @@ export function ReviewEditor({
               </div>
               <div className="sm:col-span-2">
                 <SourcePicker
-                  value={form.watch(`actions.${index}.sourceIds`)}
+                  value={watched.actions?.[index]?.sourceIds ?? []}
                   onChange={(ids) => {
                     form.setValue(`actions.${index}.sourceIds`, ids, {
                       shouldDirty: true,

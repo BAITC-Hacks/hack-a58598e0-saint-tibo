@@ -17,7 +17,7 @@ export function speakerColor(index: number) {
 /** Combine adjacent turns of the same voice to prevent rapid solo seeks. */
 export function mergeSpeakerIntervals(intervals: readonly SpeakerInterval[]) {
   const merged: SpeakerInterval[] = [];
-  for (const interval of [...intervals].sort((a, b) => a.startMs - b.startMs)) {
+  for (const interval of intervals.toSorted((a, b) => a.startMs - b.startMs)) {
     const previous = merged.at(-1);
     if (
       previous?.speakerId === interval.speakerId &&
