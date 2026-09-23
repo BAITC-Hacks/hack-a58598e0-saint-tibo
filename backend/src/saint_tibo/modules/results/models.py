@@ -15,6 +15,9 @@ class ResultVersion(UUIDPrimaryKey, Timestamps, Base):
     recording_id: Mapped[UUID] = mapped_column(
         ForeignKey("app.recordings.id", ondelete="CASCADE"), index=True
     )
+    canvas_version_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("app.meeting_canvases.id", ondelete="SET NULL")
+    )
     job_id: Mapped[UUID] = mapped_column(
         ForeignKey("app.processing_jobs.id", ondelete="CASCADE"), unique=True
     )

@@ -1,5 +1,19 @@
 # NEXT-SESSION — core release handoff
 
+## Isolated #60 lane (2026-09-23)
+
+- `feat/60-meeting-canvas` was cut from fresh `origin/dev`
+  `e3a241fc84040ce2622af0cb8102b81b6dd34a51`. Code commit:
+  `1f344997069541a5d3a34a9fa2766b512682673e`. No push, merge, or deploy.
+- API/DB/UI contracts and browser proof: [API-60](../memories/API-60-meeting-canvas.md),
+  [DB-60](../memories/DB-60-meeting-canvas.md), [WEB-60](../memories/WEB-60-meeting-canvas.md).
+- `alembic check`, canvas integration check, frontend typecheck, targeted lint,
+  OpenAPI check and production build passed. Full repository hooks remain red on
+  pre-existing frontend formatting and backend processing line-length issues;
+  the code commit bypassed those hooks after targeted checks.
+- #61 templates stay out until #60 contract integration. Release awaits owner
+  instruction; preserve #83 file ownership and do not merge dev/main here.
+
 Snapshot: 2026-09-23; refresh refs and #94 before acting.
 Last commit: `6ed682e734620ec6cc710ad59192350e3f46ed39` (pinned core; production 7d5b481 LIVE-OK; TEST-01).
 
