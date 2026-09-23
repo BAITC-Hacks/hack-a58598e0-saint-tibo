@@ -1,85 +1,42 @@
-# Saint Tibo: integration and delivery plan
+# Saint Tibo: remaining integration plan
 
-Owner: Danil (`rldyourmnd`). Coordination: [#94](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/94).
-This plan implements only Danil's assigned features. Artem owns UI/design;
-Ivan owns the player and meeting-platform integrations.
+Owner: Danil (rldyourmnd). Shared coordination and live receipts: [#94](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/94). Artem owns UI/design; Ivan owns player/capture. Delegated adapters keep narrow file ownership.
 
-## Current wave
+## Delivered slice
 
-Completed: branch/session audit, reviewed-version persistence, protected export,
-independent HTTPS verification and the first full knowledge synchronization.
-#14 is closed. The current release does not wait for optional integrations or
-claim automatic extraction, diarization or multilingual quality complete.
+The audited recording → local STT → manual review → PDF/DOCX path is merged into main in #114 at 7d5b481, with the same tree as verified dev6ed682e. The canonical browser journey passed approval reset, conflict recovery, downloads, playback and reload persistence. #14, #104, #105 and #107 are closed. See [current-state.md](current-state.md).
 
-1. Audit every local worktree and remote tip before changing shared refs.
-   Preserve uncommitted, untracked and ignored material; no cleanup is needed
-   to start a clean task. Distinguish ancestry from feature acceptance.
-2. Deliver #13/#14 as one coherent backend slice: owner-scoped review,
-   revision conflict handling, immutable reviewed snapshots, evidence links,
-   and PDF/DOCX downloads from a selected reviewed revision. Extend the existing
-   result model and renderer. Do not introduce a second result store or fake
-   automatic extraction while #69 is unfinished.
-3. Publish the real API paths and regenerate OpenAPI/TypeScript SDK in the
-   same feature. Notify the UI's coordination issues of differences from the
-   temporary mock adapter; leave Artem's components under his ownership.
-4. Merge ready feature → `danil` → fresh `dev` with history-preserving merges.
-   Integrate teammates' already-published shared changes without silently
-   dropping their work. Only one task deploys `dev-danil` at a time.
-5. Build and deploy the exact integrated commit. Independently exercise
-   authenticated review/save/reload, stale revision rejection, invalid or
-   foreign evidence rejection, owner isolation and both export formats.
-   Check RU/KK text and actual document rendering. Remove only data created
-   for this verification. Repository test suites remain disabled by the owner.
-6. Refresh all Serena domains and the next-session index against the final
-   code, issues and live receipt. Commit knowledge separately. Mark partial
-   features accurately and release claims only after a durable handoff.
+## Critical path
 
-Production is a separate release boundary. A successful dev slice is not a
-claim that the complete case is ready. Keep `main` on its established release
-until the candidate and its remaining limitations have been evaluated.
-
-## Next Danil product slices
-
-| Order | Work | Exit evidence |
+| Work | Remaining delivery | Owner |
 | --- | --- | --- |
-| 1 | Active: continue preserved #69 work; connect accepted local extraction to #13 | Real case evaluation of owners, deadlines, corrected decisions and source IDs; no cloud requests or invented unknowns |
-| 2 | #12 diarization and participant confirmation | Stable speaker labels and human-confirmed identities; speaker and action assignee remain distinct |
-| 3 | Active measured blocker: #11/#70 RU, KK and mixed-language quality | Suitable recordings with separate human references; measured results, not locale labels |
-| 4 | #26 complete case walkthrough and reproducible README | A new operator runs recording → transcript → reviewed actions/summary → downloadable minutes |
-| 5 | #15 curator reminders | Upcoming/overdue reminder from a confirmed action item without unwanted external disclosure |
+| Current core release | Completed at 7d5b481: real login, processing, review/export and scoped cleanup | Coordinator / verifier |
+| #113 speed | Pinned turbo on private NVIDIA CUDA; same-recording elapsed time, cancellation and cleanup | Danil GPU worker / coordinator |
+| #12 speakers | Real review UI plus published backend; complete live recording scenario | Danil backend / delegated UI |
+| #69 / #13 draft | Integrate transcribe→diarize→extract, preserve unknowns/evidence, prove real HTTP job and manual correction | Danil extraction worker |
+| #15 reminders | Owner inbox from explicit deadlines of current reviewed actions; automatic UI refresh, timezone and no stale closed actions | Danil backend / delegated UI |
+| #70 quality | RU/KK/mixed recordings with explicit references; retain known name/deadline limits | Danil |
+| #26 demo | Keep DEMO, README, current-state and Serena aligned with actual release | Coordinator / knowledge owner |
 
-Dependencies can overlap in isolated branches after file claims are agreed.
-Do not let optional organizational memory, extra channels or unbacked screens
-displace completion of the required path. The README/reproducibility criterion
-has the same 25-point weight as implementation in the case rubric.
+These slices proceed in parallel under separate file claims. No broad workflow engine, new ASR model, external messaging channel or optional memory system is needed. Reference systems inform small implementations; their data, credentials and branding are not imported.
 
-## Contract requirements that must survive integration
+## Integration order
 
-- Unknown assignee/deadline remains unknown. A department may be the assignee.
-- Preserve `due_text`; normalize only from explicit meeting date/timezone and
-  supported meaning. Event-based or contradictory deadlines stay explicit.
-- Validate source segments against the same recording/result, derive playback
-  time from real segments, and preserve evidence for later deadline corrections.
-- Concurrent review must reject stale revision; reprocessing must not destroy
-  an already reviewed snapshot or change an exported historical revision.
-- A rendered file must exist and be valid before export is called successful.
-- User content remains data, including text that resembles model instructions.
-- Local/self-hosted inference has no external fallback; logs exclude meeting
-  text and secrets. Browser mocks must never masquerade as model output.
+1. Fetch fresh refs and preserve other source, untracked work and models.
+2. Merge ready features through Danil's lane into dev with history preserved. Keep one migration head: released0005, diarization0007→0005, extraction0008→0007.
+3. Build and manually deploy the integrated candidate. Only the coordinator uses the Danil deployment slot; do not interrupt another live scenario.
+4. Exercise the changed actual path. Do not label a local fixture proof as a complete live processing flow.
+5. Pin the verified release, merge into main and deploy exact origin/main. New dev work can continue separately.
+6. Publish exact SHA, scenario, remaining limits and cleanup. Update knowledge and close only issues with complete acceptance.
 
-## Coordination rules
+## Invariants
 
-Use fresh GitHub assignees and file claims, not an old chat's plan. Feature
-workers push only their branch; the coordinator serializes shared integration
-and deployment for this wave. The Serena worker writes knowledge only. The
-independent verifier changes neither product code nor deployment settings.
+- Unknown speaker/assignee/deadline remains unknown. Acoustic clusters do not identify people.
+- Preserve due_text and corrections; do not invent dates.
+- Evidence belongs to the same recording/result. Preserve canonical timing and actual model provenance.
+- Edits clear approval unless explicitly confirmed. CAS rejects stale saves; reprocessing preserves historical reviewed snapshots/exports.
+- User content remains data, including prompt-like text. Self-hosted inference has no cloud fallback; logs omit meeting content/secrets.
+- Distinguish actual output from fixtures. Keep permanent demo accounts; clean only each verifier's own temporary data.
+- #102/#106 need remaining live acceptance. Broader #10/#11/#13/#70 are not complete merely because the core works.
 
-Evidence belongs in the relevant issue with exact SHA, URL, exercised scenario,
-remaining limits and cleanup result. Keep #10/#11/#13 open when their broader
-acceptance is incomplete. Close #14 only after real reviewed-version downloads
-and document checks pass; a renderer-only smoke is insufficient.
-
-The administrator-only GitHub merge-settings discrepancy and held Ivan branches
-are recorded in [current-state.md](current-state.md). No force-push, squash,
-rebase, blind worktree deletion, or removal of license/provenance records is
-part of this plan.
+No force-push, squash, rebase, blind cleanup or removal of license/model provenance is part of this plan.
