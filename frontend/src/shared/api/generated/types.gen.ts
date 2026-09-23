@@ -22,6 +22,28 @@ export type AccessPolicy = {
 export type ActionItemStatus = 'open' | 'in_progress' | 'done' | 'cancelled';
 
 /**
+ * Answer
+ */
+export type Answer = {
+    /**
+     * Answer
+     */
+    answer: string;
+    /**
+     * Meeting Count
+     */
+    meeting_count: number;
+    /**
+     * Participant Count
+     */
+    participant_count: number;
+    /**
+     * Provider
+     */
+    provider?: string;
+};
+
+/**
  * CurrentUser
  */
 export type CurrentUser = {
@@ -568,6 +590,16 @@ export type ProcessingJobRead = {
 };
 
 /**
+ * Question
+ */
+export type Question = {
+    /**
+     * Query
+     */
+    query: string;
+};
+
+/**
  * RecordingCreate
  */
 export type RecordingCreate = {
@@ -661,6 +693,106 @@ export type RecordingSource = 'file' | 'live' | 'teams' | 'google_meet' | 'zoom'
  * RecordingStatus
  */
 export type RecordingStatus = 'receiving' | 'ready' | 'incomplete' | 'failed';
+
+/**
+ * ReminderPage
+ */
+export type ReminderPage = {
+    /**
+     * Channel
+     */
+    channel?: 'in_app';
+    /**
+     * Curator Policy
+     */
+    curator_policy?: 'meeting_owner';
+    /**
+     * Evaluated At
+     */
+    evaluated_at: string;
+    /**
+     * Items
+     */
+    items: Array<ReminderRead>;
+    /**
+     * Limit
+     */
+    limit: number;
+    /**
+     * Offset
+     */
+    offset: number;
+    /**
+     * Total
+     */
+    total: number;
+};
+
+/**
+ * ReminderRead
+ */
+export type ReminderRead = {
+    /**
+     * Action Item Id
+     */
+    action_item_id: string;
+    /**
+     * Assignee Participant Id
+     */
+    assignee_participant_id: string | null;
+    /**
+     * Assignee Text
+     */
+    assignee_text: string | null;
+    /**
+     * Days Until Due
+     */
+    days_until_due: number;
+    /**
+     * Due Date
+     */
+    due_date: string;
+    /**
+     * Due Text
+     */
+    due_text: string | null;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Kind
+     */
+    kind: 'upcoming' | 'overdue';
+    /**
+     * Meeting Id
+     */
+    meeting_id: string;
+    /**
+     * Meeting Title
+     */
+    meeting_title: string;
+    /**
+     * Recording Id
+     */
+    recording_id: string;
+    /**
+     * Result Version Id
+     */
+    result_version_id: string;
+    /**
+     * Revision
+     */
+    revision: number;
+    /**
+     * Text
+     */
+    text: string;
+    /**
+     * Timezone
+     */
+    timezone: string;
+};
 
 /**
  * ResultVersionRead
@@ -2922,6 +3054,68 @@ export type ExportReviewedResultResponses = {
 
 export type ExportReviewedResultResponse = ExportReviewedResultResponses[keyof ExportReviewedResultResponses];
 
+export type ExtractResultDraftData = {
+    body?: never;
+    path: {
+        /**
+         * Meeting Id
+         */
+        meeting_id: string;
+        /**
+         * Recording Id
+         */
+        recording_id: string;
+        /**
+         * Result Version Id
+         */
+        result_version_id: string;
+    };
+    query?: never;
+    url: '/api/v1/meetings/{meeting_id}/recordings/{recording_id}/results/{result_version_id}/extract';
+};
+
+export type ExtractResultDraftErrors = {
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ErrorResponse;
+    /**
+     * Internal Server Error
+     */
+    500: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
+};
+
+export type ExtractResultDraftError = ExtractResultDraftErrors[keyof ExtractResultDraftErrors];
+
+export type ExtractResultDraftResponses = {
+    /**
+     * Successful Response
+     */
+    200: ReviewRead;
+};
+
+export type ExtractResultDraftResponse = ExtractResultDraftResponses[keyof ExtractResultDraftResponses];
+
 export type GetResultReviewData = {
     body?: never;
     path: {
@@ -3113,6 +3307,97 @@ export type ListTranscriptSegmentsResponses = {
 };
 
 export type ListTranscriptSegmentsResponse = ListTranscriptSegmentsResponses[keyof ListTranscriptSegmentsResponses];
+
+export type AskOrganizationQuestionData = {
+    body: Question;
+    path?: never;
+    query?: never;
+    url: '/api/v1/org/questions';
+};
+
+export type AskOrganizationQuestionErrors = {
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ErrorResponse;
+    /**
+     * Internal Server Error
+     */
+    500: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
+};
+
+export type AskOrganizationQuestionError = AskOrganizationQuestionErrors[keyof AskOrganizationQuestionErrors];
+
+export type AskOrganizationQuestionResponses = {
+    /**
+     * Successful Response
+     */
+    200: Answer;
+};
+
+export type AskOrganizationQuestionResponse = AskOrganizationQuestionResponses[keyof AskOrganizationQuestionResponses];
+
+export type ListRemindersData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Limit
+         */
+        limit?: number;
+        /**
+         * Offset
+         */
+        offset?: number;
+    };
+    url: '/api/v1/reminders';
+};
+
+export type ListRemindersErrors = {
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ErrorResponse;
+    /**
+     * Internal Server Error
+     */
+    500: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
+};
+
+export type ListRemindersError = ListRemindersErrors[keyof ListRemindersErrors];
+
+export type ListRemindersResponses = {
+    /**
+     * Successful Response
+     */
+    200: ReminderPage;
+};
+
+export type ListRemindersResponse = ListRemindersResponses[keyof ListRemindersResponses];
 
 export type GetLivenessData = {
     body?: never;
