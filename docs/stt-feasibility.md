@@ -23,6 +23,53 @@ STT исполняется отдельным worker-процессом, вне 
 | Локальные прогоны кейса на Mac | Ранее выполнены MLX Whisper base/small; не являются измерением Linux CPU и KK |
 | RU/KK/mixed точность, Linux RTF/RSS, egress isolation | Ещё не проверены |
 
+### Локальный прогон на Apple M5 Max, 23 сентября 2026
+
+Отдельное окружение Python 3.13.15 в игнорируемом `.data/stt/venv`:
+`faster-whisper==1.2.1`, `ctranslate2==4.8.2`, CPU INT8, 4 потока,
+beam 5, без VAD. Публичный bundle small взят по revision
+`536b0662742c02347bc0e980a01041f333bce120`; SHA256 `model.bin`:
+`3e305921506d8872816023e4c273e75d2419fb89b24da97b4fe7bce14170d671`.
+Обе записи декодированы локально через PyAV с явным выбором аудиопотока
+в PCM16/16 kHz/mono WAV. Аудио и транскрипты никуда не отправлялись.
+
+| Запись | Длительность | Язык auto | Inference / RTF | Пик RSS | Сегменты / ошибки границ |
+| --- | ---: | --- | ---: | ---: | ---: |
+| №1 | 274,250 с | `ru` | 32,326 с / 0,1179 | 1 315 848 192 B | 77 / 0 |
+| №2 | 206,031 с | `ru` | 26,901 с / 0,1306 | 1 271 463 936 B | 82 / 0 |
+
+Все сегменты имеют непустой текст, допустимые границы и неубывающие
+начала. Это структурная проверка, **не** оценка точности речи: дословного
+эталона и ручной языковой проверки пока нет. WER/CER не рассчитаны;
+эти результаты не оценивают KK или переключение RU/KK и не заменяют
+Linux benchmark для #11. Метрики, транскрипты, WAV и полный список
+версий находятся только в игнорируемом `.data/stt/` с режимом файлов
+0600. SHA256 исходных MP3: №1
+`0f18f11a6f65f9a2bad6497f387b224c775885a03a811edf3fb15c5238db6f54`,
+№2 `b7a42833d0691b99af300a24c7dcdeaf05378355633fb867ef6bfc9e2a8f8f46`.
+
+На macOS прогон выполнялся через `sandbox-exec` с профилем
+`(version 1) (allow default) (deny network*)`. Контрольное TCP-подключение
+из того же профиля вернуло `PermissionError` (`errno 1`); это внешняя
+проверка сетевой границы, а поле CLI `network_isolation_verified`
+остаётся `false`. Повторный запуск на уже подготовленном WAV и bundle:
+
+```sh
+umask 077
+sandbox-exec -p '(version 1) (allow default) (deny network*)' \
+  .data/stt/venv/bin/python scripts/benchmark-stt.py \
+  .data/stt/wav/meeting-1.wav --model-dir .data/stt/models/small \
+  --model-revision 536b0662742c02347bc0e980a01041f333bce120 \
+  --language auto --threads 4 --beam-size 5 \
+  --output .data/stt/results/meeting-1-auto-repeat.json \
+  --transcript-output .data/stt/results/meeting-1-auto-repeat-transcript.json
+```
+
+Для №2 заменить `meeting-1` на `meeting-2`; каждый output обязан быть
+новым файлом. Для KK/mixed проверки нужны 60–120 секунд записанной
+носителем речи каждого сценария и дословный проверенный эталон с
+казахскими буквами, числами, датами и переключениями языка.
+
 ## Кандидаты из первичных источников
 
 | Кандидат | Проверяемые факты | Роль в сравнении |
