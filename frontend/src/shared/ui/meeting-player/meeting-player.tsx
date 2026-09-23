@@ -331,7 +331,7 @@ function PlayerSession({
         />
         {markers.length > 0 && duration !== null && (
           <fieldset
-            className="flex w-full min-w-0 gap-px overflow-hidden rounded-md border"
+            className="flex w-full min-w-0 gap-px overflow-x-auto rounded-md border"
             aria-label={m.player_position({}, { locale })}
           >
             {markers.map((marker, index) => (
@@ -346,7 +346,7 @@ function PlayerSession({
                       marker.startMs
                   )} 1 0%`,
                 }}
-                className="min-w-0 flex-1 border-e border-border bg-muted/60 px-2 py-2 text-start text-xs last:border-e-0 hover:bg-accent focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-ring"
+                className="min-w-24 flex-1 border-e border-border bg-muted/60 px-2 py-2 text-start text-xs last:border-e-0 hover:bg-accent focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-ring"
                 aria-label={`${timeLabel(marker.startMs / 1000)} · ${marker.label}`}
                 title={marker.label}
               >
