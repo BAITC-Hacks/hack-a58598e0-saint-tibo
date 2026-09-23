@@ -111,7 +111,8 @@ services:
       - ${EXTRACT_MODELS_PATH:-./models/qwen3-8b}:/extract-model:ro
     networks: [processing]
     cpus: 4
-    mem_limit: 6g
+    # Measured Qwen3-8B RSS is about 5.93 GiB; leave room for the worker and CLI.
+    mem_limit: 8g
     extra_hosts: []
     depends_on:
       migrate:
