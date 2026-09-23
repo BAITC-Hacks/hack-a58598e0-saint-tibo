@@ -34,5 +34,10 @@
   UI work. No action items or speakers are inferred from transcript text.
 - #12 speaker identity and #13 reviewed source data remain backend
   dependencies; don't treat local demo fields as persisted product data.
+- Branch `ivan/20-real-transcript` was built and deployed on `dev-ivan` as
+  `cc131fd`. Browser `/player` showed the protected selector and preserved #98
+  sample. The dev user had no playable server recordings, and the worker's
+  `/models` directory was empty, so a completed server result and its seek/follow
+  behavior were not verified there. Keep #20 open and do not label it LIVE-OK.
 
-Last commit: `ab3d3312c3bafb3892bde93539383cea9e48b6de` (audited tree, 2026-09-23; live evidence is separate).
+Updated 2026-09-23 from the `ivan/20-real-transcript` worktree.
