@@ -309,6 +309,9 @@ export const PlayerPage = () => {
               const recording = serverRecordings.find(
                 (item) => item.id === event.target.value
               );
+              if ((recording?.id ?? "") !== selectedServerRecording) {
+                setSpeakerFilter("");
+              }
               if (recording?.media_url) {
                 player.select({
                   id: recording.id,
