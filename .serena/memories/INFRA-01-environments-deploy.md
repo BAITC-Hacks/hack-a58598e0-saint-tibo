@@ -12,8 +12,8 @@ No CI/CD. Push deploys nothing. Doc: `docs/dev-server.md`.
 | Artem | `saint-dev-artem` | https://dev-artem.saint-tibo.win |
 
 Independent DBs, secrets, sessions, TLS. Session on one env ≠ access
-to another. `saint-dev-danil` hardware (snapshot 2026-09-23):
-8 vCPU AMD AVX2, ~16 GiB RAM, ~302 GiB free on /opt/saint-tibo.
+to another. Dev-server CPU/RAM inventory for model sizing lives in
+`docs/stt-feasibility.md`.
 
 ## Deploy flow
 

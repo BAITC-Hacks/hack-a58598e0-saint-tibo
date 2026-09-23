@@ -8,7 +8,7 @@ TanStack Start SPA, one origin with auth. Conventions:
 - Routes `src/app/routes/`: `__root`, `_app` shell + `_app.index`
   (home/meetings placeholder), `login`, `api/auth/$` (Better Auth
   catch-all), `api/media/meetings/$meetingId/recordings/$recordingId`
-  (same-origin media proxy — on main since 62b137d).
+  (same-origin media proxy — on main).
 - Server code `src/app/server/`: `auth.server.ts` (Better Auth),
   `auth-guards.server.ts`, `media.server.ts` (cookie→JWT media proxy).
 - Pages `src/pages/<slice>/{index.ts,ui/}` — thin route → page import.
@@ -27,10 +27,9 @@ Baseline forbids fake counters/static demos before real backend data.
 Media playback (#19/#20, Ivan): HTMLMediaElement + same-origin
 `/api/media/...` URL (see API-02).
 
-## Open UI lanes (Artem)
+## UI lanes
 
-#16 branding/visual contract, #17 meeting list/create/progress,
-#18 transcript/participants/action items/export views,
-#40–43 landing, #44–48 design tokens/DESIGN.md/shared UI/Storybook/FSD.
-Home page currently says "processing not connected" — honest placeholder,
-keep it truthful until APIs land.
+UI/UX, branding, landing and design-system work is Artem's lane —
+live list in `gh issue list --assignee letya999`. Placeholder states
+stay honest: no static demo data passed off as processing results
+(product-baseline rule).
