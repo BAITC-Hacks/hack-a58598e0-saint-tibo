@@ -57,6 +57,9 @@ export function ReviewPanel({
   const [conflict, setConflict] = useState(false);
   const [exportError, setExportError] = useState("");
   const [extractError, setExtractError] = useState(false);
+  const [copyStatus, setCopyStatus] = useState<"copied" | "failed" | null>(
+    null
+  );
   const player = useRef<MeetingPlayerHandle>(null);
   const transcriptBox = useRef<HTMLDivElement>(null);
   const sync = useTranscriptSync({
@@ -118,11 +121,15 @@ export function ReviewPanel({
   const overviewQuestions = review.summary.open_questions.filter((entry) =>
     entry.text.trim()
   );
-  const overviewActions = review.action_items.filter((item) => item.text.trim());
-  const overviewSources = [...new Set([
-    ...(review.summary_source_segment_ids ?? []),
-    ...overviewActions.flatMap((item) => item.source_segment_ids),
-  ])]
+  const overviewActions = review.action_items.filter((item) =>
+    item.text.trim()
+  );
+  const overviewSources = [
+    ...new Set([
+      ...(review.summary_source_segment_ids ?? []),
+      ...overviewActions.flatMap((item) => item.source_segment_ids),
+    ]),
+  ]
     .map((id) => segmentById.get(id))
     .filter((segment) => segment !== undefined);
   const hasOverview =
@@ -130,6 +137,34 @@ export function ReviewPanel({
     overviewDecisions.length > 0 ||
     overviewQuestions.length > 0 ||
     overviewActions.length > 0;
+  async function copyOverview() {
+    const lines = [
+      t.overviewTitle,
+      ...(overviewTopics.length ? ["", ...overviewTopics] : []),
+      ...(overviewDecisions.length
+        ? [
+            "",
+            `${t.decisions}:`,
+            ...overviewDecisions.map((item) => `• ${item}`),
+          ]
+        : []),
+      ...(overviewActions.length
+        ? [
+            "",
+            `${t.actions}:`,
+            ...overviewActions.slice(0, 3).map((item) => `• ${item.text}`),
+          ]
+        : []),
+      "",
+      `${t.actions}: ${overviewActions.length} · ${t.openQuestions}: ${overviewQuestions.length}`,
+    ];
+    try {
+      await navigator.clipboard.writeText(lines.join("\n"));
+      setCopyStatus("copied");
+    } catch {
+      setCopyStatus("failed");
+    }
+  }
   const participantById = new Map(
     participants.map((participant) => [participant.id, participant])
   );
@@ -510,13 +545,38 @@ export function ReviewPanel({
           </p>
         )}
         {tab === "summary" && review.source === "real" && (
-          <section className="space-y-3 rounded-xl border bg-card p-5" aria-label={t.overviewTitle}>
+          <section
+            className="space-y-3 rounded-xl border bg-card p-5"
+            aria-label={t.overviewTitle}
+          >
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h3 className="text-lg font-semibold">{t.overviewTitle}</h3>
-              <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium">
-                {review.reviewed ? t.overviewConfirmed : t.overviewDraft}
-              </span>
+              <div className="flex items-center gap-2">
+                {hasOverview && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => void copyOverview()}
+                  >
+                    {t.copyOverview}
+                  </Button>
+                )}
+                <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium">
+                  {review.reviewed ? t.overviewConfirmed : t.overviewDraft}
+                </span>
+              </div>
             </div>
+            <output
+              aria-live="polite"
+              className="block text-sm text-muted-foreground"
+            >
+              {copyStatus === "copied"
+                ? t.overviewCopied
+                : copyStatus === "failed"
+                  ? t.overviewCopyFailed
+                  : ""}
+            </output>
             {hasOverview ? (
               <>
                 {overviewTopics.length > 0 && (
@@ -545,7 +605,8 @@ export function ReviewPanel({
                   </div>
                 )}
                 <p className="text-sm text-muted-foreground">
-                  {t.actions}: {overviewActions.length} · {t.openQuestions}: {overviewQuestions.length}
+                  {t.actions}: {overviewActions.length} · {t.openQuestions}:{" "}
+                  {overviewQuestions.length}
                 </p>
                 {overviewSources.length > 0 && (
                   <div className="flex flex-wrap gap-x-3 gap-y-1">
@@ -710,7 +771,8 @@ export function ReviewPanel({
                         </select>
                       </label>
                       <p className="text-xs text-muted-foreground">
-                        {displayName ?? t.unknown} · {segmentCount} {t.voiceSegments}
+                        {displayName ?? t.unknown} · {segmentCount}{" "}
+                        {t.voiceSegments}
                       </p>
                       {displayName && segmentCount > 0 && (
                         <button
