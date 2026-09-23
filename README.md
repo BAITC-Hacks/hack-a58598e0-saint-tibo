@@ -20,6 +20,15 @@ API-клиент и сборка. API поддерживает совещани�
 [Инструкция](docs/dev-server.md): `sh scripts/dev-deploy.sh saint-dev-danil`
 (каждый использует свой сервер).
 
+Для проверки в браузере просто откройте свой dev-домен:
+[Данил](https://dev-danil.saint-tibo.win),
+[Иван](https://dev-ivan.saint-tibo.win),
+[Артём](https://dev-artem.saint-tibo.win).
+Вход обычным тестовым пользователем автоматический. Администратор:
+`/dev-login?role=admin`; ручной вход: `/login`.
+Dev-аккаунты, переключение ролей и инструкции для browser-use —
+в [коротком руководстве](docs/browser-testing.md).
+
 Для полного локального запуска нужны Git, Bun **1.4.2**, uv **0.12.13+**, Docker с Compose.
 uv установит Python 3.13 по `backend/.python-version`.
 При запуске backend вне Docker для загрузки аудио нужны `ffmpeg` и `ffprobe` в PATH;
@@ -45,7 +54,9 @@ bun run dev
 Для локальных демонстрационных аккаунтов: `bun run seed`.
 Они создаются только этой командой: `admin@saint-tibo.local` и
 `user@saint-tibo.local`, пароль `saint-tibo-dev` (переопределяется `SEED_PASSWORD`).
-Не создавайте их на публичном сервере. Рабочие аккаунты создаются через регистрацию.
+Этот локальный seed не предназначен для серверов. На трёх dev-серверах
+deployment запускает отдельный ограниченный `seed:dev`; в production
+тестовые аккаунты не создаются. Рабочие аккаунты создаются через регистрацию.
 
 ## Команды
 
