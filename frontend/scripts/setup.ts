@@ -38,6 +38,22 @@ if (!(await environment.exists())) {
   }
 }
 
+let configured = await environment.text();
+const additions: string[] = [];
+if (!/^BACKEND_INTERNAL_URL=/m.test(configured)) {
+  additions.push("BACKEND_INTERNAL_URL=http://localhost:${BACKEND_PORT}");
+}
+if (!/^DEV_LOGIN_ENABLED=/m.test(configured)) {
+  additions.push("DEV_LOGIN_ENABLED=false");
+}
+if (additions.length > 0) {
+  configured = `${configured.trimEnd()}\n${additions.join("\n")}\n`;
+  await writeFile(`${root}.env`, configured, { mode: 0o600 });
+  process.stdout.write(
+    "Added missing local server settings with dev login disabled by default.\n"
+  );
+}
+
 const install = Bun.spawn(["bun", "run", "install:all"], {
   cwd: root,
   stdin: "inherit",

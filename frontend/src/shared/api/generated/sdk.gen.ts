@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { GetAccessPolicyData, GetAccessPolicyErrors, GetAccessPolicyResponses, GetCurrentUserData, GetCurrentUserErrors, GetCurrentUserResponses, GetLivenessData, GetLivenessErrors, GetLivenessResponses, GetReadinessData, GetReadinessErrors, GetReadinessResponses } from './types.gen';
+import type { CreateMeetingData, CreateMeetingErrors, CreateMeetingResponses, CreateParticipantData, CreateParticipantErrors, CreateParticipantResponses, CreateProcessingJobData, CreateProcessingJobErrors, CreateProcessingJobResponses, CreateRecordingData, CreateRecordingErrors, CreateRecordingResponses, DeleteMeetingData, DeleteMeetingErrors, DeleteMeetingResponses, DeleteParticipantData, DeleteParticipantErrors, DeleteParticipantResponses, DeleteRecordingData, DeleteRecordingErrors, DeleteRecordingResponses, FinalizeRecordingData, FinalizeRecordingErrors, FinalizeRecordingResponses, GetAccessPolicyData, GetAccessPolicyErrors, GetAccessPolicyResponses, GetCurrentUserData, GetCurrentUserErrors, GetCurrentUserResponses, GetLivenessData, GetLivenessErrors, GetLivenessResponses, GetMeetingData, GetMeetingErrors, GetMeetingResponses, GetProcessingJobData, GetProcessingJobErrors, GetProcessingJobResponses, GetReadinessData, GetReadinessErrors, GetReadinessResponses, GetRecordingData, GetRecordingErrors, GetRecordingMediaData, GetRecordingMediaErrors, GetRecordingMediaResponses, GetRecordingResponses, HeadRecordingMediaData, HeadRecordingMediaErrors, HeadRecordingMediaResponses, ListMeetingsData, ListMeetingsErrors, ListMeetingsResponses, ListParticipantsData, ListParticipantsErrors, ListParticipantsResponses, ListProcessingJobsData, ListProcessingJobsErrors, ListProcessingJobsResponses, ListRecordingsData, ListRecordingsErrors, ListRecordingsResponses, UpdateMeetingData, UpdateMeetingErrors, UpdateMeetingResponses, UpdateParticipantData, UpdateParticipantErrors, UpdateParticipantResponses, UploadRecordingChunkData, UploadRecordingChunkErrors, UploadRecordingChunkResponses, UploadRecordingFileData, UploadRecordingFileErrors, UploadRecordingFileResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -37,6 +37,229 @@ export const getAccessPolicy = <ThrowOnError extends boolean = false>(options?: 
 export const getCurrentUser = <ThrowOnError extends boolean = false>(options?: Options<GetCurrentUserData, ThrowOnError>): RequestResult<GetCurrentUserResponses, GetCurrentUserErrors, ThrowOnError> => (options?.client ?? client).get<GetCurrentUserResponses, GetCurrentUserErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/v1/me',
+    ...options
+});
+
+/**
+ * List Meetings
+ */
+export const listMeetings = <ThrowOnError extends boolean = false>(options?: Options<ListMeetingsData, ThrowOnError>): RequestResult<ListMeetingsResponses, ListMeetingsErrors, ThrowOnError> => (options?.client ?? client).get<ListMeetingsResponses, ListMeetingsErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/meetings',
+    ...options
+});
+
+/**
+ * Create Meeting
+ */
+export const createMeeting = <ThrowOnError extends boolean = false>(options: Options<CreateMeetingData, ThrowOnError>): RequestResult<CreateMeetingResponses, CreateMeetingErrors, ThrowOnError> => (options.client ?? client).post<CreateMeetingResponses, CreateMeetingErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/meetings',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Delete Meeting
+ */
+export const deleteMeeting = <ThrowOnError extends boolean = false>(options: Options<DeleteMeetingData, ThrowOnError>): RequestResult<DeleteMeetingResponses, DeleteMeetingErrors, ThrowOnError> => (options.client ?? client).delete<DeleteMeetingResponses, DeleteMeetingErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/meetings/{meeting_id}',
+    ...options
+});
+
+/**
+ * Get Meeting
+ */
+export const getMeeting = <ThrowOnError extends boolean = false>(options: Options<GetMeetingData, ThrowOnError>): RequestResult<GetMeetingResponses, GetMeetingErrors, ThrowOnError> => (options.client ?? client).get<GetMeetingResponses, GetMeetingErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/meetings/{meeting_id}',
+    ...options
+});
+
+/**
+ * Update Meeting
+ */
+export const updateMeeting = <ThrowOnError extends boolean = false>(options: Options<UpdateMeetingData, ThrowOnError>): RequestResult<UpdateMeetingResponses, UpdateMeetingErrors, ThrowOnError> => (options.client ?? client).patch<UpdateMeetingResponses, UpdateMeetingErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/meetings/{meeting_id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * List Participants
+ */
+export const listParticipants = <ThrowOnError extends boolean = false>(options: Options<ListParticipantsData, ThrowOnError>): RequestResult<ListParticipantsResponses, ListParticipantsErrors, ThrowOnError> => (options.client ?? client).get<ListParticipantsResponses, ListParticipantsErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/meetings/{meeting_id}/participants',
+    ...options
+});
+
+/**
+ * Create Participant
+ */
+export const createParticipant = <ThrowOnError extends boolean = false>(options: Options<CreateParticipantData, ThrowOnError>): RequestResult<CreateParticipantResponses, CreateParticipantErrors, ThrowOnError> => (options.client ?? client).post<CreateParticipantResponses, CreateParticipantErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/meetings/{meeting_id}/participants',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Delete Participant
+ */
+export const deleteParticipant = <ThrowOnError extends boolean = false>(options: Options<DeleteParticipantData, ThrowOnError>): RequestResult<DeleteParticipantResponses, DeleteParticipantErrors, ThrowOnError> => (options.client ?? client).delete<DeleteParticipantResponses, DeleteParticipantErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/meetings/{meeting_id}/participants/{participant_id}',
+    ...options
+});
+
+/**
+ * Update Participant
+ */
+export const updateParticipant = <ThrowOnError extends boolean = false>(options: Options<UpdateParticipantData, ThrowOnError>): RequestResult<UpdateParticipantResponses, UpdateParticipantErrors, ThrowOnError> => (options.client ?? client).patch<UpdateParticipantResponses, UpdateParticipantErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/meetings/{meeting_id}/participants/{participant_id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * List Recordings
+ */
+export const listRecordings = <ThrowOnError extends boolean = false>(options: Options<ListRecordingsData, ThrowOnError>): RequestResult<ListRecordingsResponses, ListRecordingsErrors, ThrowOnError> => (options.client ?? client).get<ListRecordingsResponses, ListRecordingsErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/meetings/{meeting_id}/recordings',
+    ...options
+});
+
+/**
+ * Create Recording
+ */
+export const createRecording = <ThrowOnError extends boolean = false>(options: Options<CreateRecordingData, ThrowOnError>): RequestResult<CreateRecordingResponses, CreateRecordingErrors, ThrowOnError> => (options.client ?? client).post<CreateRecordingResponses, CreateRecordingErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/meetings/{meeting_id}/recordings',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Delete Recording
+ */
+export const deleteRecording = <ThrowOnError extends boolean = false>(options: Options<DeleteRecordingData, ThrowOnError>): RequestResult<DeleteRecordingResponses, DeleteRecordingErrors, ThrowOnError> => (options.client ?? client).delete<DeleteRecordingResponses, DeleteRecordingErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/meetings/{meeting_id}/recordings/{recording_id}',
+    ...options
+});
+
+/**
+ * Get Recording
+ */
+export const getRecording = <ThrowOnError extends boolean = false>(options: Options<GetRecordingData, ThrowOnError>): RequestResult<GetRecordingResponses, GetRecordingErrors, ThrowOnError> => (options.client ?? client).get<GetRecordingResponses, GetRecordingErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/meetings/{meeting_id}/recordings/{recording_id}',
+    ...options
+});
+
+/**
+ * Upload Chunk
+ */
+export const uploadRecordingChunk = <ThrowOnError extends boolean = false>(options: Options<UploadRecordingChunkData, ThrowOnError>): RequestResult<UploadRecordingChunkResponses, UploadRecordingChunkErrors, ThrowOnError> => (options.client ?? client).put<UploadRecordingChunkResponses, UploadRecordingChunkErrors, ThrowOnError>({
+    bodySerializer: null,
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/meetings/{meeting_id}/recordings/{recording_id}/chunks/{sequence}',
+    ...options
+});
+
+/**
+ * Upload File
+ */
+export const uploadRecordingFile = <ThrowOnError extends boolean = false>(options: Options<UploadRecordingFileData, ThrowOnError>): RequestResult<UploadRecordingFileResponses, UploadRecordingFileErrors, ThrowOnError> => (options.client ?? client).put<UploadRecordingFileResponses, UploadRecordingFileErrors, ThrowOnError>({
+    bodySerializer: null,
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/meetings/{meeting_id}/recordings/{recording_id}/file',
+    ...options,
+    headers: {
+        'Content-Type': 'application/octet-stream',
+        ...options.headers
+    }
+});
+
+/**
+ * Finalize Recording
+ */
+export const finalizeRecording = <ThrowOnError extends boolean = false>(options: Options<FinalizeRecordingData, ThrowOnError>): RequestResult<FinalizeRecordingResponses, FinalizeRecordingErrors, ThrowOnError> => (options.client ?? client).post<FinalizeRecordingResponses, FinalizeRecordingErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/meetings/{meeting_id}/recordings/{recording_id}/finalize',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * List Jobs
+ */
+export const listProcessingJobs = <ThrowOnError extends boolean = false>(options: Options<ListProcessingJobsData, ThrowOnError>): RequestResult<ListProcessingJobsResponses, ListProcessingJobsErrors, ThrowOnError> => (options.client ?? client).get<ListProcessingJobsResponses, ListProcessingJobsErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/meetings/{meeting_id}/recordings/{recording_id}/jobs',
+    ...options
+});
+
+/**
+ * Create Job
+ */
+export const createProcessingJob = <ThrowOnError extends boolean = false>(options: Options<CreateProcessingJobData, ThrowOnError>): RequestResult<CreateProcessingJobResponses, CreateProcessingJobErrors, ThrowOnError> => (options.client ?? client).post<CreateProcessingJobResponses, CreateProcessingJobErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/meetings/{meeting_id}/recordings/{recording_id}/jobs',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Get Job
+ */
+export const getProcessingJob = <ThrowOnError extends boolean = false>(options: Options<GetProcessingJobData, ThrowOnError>): RequestResult<GetProcessingJobResponses, GetProcessingJobErrors, ThrowOnError> => (options.client ?? client).get<GetProcessingJobResponses, GetProcessingJobErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/meetings/{meeting_id}/recordings/{recording_id}/jobs/{job_id}',
+    ...options
+});
+
+/**
+ * Get Media
+ */
+export const getRecordingMedia = <ThrowOnError extends boolean = false>(options: Options<GetRecordingMediaData, ThrowOnError>): RequestResult<GetRecordingMediaResponses, GetRecordingMediaErrors, ThrowOnError> => (options.client ?? client).get<GetRecordingMediaResponses, GetRecordingMediaErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/meetings/{meeting_id}/recordings/{recording_id}/media',
+    ...options
+});
+
+/**
+ * Head Media
+ */
+export const headRecordingMedia = <ThrowOnError extends boolean = false>(options: Options<HeadRecordingMediaData, ThrowOnError>): RequestResult<HeadRecordingMediaResponses, HeadRecordingMediaErrors, ThrowOnError> => (options.client ?? client).head<HeadRecordingMediaResponses, HeadRecordingMediaErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/meetings/{meeting_id}/recordings/{recording_id}/media',
     ...options
 });
 
