@@ -10,6 +10,7 @@ Auth; `/api/v1/*` + media → FastAPI). Better Auth cookie → short-lived
 JWT (5 min) → FastAPI verifies JWKS signature AND re-checks
 role/ban/session via `auth/identity.py` every request — revoked session
 dies on next API call. `BETTER_AUTH_SECRET` protects JWT keys in DB.
+Auth surface details (permissions, dev-login, seeding) — AUTH-01.
 
 ## Module recipe (per `docs/conventions.md`)
 

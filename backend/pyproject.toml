@@ -11,6 +11,8 @@ dependencies = [
     "pydantic>=2.13.5",
     "pydantic-settings>=2.15.0",
     "pyjwt[crypto]>=2.14.0",
+    "python-docx>=1.2.0",
+    "reportlab>=5.0.1",
     "sqlalchemy[asyncio]>=2.0.54",
     "uvicorn[standard]>=0.53.0",
 ]
@@ -34,6 +36,10 @@ python_version = "3.13"
 strict = true
 plugins = ["pydantic.mypy"]
 files = ["src", "scripts", "migrations"]
+
+[[tool.mypy.overrides]]
+module = ["docx.*", "reportlab.*"]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
