@@ -1,5 +1,8 @@
 # INFRA-01 Environments and manual deployment
 
+Latest release: [GPU/speakers/extraction/inbox delta](RELEASE-94-runtime-wave.md).
+The core snapshot below retains its original audit boundary.
+
 ## Current Behavior
 
 - Push deploys nothing; no repository CI workflow is present in this tree.

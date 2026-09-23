@@ -4,12 +4,15 @@ import {
   BarChart3,
   Bell,
   CalendarDays,
+  CirclePlay,
   ClipboardList,
+  FileAudio,
   House,
   ListTodo,
   LogOut,
   Menu,
   MessageCircleQuestion,
+  Mic,
   NotebookTabs,
   Shield,
   UserRound,
@@ -51,6 +54,21 @@ const navigation: NavigationItem[] = [
     to: "/meetings",
     icon: NotebookTabs,
     label: (locale) => m.nav_meetings({}, { locale }),
+  },
+  {
+    to: "/capture",
+    icon: Mic,
+    label: (locale) => m.nav_capture({}, { locale }),
+  },
+  {
+    to: "/player",
+    icon: CirclePlay,
+    label: (locale) => m.nav_player({}, { locale }),
+  },
+  {
+    to: "/workspace",
+    icon: FileAudio,
+    label: (locale) => m.workspace_title({}, { locale }),
   },
   {
     to: "/notifications",
@@ -117,7 +135,10 @@ const navigation: NavigationItem[] = [
   },
 ];
 
-const Navigation = ({ onNavigate, reminderCount }: {
+const Navigation = ({
+  onNavigate,
+  reminderCount,
+}: {
   onNavigate?: () => void;
   reminderCount?: number;
 }) => {
@@ -151,7 +172,9 @@ const Navigation = ({ onNavigate, reminderCount }: {
               />
               {label(locale)}
               {to === "/notifications" && reminderCount !== undefined && (
-                <span className="ms-auto text-xs tabular-nums">{reminderCount}</span>
+                <span className="ms-auto text-xs tabular-nums">
+                  {reminderCount}
+                </span>
               )}
             </Link>
           );
@@ -250,7 +273,10 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
                   <X aria-hidden="true" />
                 </SheetClose>
               </div>
-              <Navigation reminderCount={reminderCount} onNavigate={() => setMenuOpen(false)} />
+              <Navigation
+                reminderCount={reminderCount}
+                onNavigate={() => setMenuOpen(false)}
+              />
             </SheetContent>
           </Sheet>
         </div>

@@ -1,5 +1,8 @@
 # MODELS-01 Local speech and pending ML work
 
+Latest release: [GPU/speakers/extraction/inbox delta](RELEASE-94-runtime-wave.md).
+The core snapshot below retains its original audit boundary.
+
 ## Current Behavior
 
 - Audio/text processing stays local/self-hosted with no external fallback.
