@@ -11,7 +11,9 @@ from pathlib import Path
 
 from extract.client import chat_extraction
 from extract.prompt import SYSTEM_PROMPT, MeetingContext, build_user_prompt
-from extract.runtime import MODEL_ID, MODEL_REVISION, MODEL_SHA256, RUNTIME_ID, local_runtime
+from extract.runtime import (
+    CUDA_RUNTIME_ID, MODEL_ID, MODEL_REVISION, MODEL_SHA256, RUNTIME_ID, local_runtime,
+)
 from extract.schema import ExtractionError
 
 
@@ -40,6 +42,7 @@ def main() -> int:
     parser.add_argument("--server", help="Existing loopback runtime (benchmark only)")
     parser.add_argument("--llama-server", type=Path)
     parser.add_argument("--model-file", type=Path)
+    parser.add_argument("--device", choices=("cpu", "cuda"), default="cpu")
     parser.add_argument("--title", default="")
     parser.add_argument("--started-at", default="")
     parser.add_argument("--timezone", default="")
@@ -70,7 +73,10 @@ def main() -> int:
         )
         if not args.server and (args.llama_server is None or args.model_file is None):
             raise ExtractionError("extraction_unavailable")
-        manager = nullcontext((args.server, None)) if args.server else local_runtime(args.llama_server, args.model_file)
+        manager = (
+            nullcontext((args.server, None)) if args.server
+            else local_runtime(args.llama_server, args.model_file, device=args.device)
+        )
         started = time.monotonic()
         with manager as (url, pid):
             try:
@@ -93,7 +99,8 @@ def main() -> int:
                 meta.update(elapsed_seconds=round(time.monotonic() - started, 3),
                             server_peak_rss_bytes=peak_rss, max_tokens=args.max_tokens)
         provenance = {"model_id": MODEL_ID, "model_revision": MODEL_REVISION,
-                      "model_sha256": MODEL_SHA256, "runtime_id": RUNTIME_ID,
+                      "model_sha256": MODEL_SHA256,
+                      "runtime_id": CUDA_RUNTIME_ID if args.device == "cuda" else RUNTIME_ID,
                       "prompt_sha256": hashlib.sha256(SYSTEM_PROMPT.encode()).hexdigest()}
         result = {"status": "ok", "payload": payload, "provenance": provenance, "metrics": meta}
         # An external benchmark server has not been fingerprinted by this process.
