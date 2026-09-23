@@ -43,14 +43,14 @@
 
 ## Known Gaps
 
-- #14 is closed for backend downloads/renderer; UI button integration stays
-  with Artem. Local identity-substituted proof and real live proof are separate.
+- #14 backend and #107 canonical UI are closed. [Browser proof 6ed682e](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/94#issuecomment-5794265640)
+  covers real save/approval/edit reset/two-tab 409/reload and both downloads.
 - completed_stage stays transcribe after human review. Automatic extraction
   (#69), diarization/speaker confirmation (#12), STT text edits and reminders
   (#15) are separate work. #13 is only partially delivered.
 - Renderer headings are RU; summary sources are shared, manual duplicate
   merging remains manual, and JSONB actions lack cross-meeting query projection.
-- #85 meeting-level review/export mock paths are not real API. Select a
-  recording/result and use the version routes; fetch transcript separately.
+- #85 meeting-level paths remain DEV-only; canonical UI adapts real versions,
+  clears approval on edits and explicitly reloads the same result after 409.
 
-Last commit: `ab3d3312c3bafb3892bde93539383cea9e48b6de` (audited tree, 2026-09-23; live evidence is separate).
+Last commit: `6ed682e734620ec6cc710ad59192350e3f46ed39` (audited core release tree, 2026-09-23; production 7d5b481 LIVE-OK; TEST-01).

@@ -18,7 +18,12 @@
 
 ## Known Gaps
 
-- Live dev-ivan at `cc131fd` still lacks this patch. #102 stays open until
-  coordinated dev merge/deploy and live cancellation/seek/log proof.
+- [Integrated d9ce072](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/102#issuecomment-5794083343)
+  preserves the patch and both Docker COPY stages on shared dev. Earlier
+  dev-ivan cc131fd lacked it; that is historical, not current deployment state.
+- #102 stays open until exact deployed cancellation/seek/log proof; successful
+  local aborted Start request does not establish final server/browser behavior.
 
 Last implementation commit: `fa1baf2` (2026-09-23).
+
+Last commit: `6ed682e734620ec6cc710ad59192350e3f46ed39` (audited core release tree, 2026-09-23; production 7d5b481 LIVE-OK; TEST-01).
