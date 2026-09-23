@@ -30,7 +30,8 @@ Lifecycle in comments: `implemented` (branch pushed) → `done: <sha>`
 `dev` → `main`. `--no-ff` merges only; no squash/rebase; never rewrite
 shared history. `main` is protected — integrator-only. Each member
 merges own lane → `dev` themselves and verifies on own dev server.
-Flow detail: `docs/development.md`.
+Flow detail: `docs/development.md`; cross-session handoff and
+memory-ownership notes: `docs/session-handoff.md`.
 
 Work happens in separate worktrees off `origin/dev`; never edit inside
 a checkout another session is using.
