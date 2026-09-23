@@ -29,6 +29,7 @@ const speaker = z.object({
   result_version_id: z.string(),
   label: z.string(),
   participant_id: z.string().nullable(),
+  merged_into_speaker_id: z.string().nullable().optional(),
 });
 const action = z.object({
   id: z.string(),
@@ -80,7 +81,13 @@ function realDocument(
     revision: data.revision,
     reviewed: data.reviewed,
     segments,
-    speakers: [],
+    speakers: (data.speakers ?? []).map((assignment) => ({
+      id: assignment.speaker_id,
+      result_version_id: data.result_version_id,
+      label: assignment.label,
+      participant_id: assignment.participant_id ?? null,
+      merged_into_speaker_id: assignment.merged_into_speaker_id ?? null,
+    })),
     action_items: data.action_items.map((item) => ({
       id: item.id ?? crypto.randomUUID(),
       result_version_id: item.result_version_id,
@@ -214,6 +221,11 @@ export async function saveReview(meetingId: string, review: ReviewDocument) {
           due_date: item.due_date,
           status: item.status,
           source_segment_ids: item.source_segment_ids,
+        })),
+        speakers: review.speakers.map((assignment) => ({
+          speaker_id: assignment.id,
+          participant_id: assignment.participant_id,
+          merged_into_speaker_id: assignment.merged_into_speaker_id ?? null,
         })),
       },
     });

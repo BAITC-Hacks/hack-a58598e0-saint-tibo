@@ -6,6 +6,7 @@ import {
   createParticipant,
   createProcessingJob,
   createRecording,
+  deleteRecording,
   getMeeting,
   listMeetings,
   listParticipants,
@@ -144,16 +145,24 @@ export async function uploadFile(
     })
   );
   onProgress(10);
-  const uploaded = required(
-    await uploadRecordingFile({
+  try {
+    const uploaded = required(
+      await uploadRecordingFile({
+        client: backendClient,
+        path: { meeting_id: meetingId, recording_id: recording.id },
+        body: file,
+        headers: { "Content-Type": file.type || "application/octet-stream" },
+      })
+    );
+    onProgress(100);
+    return uploaded;
+  } catch (error) {
+    await deleteRecording({
       client: backendClient,
       path: { meeting_id: meetingId, recording_id: recording.id },
-      body: file,
-      headers: { "Content-Type": file.type || "application/octet-stream" },
-    })
-  );
-  onProgress(100);
-  return uploaded;
+    }).catch(() => {});
+    throw error;
+  }
 }
 
 export const startProcessing = async (

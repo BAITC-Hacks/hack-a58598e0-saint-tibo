@@ -36,6 +36,7 @@ export function MeetingPage({ meetingId }: { meetingId: string }) {
   const [processingError, setProcessingError] = useState("");
   const [uploading, setUploading] = useState(false);
   const [uploadStep, setUploadStep] = useState(0);
+  const [failedFile, setFailedFile] = useState<File | null>(null);
   const add = useMutation({
     mutationFn: (body: { display_name: string; role: string | null }) =>
       addParticipant(meetingId, body),
@@ -81,13 +82,15 @@ export function MeetingPage({ meetingId }: { meetingId: string }) {
   async function submitUpload(file: File | null) {
     if (!file) return;
     setUploadError("");
+    setFailedFile(null);
     setUploading(true);
     setUploadStep(0);
     try {
       await uploadFile(meetingId, file, setUploadStep);
       await client.invalidateQueries({ queryKey: ["recordings", meetingId] });
-    } catch (reason) {
-      setUploadError(reason instanceof Error ? reason.message : t.error);
+    } catch {
+      setFailedFile(file);
+      setUploadError(t.uploadFailed);
     } finally {
       setUploading(false);
     }
@@ -103,8 +106,8 @@ export function MeetingPage({ meetingId }: { meetingId: string }) {
       await client.invalidateQueries({
         queryKey: ["jobs", meetingId, recording.id],
       });
-    } catch (reason) {
-      setProcessingError(reason instanceof Error ? reason.message : t.error);
+    } catch {
+      setProcessingError(t.processingFailed);
     }
   }
 
@@ -154,6 +157,7 @@ export function MeetingPage({ meetingId }: { meetingId: string }) {
               </span>
               <input
                 className="sr-only"
+                data-testid="recording-file"
                 type="file"
                 accept="audio/*,video/mp4,.flac,.ogg,.webm,.m4a"
                 disabled={uploading}
@@ -170,9 +174,20 @@ export function MeetingPage({ meetingId }: { meetingId: string }) {
               </output>
             )}
             {uploadError && (
-              <p role="alert" className="mt-2 text-sm text-destructive">
-                {uploadError} · {t.retryUpload}
-              </p>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <p role="alert" className="text-sm text-destructive">
+                  {uploadError}
+                </p>
+                {failedFile && (
+                  <Button
+                    variant="outline"
+                    disabled={uploading}
+                    onClick={() => void submitUpload(failedFile)}
+                  >
+                    {t.retryUpload}
+                  </Button>
+                )}
+              </div>
             )}
             {recordings.isPending ? (
               <output className="mt-4 block text-sm text-muted-foreground">
@@ -193,6 +208,7 @@ export function MeetingPage({ meetingId }: { meetingId: string }) {
                 {recordings.data.items.map((recording) => (
                   <li
                     key={recording.id}
+                    data-testid={`recording-${recording.id}`}
                     className="flex flex-wrap items-center justify-between gap-2 p-3 text-sm"
                   >
                     <span className="min-w-0 truncate">
@@ -209,7 +225,9 @@ export function MeetingPage({ meetingId }: { meetingId: string }) {
                         ? t.recordingReady
                         : recording.status === "failed"
                           ? t.failed
-                          : recording.status}
+                          : recording.status === "incomplete"
+                            ? t.incomplete
+                            : t.receiving}
                     </span>
                   </li>
                 ))}
@@ -228,6 +246,7 @@ export function MeetingPage({ meetingId }: { meetingId: string }) {
                 (!latestJob ||
                   ["failed", "interrupted"].includes(latestJob.status)) && (
                   <Button
+                    data-testid="processing-start"
                     disabled={process.isPending}
                     onClick={() =>
                       void submitProcessing(latestRecording, latestJob?.id)
@@ -377,8 +396,8 @@ export function MeetingPage({ meetingId }: { meetingId: string }) {
           participants={participants.data?.items ?? []}
           recording={
             recordings.data?.items.find(
-              (recording) => recording.id === result.segments[0]?.recording_id
-            ) ?? latestRecording
+              (recording) => recording.id === result.recording_id
+            ) ?? null
           }
         />
       ) : (
@@ -409,7 +428,7 @@ function JobStatus({ job }: { job: ProcessingJobRead }) {
     <div className="mt-4 space-y-2">
       <div className="flex flex-wrap justify-between gap-2 text-sm">
         <span>
-          {label} · {job.stage}
+          {label} · {t[`stage_${job.stage}`]}
         </span>
         {job.progress !== null && (
           <span>{Math.round(job.progress * 100)}%</span>
@@ -425,7 +444,7 @@ function JobStatus({ job }: { job: ProcessingJobRead }) {
       )}
       {job.error_code && (
         <p role="alert" className="text-sm text-destructive">
-          {job.error_code}
+          {t.processingFailed}
         </p>
       )}
     </div>

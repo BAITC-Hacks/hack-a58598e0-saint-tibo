@@ -38,3 +38,8 @@ export const Invalid: Story = {
   ),
 };
 export const Disabled: Story = { args: { disabled: true, value: "Совещание" } };
+export const LongLocalizedValue: Story = {
+  args: {
+    defaultValue: "Кеңестің қорытындысы және қатысушылардың тапсырмалары",
+  },
+};

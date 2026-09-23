@@ -74,14 +74,22 @@ export function CreateMeetingPage() {
         <p className="mt-1 text-sm text-muted-foreground">{t.notice}</p>
       </header>
       <form
+        data-testid="meeting-create-form"
         className="space-y-5 rounded-xl border bg-card p-5 sm:p-7"
         onSubmit={(event) => {
           event.preventDefault();
           setError("");
+          let started_at: string;
+          try {
+            started_at = zonedTime(startedAt, timezone);
+          } catch {
+            setError(t.invalidDate);
+            return;
+          }
           mutation.mutate(
             {
               title: title.trim(),
-              started_at: zonedTime(startedAt, timezone),
+              started_at,
               timezone,
             },
             {
@@ -92,8 +100,7 @@ export function CreateMeetingPage() {
                   params: { meetingId: meeting.id },
                 });
               },
-              onError: (reason) =>
-                setError(reason instanceof Error ? reason.message : t.error),
+              onError: () => setError(t.createFailed),
             }
           );
         }}

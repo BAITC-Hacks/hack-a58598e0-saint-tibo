@@ -157,6 +157,7 @@ export function ReviewPanel({
             {t.markReviewed}
           </label>
           <Button
+            data-testid="review-save"
             disabled={!canEdit || !dirty || save.isPending || reload.isPending}
             onClick={() => {
               setSaveError("");
@@ -177,6 +178,7 @@ export function ReviewPanel({
             {save.isPending ? t.loading : t.save}
           </Button>
           <Button
+            data-testid="review-export-pdf"
             variant="outline"
             disabled={
               !canEdit || dirty || !review.reviewed || download.isPending
@@ -186,6 +188,7 @@ export function ReviewPanel({
             {t.pdf}
           </Button>
           <Button
+            data-testid="review-export-docx"
             variant="outline"
             disabled={
               !canEdit || dirty || !review.reviewed || download.isPending
@@ -202,7 +205,10 @@ export function ReviewPanel({
         </p>
       )}
       {conflict && (
-        <div role="alert" className="space-y-2 rounded-lg border border-destructive/40 p-3">
+        <div
+          role="alert"
+          className="space-y-2 rounded-lg border border-destructive/40 p-3"
+        >
           <p className="text-sm">{t.reviewConflict}</p>
           <Button
             variant="outline"
@@ -238,397 +244,485 @@ export function ReviewPanel({
         />
       )}
 
-      <fieldset disabled={save.isPending || reload.isPending} className="contents">
-      <div
-        className="flex flex-wrap gap-1 rounded-lg bg-muted p-1"
-        role="tablist"
-        aria-label={t.review}
+      <fieldset
+        disabled={save.isPending || reload.isPending}
+        className="contents"
       >
-        {(["summary", "transcript", "actions"] as Tab[]).map((name) => (
-          <button
-            key={name}
-            type="button"
-            role="tab"
-            aria-selected={tab === name}
-            onClick={() => setTab(name)}
-            className="rounded-md px-3 py-1.5 text-sm focus-visible:outline-2 focus-visible:outline-ring aria-selected:bg-background aria-selected:shadow-sm"
-          >
-            {t[name]}
-            {name === "transcript"
-              ? ` (${review.segments.length})`
-              : name === "actions"
-                ? ` (${draft.action_items.length})`
-                : ""}
-          </button>
-        ))}
-      </div>
+        <div
+          className="flex flex-wrap gap-1 rounded-lg bg-muted p-1"
+          role="tablist"
+          aria-label={t.review}
+        >
+          {(["summary", "transcript", "actions"] as Tab[]).map((name) => (
+            <button
+              key={name}
+              type="button"
+              role="tab"
+              aria-selected={tab === name}
+              onClick={() => setTab(name)}
+              className="rounded-md px-3 py-1.5 text-sm focus-visible:outline-2 focus-visible:outline-ring aria-selected:bg-background aria-selected:shadow-sm"
+            >
+              {t[name]}
+              {name === "transcript"
+                ? ` (${review.segments.length})`
+                : name === "actions"
+                  ? ` (${draft.action_items.length})`
+                  : ""}
+            </button>
+          ))}
+        </div>
 
-      {tab === "summary" && !canEdit && (
-        <p className="rounded-xl border p-5 text-sm text-muted-foreground">
-          {t.detailsUnavailable}
-        </p>
-      )}
-      {tab === "summary" && canEdit && (
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_260px]">
-          <div className="space-y-5">
-            {(["topics", "decisions", "open_questions"] as const).map(
-              (section) => (
-                <section
-                  key={section}
-                  className="rounded-xl border bg-card p-4"
-                >
-                  <h3 className="mb-3 font-medium">
-                    {section === "topics"
-                      ? t.topics
-                      : section === "decisions"
-                        ? t.decisions
-                        : t.openQuestions}
-                  </h3>
-                  <div className="space-y-3">
-                    {draft.summary[section].map((entry, index) => (
-                      <div key={`${section}-${index}`} className="space-y-1">
-                        <Textarea
-                          aria-label={`${section} ${index + 1}`}
-                          value={entry.text}
-                          onChange={(event) =>
-                            editDraft((current) => ({
-                              ...current,
-                              summary: {
-                                ...current.summary,
-                                [section]: current.summary[section].map(
-                                  (item, i) =>
-                                    i === index
-                                      ? { ...item, text: event.target.value }
-                                      : item
-                                ),
-                              },
-                            }))
-                          }
-                        />
-                        {entry.source_segment_ids.map((id) => (
-                          <button
-                            key={id}
-                            className="text-xs text-primary underline"
-                            type="button"
-                            disabled={!segmentById.has(id)}
-                            onClick={() => seekSource(id)}
-                          >
-                            {t.source}{" "}
-                            {transcriptTime(segmentById.get(id)?.start_ms ?? 0)}
-                          </button>
-                        ))}
-                      </div>
-                    ))}
-                    {draft.summary[section].length === 0 && (
-                      <p className="text-sm text-muted-foreground">
-                        {t.noItems}
-                      </p>
-                    )}
-                  </div>
-                  <Button
-                    className="mt-3"
-                    size="sm"
-                    variant="outline"
-                    onClick={() =>
-                      editDraft((current) => ({
-                        ...current,
-                        summary: {
-                          ...current.summary,
-                          [section]: [
-                            ...current.summary[section],
-                            { text: "", source_segment_ids: [] },
-                          ],
-                        },
-                      }))
-                    }
+        {tab === "summary" && !canEdit && (
+          <p className="rounded-xl border p-5 text-sm text-muted-foreground">
+            {t.detailsUnavailable}
+          </p>
+        )}
+        {tab === "summary" && canEdit && (
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_260px]">
+            <div className="space-y-5">
+              {(["topics", "decisions", "open_questions"] as const).map(
+                (section) => (
+                  <section
+                    key={section}
+                    className="rounded-xl border bg-card p-4"
                   >
-                    {t.add}
-                  </Button>
-                </section>
-              )
-            )}
-          </div>
-          <aside className="rounded-xl border bg-card p-4">
-            <h3 className="font-medium">{t.speakers}</h3>
-            <div className="mt-3 space-y-3">
-              {draft.speakers.map((speaker, index) => (
-                <label key={speaker.id} className="block space-y-1 text-sm">
-                  <span>{speaker.label}</span>
+                    <h3 className="mb-3 font-medium">
+                      {section === "topics"
+                        ? t.topics
+                        : section === "decisions"
+                          ? t.decisions
+                          : t.openQuestions}
+                    </h3>
+                    <div className="space-y-3">
+                      {draft.summary[section].map((entry, index) => (
+                        <div key={`${section}-${index}`} className="space-y-1">
+                          <Textarea
+                            aria-label={`${section === "topics" ? t.topics : section === "decisions" ? t.decisions : t.openQuestions} ${index + 1}`}
+                            value={entry.text}
+                            onChange={(event) =>
+                              editDraft((current) => ({
+                                ...current,
+                                summary: {
+                                  ...current.summary,
+                                  [section]: current.summary[section].map(
+                                    (item, i) =>
+                                      i === index
+                                        ? { ...item, text: event.target.value }
+                                        : item
+                                  ),
+                                },
+                              }))
+                            }
+                          />
+                          {entry.source_segment_ids.map((id) => (
+                            <button
+                              key={id}
+                              className="text-xs text-primary underline"
+                              type="button"
+                              disabled={!segmentById.has(id)}
+                              onClick={() => seekSource(id)}
+                            >
+                              {t.source}{" "}
+                              {transcriptTime(
+                                segmentById.get(id)?.start_ms ?? 0
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      ))}
+                      {draft.summary[section].length === 0 && (
+                        <p className="text-sm text-muted-foreground">
+                          {t.noItems}
+                        </p>
+                      )}
+                    </div>
+                    <Button
+                      className="mt-3"
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        editDraft((current) => ({
+                          ...current,
+                          summary: {
+                            ...current.summary,
+                            [section]: [
+                              ...current.summary[section],
+                              { text: "", source_segment_ids: [] },
+                            ],
+                          },
+                        }))
+                      }
+                    >
+                      {t.add}
+                    </Button>
+                  </section>
+                )
+              )}
+              {!!review.segments.length && (
+                <div className="flex flex-wrap gap-2 rounded-xl border bg-card p-4">
+                  <span className="w-full text-sm font-medium">{t.source}</span>
+                  {draft.summary_source_segment_ids?.map((id) => (
+                    <button
+                      key={id}
+                      type="button"
+                      disabled={!segmentById.has(id)}
+                      className="text-sm text-primary underline disabled:text-muted-foreground"
+                      onClick={() => seekSource(id)}
+                    >
+                      {transcriptTime(segmentById.get(id)?.start_ms ?? 0)}
+                    </button>
+                  ))}
                   <select
-                    aria-label={`${speaker.label}: ${t.participants}`}
+                    aria-label={t.chooseSource}
                     className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
-                    value={speaker.participant_id ?? ""}
-                    onChange={(event) =>
-                      editDraft((current) => ({
-                        ...current,
-                        speakers: current.speakers.map((item, i) =>
-                          i === index
-                            ? {
-                                ...item,
-                                participant_id: event.target.value || null,
-                              }
-                            : item
-                        ),
-                      }))
-                    }
+                    value=""
+                    onChange={(event) => {
+                      const id = event.target.value;
+                      if (id && !draft.summary_source_segment_ids?.includes(id))
+                        editDraft((current) => ({
+                          ...current,
+                          summary_source_segment_ids: [
+                            ...(current.summary_source_segment_ids ?? []),
+                            id,
+                          ],
+                        }));
+                    }}
                   >
-                    <option value="">{t.unknown}</option>
-                    {participants.map((participant) => (
-                      <option key={participant.id} value={participant.id}>
-                        {participant.display_name}
+                    <option value="">{t.chooseSource}</option>
+                    {review.segments.map((segment) => (
+                      <option key={segment.id} value={segment.id}>
+                        {transcriptTime(segment.start_ms)} ·{" "}
+                        {segment.text.slice(0, 80)}
                       </option>
                     ))}
                   </select>
-                </label>
-              ))}
-              {!draft.speakers.length && (
-                <p className="text-sm text-muted-foreground">{t.noItems}</p>
+                </div>
               )}
             </div>
-          </aside>
-        </div>
-      )}
-
-      {tab === "transcript" && (
-        <section className="space-y-3">
-          <div className="flex flex-wrap gap-2">
-            <Input
-              className="w-full sm:max-w-xs"
-              type="search"
-              aria-label={t.search}
-              placeholder={t.search}
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
-            <select
-              aria-label={t.filterSpeaker}
-              className="h-9 rounded-md border border-input bg-background px-2 text-sm"
-              value={speakerFilter}
-              onChange={(event) => setSpeakerFilter(event.target.value)}
-            >
-              <option value="">{t.filterSpeaker}</option>
-              {draft.speakers.map((speaker) => (
-                <option key={speaker.id} value={speaker.id}>
-                  {participantById.get(speaker.participant_id ?? "")
-                    ?.display_name ?? speaker.label}
-                </option>
-              ))}
-            </select>
-            <Button
-              variant="outline"
-              aria-pressed={sync.follow}
-              onClick={() => sync.setFollow(!sync.follow)}
-            >
-              {sync.follow ? "●" : "○"} {t.followAudio}
-            </Button>
+            <aside className="rounded-xl border bg-card p-4">
+              <h3 className="font-medium">{t.speakers}</h3>
+              <div className="mt-3 space-y-3">
+                {draft.speakers.map((speaker, index) => (
+                  <label key={speaker.id} className="block space-y-1 text-sm">
+                    <span>{speaker.label}</span>
+                    <select
+                      aria-label={`${speaker.label}: ${t.participants}`}
+                      className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+                      value={speaker.participant_id ?? ""}
+                      onChange={(event) =>
+                        editDraft((current) => ({
+                          ...current,
+                          speakers: current.speakers.map((item, i) =>
+                            i === index
+                              ? {
+                                  ...item,
+                                  participant_id: event.target.value || null,
+                                }
+                              : item
+                          ),
+                        }))
+                      }
+                    >
+                      <option value="">{t.unknown}</option>
+                      {participants.map((participant) => (
+                        <option key={participant.id} value={participant.id}>
+                          {participant.display_name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ))}
+                {!draft.speakers.length && (
+                  <p className="text-sm text-muted-foreground">{t.noItems}</p>
+                )}
+              </div>
+            </aside>
           </div>
-          <div
-            ref={transcriptBox}
-            className="max-h-[560px] space-y-1 overflow-y-auto rounded-xl border bg-card p-2"
-            onWheel={() => sync.setFollow(false)}
-            onTouchMove={() => sync.setFollow(false)}
-          >
-            {selectedSegments.map((segment) => {
-              const speaker = speakerById.get(segment.speaker_id ?? "");
-              return (
-                <button
-                  key={segment.id}
-                  data-segment-id={segment.id}
-                  type="button"
-                  className="grid w-full grid-cols-[54px_minmax(0,1fr)] gap-3 rounded-lg p-3 text-left hover:bg-muted/50 focus-visible:outline-2 focus-visible:outline-ring aria-current:bg-accent"
-                  aria-current={
-                    sync.activeSegmentId === segment.id ? "true" : undefined
-                  }
-                  onClick={() => sync.seekSegment(segment.id)}
-                >
-                  <time className="text-xs text-muted-foreground tabular-nums">
-                    {transcriptTime(segment.start_ms)}
-                  </time>
-                  <span>
-                    <strong className="block text-sm">
-                      {participantById.get(speaker?.participant_id ?? "")
-                        ?.display_name ??
-                        speaker?.label ??
-                        t.unknown}
-                    </strong>
-                    <span className="text-sm">{segment.text}</span>
-                  </span>
-                </button>
-              );
-            })}
-            {!selectedSegments.length && (
-              <p className="p-5 text-sm text-muted-foreground">{t.noItems}</p>
-            )}
-          </div>
-        </section>
-      )}
+        )}
 
-      {tab === "actions" && !canEdit && (
-        <p className="rounded-xl border p-5 text-sm text-muted-foreground">
-          {t.detailsUnavailable}
-        </p>
-      )}
-      {tab === "actions" && canEdit && (
-        <section className="space-y-3">
-          {draft.action_items.map((item, index) => (
+        {tab === "transcript" && (
+          <section className="space-y-3">
+            <div className="flex flex-wrap gap-2">
+              <Input
+                className="w-full sm:max-w-xs"
+                type="search"
+                aria-label={t.search}
+                placeholder={t.search}
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+              />
+              <select
+                aria-label={t.filterSpeaker}
+                className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+                value={speakerFilter}
+                onChange={(event) => setSpeakerFilter(event.target.value)}
+              >
+                <option value="">{t.filterSpeaker}</option>
+                {draft.speakers.map((speaker) => (
+                  <option key={speaker.id} value={speaker.id}>
+                    {participantById.get(speaker.participant_id ?? "")
+                      ?.display_name ?? speaker.label}
+                  </option>
+                ))}
+              </select>
+              <Button
+                variant="outline"
+                aria-pressed={sync.follow}
+                onClick={() => sync.setFollow(!sync.follow)}
+              >
+                {sync.follow ? "●" : "○"} {t.followAudio}
+              </Button>
+            </div>
             <div
-              key={item.id}
-              className="space-y-3 rounded-xl border bg-card p-4"
+              ref={transcriptBox}
+              className="max-h-[560px] space-y-1 overflow-y-auto rounded-xl border bg-card p-2"
+              onWheel={() => sync.setFollow(false)}
+              onTouchMove={() => sync.setFollow(false)}
             >
-              <label className="block space-y-1 text-sm">
-                <span>{t.actions}</span>
-                <Textarea
-                  value={item.text}
-                  onChange={(event) =>
-                    editDraft((current) => ({
-                      ...current,
-                      action_items: current.action_items.map((entry, i) =>
-                        i === index
-                          ? { ...entry, text: event.target.value }
-                          : entry
-                      ),
-                    }))
-                  }
-                />
-              </label>
-              <div className="grid gap-3 sm:grid-cols-3">
-                <label className="block space-y-1 text-sm">
-                  <span>{t.owner}</span>
-                  <select
-                    className="h-9 w-full rounded-md border border-input bg-background px-2"
-                    value={item.assignee_participant_id ?? ""}
-                    onChange={(event) =>
-                      editDraft((current) => ({
-                        ...current,
-                        action_items: current.action_items.map((entry, i) =>
-                          i === index
-                            ? {
-                                ...entry,
-                                assignee_participant_id:
-                                  event.target.value || null,
-                                assignee_text: event.target.value
-                                  ? null
-                                  : entry.assignee_text,
-                              }
-                            : entry
-                        ),
-                      }))
+              {selectedSegments.map((segment) => {
+                const speaker = speakerById.get(segment.speaker_id ?? "");
+                return (
+                  <button
+                    key={segment.id}
+                    data-segment-id={segment.id}
+                    data-testid={`segment-${segment.id}`}
+                    type="button"
+                    className="grid w-full grid-cols-[54px_minmax(0,1fr)] gap-3 rounded-lg p-3 text-left hover:bg-muted/50 focus-visible:outline-2 focus-visible:outline-ring aria-current:bg-accent"
+                    aria-current={
+                      sync.activeSegmentId === segment.id ? "true" : undefined
                     }
+                    onClick={() => sync.seekSegment(segment.id)}
                   >
-                    <option value="">{item.assignee_text || t.unknown}</option>
-                    {participants.map((participant) => (
-                      <option key={participant.id} value={participant.id}>
-                        {participant.display_name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                    <time className="text-xs text-muted-foreground tabular-nums">
+                      {transcriptTime(segment.start_ms)}
+                    </time>
+                    <span>
+                      <strong className="block text-sm">
+                        {participantById.get(speaker?.participant_id ?? "")
+                          ?.display_name ??
+                          speaker?.label ??
+                          t.unknown}
+                      </strong>
+                      <span className="text-sm">{segment.text}</span>
+                    </span>
+                  </button>
+                );
+              })}
+              {!selectedSegments.length && (
+                <p className="p-5 text-sm text-muted-foreground">{t.noItems}</p>
+              )}
+            </div>
+          </section>
+        )}
+
+        {tab === "actions" && !canEdit && (
+          <p className="rounded-xl border p-5 text-sm text-muted-foreground">
+            {t.detailsUnavailable}
+          </p>
+        )}
+        {tab === "actions" && canEdit && (
+          <section className="space-y-3">
+            {draft.action_items.map((item, index) => (
+              <div
+                key={item.id}
+                data-testid={`action-${item.id}`}
+                className="space-y-3 rounded-xl border bg-card p-4"
+              >
                 <label className="block space-y-1 text-sm">
-                  <span>{t.deadline}</span>
-                  <Input
-                    type="date"
-                    value={item.due_date ?? ""}
+                  <span>{t.actions}</span>
+                  <Textarea
+                    value={item.text}
                     onChange={(event) =>
                       editDraft((current) => ({
                         ...current,
                         action_items: current.action_items.map((entry, i) =>
                           i === index
-                            ? { ...entry, due_date: event.target.value || null }
+                            ? { ...entry, text: event.target.value }
                             : entry
                         ),
                       }))
                     }
                   />
                 </label>
-                <label className="block space-y-1 text-sm">
-                  <span>{t.status}</span>
-                  <select
-                    className="h-9 w-full rounded-md border border-input bg-background px-2"
-                    value={item.status}
-                    onChange={(event) => {
-                      const next = actionStatuses.find(
-                        (status) => status === event.target.value
-                      );
-                      if (next)
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <label className="block space-y-1 text-sm">
+                    <span>{t.owner}</span>
+                    <select
+                      className="h-9 w-full rounded-md border border-input bg-background px-2"
+                      value={item.assignee_participant_id ?? ""}
+                      onChange={(event) =>
                         editDraft((current) => ({
                           ...current,
                           action_items: current.action_items.map((entry, i) =>
-                            i === index ? { ...entry, status: next } : entry
+                            i === index
+                              ? {
+                                  ...entry,
+                                  assignee_participant_id:
+                                    event.target.value || null,
+                                  assignee_text: event.target.value
+                                    ? null
+                                    : entry.assignee_text,
+                                }
+                              : entry
+                          ),
+                        }))
+                      }
+                    >
+                      <option value="">
+                        {item.assignee_text || t.unknown}
+                      </option>
+                      {participants.map((participant) => (
+                        <option key={participant.id} value={participant.id}>
+                          {participant.display_name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="block space-y-1 text-sm">
+                    <span>{t.deadline}</span>
+                    <Input
+                      type="date"
+                      value={item.due_date ?? ""}
+                      onChange={(event) =>
+                        editDraft((current) => ({
+                          ...current,
+                          action_items: current.action_items.map((entry, i) =>
+                            i === index
+                              ? {
+                                  ...entry,
+                                  due_date: event.target.value || null,
+                                }
+                              : entry
+                          ),
+                        }))
+                      }
+                    />
+                  </label>
+                  <label className="block space-y-1 text-sm">
+                    <span>{t.status}</span>
+                    <select
+                      className="h-9 w-full rounded-md border border-input bg-background px-2"
+                      value={item.status}
+                      onChange={(event) => {
+                        const next = actionStatuses.find(
+                          (status) => status === event.target.value
+                        );
+                        if (next)
+                          editDraft((current) => ({
+                            ...current,
+                            action_items: current.action_items.map(
+                              (entry, i) =>
+                                i === index ? { ...entry, status: next } : entry
+                            ),
+                          }));
+                      }}
+                    >
+                      <option value="open">{t.open}</option>
+                      <option value="in_progress">{t.running}</option>
+                      <option value="done">{t.done}</option>
+                      <option value="cancelled">{t.dropped}</option>
+                    </select>
+                  </label>
+                </div>
+                {item.due_text && (
+                  <p className="text-xs text-muted-foreground">
+                    {item.due_text}
+                  </p>
+                )}
+                <div className="flex flex-wrap gap-2">
+                  {item.source_segment_ids.map((id) => (
+                    <button
+                      key={id}
+                      type="button"
+                      disabled={!segmentById.has(id)}
+                      className="text-xs text-primary underline disabled:text-muted-foreground"
+                      onClick={() => seekSource(id)}
+                    >
+                      {t.source}:{" "}
+                      {transcriptTime(segmentById.get(id)?.start_ms ?? 0)}
+                    </button>
+                  ))}
+                </div>
+                {!!review.segments.length && (
+                  <select
+                    aria-label={t.chooseSource}
+                    className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+                    value=""
+                    onChange={(event) => {
+                      const id = event.target.value;
+                      if (id && !item.source_segment_ids.includes(id))
+                        editDraft((current) => ({
+                          ...current,
+                          action_items: current.action_items.map((entry, i) =>
+                            i === index
+                              ? {
+                                  ...entry,
+                                  source_segment_ids: [
+                                    ...entry.source_segment_ids,
+                                    id,
+                                  ],
+                                }
+                              : entry
                           ),
                         }));
                     }}
                   >
-                    <option value="open">{t.open}</option>
-                    <option value="in_progress">{t.running}</option>
-                    <option value="done">{t.done}</option>
-                    <option value="cancelled">{t.dropped}</option>
+                    <option value="">{t.chooseSource}</option>
+                    {review.segments.map((segment) => (
+                      <option key={segment.id} value={segment.id}>
+                        {transcriptTime(segment.start_ms)} ·{" "}
+                        {segment.text.slice(0, 80)}
+                      </option>
+                    ))}
                   </select>
-                </label>
+                )}
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() =>
+                    editDraft((current) => ({
+                      ...current,
+                      action_items: current.action_items.filter(
+                        (_, i) => i !== index
+                      ),
+                    }))
+                  }
+                >
+                  {t.remove}
+                </Button>
               </div>
-              {item.due_text && (
-                <p className="text-xs text-muted-foreground">{item.due_text}</p>
-              )}
-              <div className="flex flex-wrap gap-2">
-                {item.source_segment_ids.map((id) => (
-                  <button
-                    key={id}
-                    type="button"
-                    disabled={!segmentById.has(id)}
-                    className="text-xs text-primary underline disabled:text-muted-foreground"
-                    onClick={() => seekSource(id)}
-                  >
-                    {t.source}:{" "}
-                    {transcriptTime(segmentById.get(id)?.start_ms ?? 0)}
-                  </button>
-                ))}
-              </div>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() =>
-                  editDraft((current) => ({
-                    ...current,
-                    action_items: current.action_items.filter(
-                      (_, i) => i !== index
-                    ),
-                  }))
-                }
-              >
-                {t.remove}
-              </Button>
-            </div>
-          ))}
-          {!draft.action_items.length && (
-            <p className="rounded-xl border p-5 text-sm text-muted-foreground">
-              {t.noItems}
-            </p>
-          )}
-          <Button
-            variant="outline"
-            onClick={() =>
-              editDraft((current) => ({
-                ...current,
-                action_items: [
-                  ...current.action_items,
-                  {
-                    id: crypto.randomUUID(),
-                    result_version_id: current.result_version_id,
-                    text: "",
-                    assignee_participant_id: null,
-                    assignee_text: null,
-                    due_text: null,
-                    due_date: null,
-                    status: "open",
-                    source_segment_ids: [],
-                  },
-                ],
-              }))
-            }
-          >
-            {t.addAction}
-          </Button>
-        </section>
-      )}
+            ))}
+            {!draft.action_items.length && (
+              <p className="rounded-xl border p-5 text-sm text-muted-foreground">
+                {t.noItems}
+              </p>
+            )}
+            <Button
+              variant="outline"
+              onClick={() =>
+                editDraft((current) => ({
+                  ...current,
+                  action_items: [
+                    ...current.action_items,
+                    {
+                      id: crypto.randomUUID(),
+                      result_version_id: current.result_version_id,
+                      text: "",
+                      assignee_participant_id: null,
+                      assignee_text: null,
+                      due_text: null,
+                      due_date: null,
+                      status: "open",
+                      source_segment_ids: [],
+                    },
+                  ],
+                }))
+              }
+            >
+              {t.addAction}
+            </Button>
+          </section>
+        )}
       </fieldset>
     </section>
   );

@@ -1,4 +1,4 @@
-import { useNavigate, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   BarChart3,
   CalendarDays,
@@ -42,7 +42,7 @@ type NavigationItem = {
   permission?: "users:read" | "access:read";
 };
 
-const navigation: NavigationItem[] = [
+const navigation = [
   { to: "/", icon: House, label: (locale) => m.nav_today({}, { locale }) },
   {
     to: "/meetings",
@@ -107,7 +107,7 @@ const navigation: NavigationItem[] = [
     label: (locale) => m.nav_admin_access({}, { locale }),
     permission: "access:read",
   },
-];
+] as const satisfies readonly NavigationItem[];
 
 const Navigation = ({ onNavigate }: { onNavigate?: () => void }) => {
   const locale = useLocale();
@@ -122,14 +122,14 @@ const Navigation = ({ onNavigate }: { onNavigate?: () => void }) => {
       className="flex flex-col py-4"
     >
       {navigation
-        .filter(({ permission }) => !permission || can(permission))
+        .filter((item) => !("permission" in item) || can(item.permission))
         .map(({ to, icon: Icon, label }) => {
           const active =
             pathname === to || (to !== "/" && pathname.startsWith(`${to}/`));
           return (
-            <a
+            <Link
               key={to}
-              href={to}
+              to={to}
               onClick={onNavigate}
               aria-current={active ? "page" : undefined}
               className="flex min-h-10 items-center gap-2.5 border-l-[3px] border-transparent px-[18px] py-2 text-[15px] text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:bg-sidebar-accent focus-visible:text-sidebar-accent-foreground aria-[current=page]:border-brand-gold aria-[current=page]:bg-white/10 aria-[current=page]:font-bold aria-[current=page]:text-white"
@@ -139,7 +139,7 @@ const Navigation = ({ onNavigate }: { onNavigate?: () => void }) => {
                 aria-hidden="true"
               />
               {label(locale)}
-            </a>
+            </Link>
           );
         })}
     </nav>

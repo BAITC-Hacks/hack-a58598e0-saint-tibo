@@ -83,6 +83,7 @@ export function MeetingsPage() {
         <div className="overflow-hidden rounded-xl border bg-card">
           {visible.map((meeting) => (
             <Link
+              data-testid={`meeting-${meeting.id}`}
               className="flex flex-wrap items-center justify-between gap-3 border-b p-4 transition-colors last:border-0 hover:bg-muted/40 focus-visible:outline-2 focus-visible:outline-ring"
               key={meeting.id}
               to="/meetings/$meetingId"
