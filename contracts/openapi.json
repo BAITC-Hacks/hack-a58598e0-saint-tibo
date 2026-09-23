@@ -23,6 +23,16 @@
         "title": "AccessPolicy",
         "type": "object"
       },
+      "ActionItemStatus": {
+        "enum": [
+          "open",
+          "in_progress",
+          "done",
+          "cancelled"
+        ],
+        "title": "ActionItemStatus",
+        "type": "string"
+      },
       "CurrentUser": {
         "properties": {
           "email": {
@@ -1050,6 +1060,410 @@
           "updated_at"
         ],
         "title": "ResultVersionRead",
+        "type": "object"
+      },
+      "ReviewActionItem": {
+        "additionalProperties": false,
+        "properties": {
+          "assignee_participant_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assignee Participant Id"
+          },
+          "assignee_text": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assignee Text"
+          },
+          "due_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date"
+          },
+          "due_text": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Text"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "source_segment_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 100,
+            "title": "Source Segment Ids",
+            "type": "array"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ActionItemStatus",
+            "default": "open"
+          },
+          "text": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "ReviewActionItem",
+        "type": "object"
+      },
+      "ReviewActionItemRead": {
+        "additionalProperties": false,
+        "properties": {
+          "assignee_participant_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assignee Participant Id"
+          },
+          "assignee_text": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assignee Text"
+          },
+          "due_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date"
+          },
+          "due_text": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Text"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "result_version_id": {
+            "format": "uuid",
+            "title": "Result Version Id",
+            "type": "string"
+          },
+          "source_segment_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 100,
+            "title": "Source Segment Ids",
+            "type": "array"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ActionItemStatus",
+            "default": "open"
+          },
+          "text": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text",
+          "result_version_id"
+        ],
+        "title": "ReviewActionItemRead",
+        "type": "object"
+      },
+      "ReviewMeeting": {
+        "properties": {
+          "started_at": {
+            "format": "date-time",
+            "title": "Started At",
+            "type": "string"
+          },
+          "timezone": {
+            "title": "Timezone",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "started_at",
+          "timezone"
+        ],
+        "title": "ReviewMeeting",
+        "type": "object"
+      },
+      "ReviewParticipant": {
+        "properties": {
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role"
+          }
+        },
+        "required": [
+          "id",
+          "display_name",
+          "role"
+        ],
+        "title": "ReviewParticipant",
+        "type": "object"
+      },
+      "ReviewRead": {
+        "properties": {
+          "action_items": {
+            "items": {
+              "$ref": "#/components/schemas/ReviewActionItemRead"
+            },
+            "title": "Action Items",
+            "type": "array"
+          },
+          "is_incomplete": {
+            "title": "Is Incomplete",
+            "type": "boolean"
+          },
+          "meeting": {
+            "$ref": "#/components/schemas/ReviewMeeting"
+          },
+          "participants": {
+            "items": {
+              "$ref": "#/components/schemas/ReviewParticipant"
+            },
+            "title": "Participants",
+            "type": "array"
+          },
+          "recording_id": {
+            "format": "uuid",
+            "title": "Recording Id",
+            "type": "string"
+          },
+          "result_version_id": {
+            "format": "uuid",
+            "title": "Result Version Id",
+            "type": "string"
+          },
+          "reviewed": {
+            "title": "Reviewed",
+            "type": "boolean"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          },
+          "saved_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Saved At"
+          },
+          "source": {
+            "const": "persisted",
+            "default": "persisted",
+            "title": "Source",
+            "type": "string"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/ReviewSummary"
+          }
+        },
+        "required": [
+          "result_version_id",
+          "recording_id",
+          "revision",
+          "reviewed",
+          "is_incomplete",
+          "saved_at",
+          "meeting",
+          "participants",
+          "action_items",
+          "summary"
+        ],
+        "title": "ReviewRead",
+        "type": "object"
+      },
+      "ReviewSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "decisions": {
+            "items": {
+              "maxLength": 2000,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 100,
+            "title": "Decisions",
+            "type": "array"
+          },
+          "open_questions": {
+            "items": {
+              "maxLength": 2000,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 100,
+            "title": "Open Questions",
+            "type": "array"
+          },
+          "source_segment_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 100,
+            "title": "Source Segment Ids",
+            "type": "array"
+          },
+          "topics": {
+            "items": {
+              "maxLength": 2000,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 100,
+            "title": "Topics",
+            "type": "array"
+          }
+        },
+        "title": "ReviewSummary",
+        "type": "object"
+      },
+      "ReviewUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "action_items": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ReviewActionItem"
+                },
+                "maxItems": 200,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Action Items"
+          },
+          "reviewed": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewed"
+          },
+          "revision": {
+            "minimum": 1.0,
+            "title": "Revision",
+            "type": "integer"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReviewSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "revision"
+        ],
+        "title": "ReviewUpdate",
         "type": "object"
       },
       "Role": {
@@ -4972,6 +5386,445 @@
           }
         ],
         "summary": "Get Version",
+        "tags": [
+          "results"
+        ]
+      }
+    },
+    "/api/v1/meetings/{meeting_id}/recordings/{recording_id}/results/{result_version_id}/export": {
+      "get": {
+        "description": "Download a specific saved, reviewed revision; requires authenticated owner access.",
+        "operationId": "exportReviewedResult",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "meeting_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Meeting Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "recording_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Recording Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "result_version_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Result Version Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "format",
+            "required": true,
+            "schema": {
+              "enum": [
+                "pdf",
+                "docx"
+              ],
+              "title": "Format",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": true,
+            "schema": {
+              "minimum": 1,
+              "title": "Revision",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              },
+              "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "Content-Disposition": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Export Result",
+        "tags": [
+          "exports"
+        ]
+      }
+    },
+    "/api/v1/meetings/{meeting_id}/recordings/{recording_id}/results/{result_version_id}/review": {
+      "get": {
+        "description": "Read the latest human review, or an immutable saved revision.",
+        "operationId": "getResultReview",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "meeting_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Meeting Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "recording_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Recording Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "result_version_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Result Version Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Revision"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Review",
+        "tags": [
+          "results"
+        ]
+      },
+      "patch": {
+        "description": "Save manual corrections. Arrays/summary replace whole fields; omitted fields stay.\n\nrevision must match the latest result revision. Content edits clear approval unless\nreviewed=true is explicit. Each save creates an immutable snapshot for later export.",
+        "operationId": "updateResultReview",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "meeting_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Meeting Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "recording_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Recording Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "result_version_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Result Version Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update Review",
         "tags": [
           "results"
         ]

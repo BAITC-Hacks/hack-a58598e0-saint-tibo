@@ -1,43 +1,34 @@
 # WEB-01 Frontend baseline
 
-TanStack Start SPA, one origin with auth. Conventions:
-`docs/conventions.md` + `docs/product-baseline.md` (branding points).
+## Current Behavior
 
-## Structure
+- TanStack Start SPA under `frontend/src/`; thin route → page modules.
+  Shared UI is vendored shadcn/Base UI; reuse existing auth and controls.
+- `app/routes/`: protected `_app` shell/home placeholder, `/capture`
+  (WEB-21), local/stored-media `/player` (WEB-19), synthetic `/transcript-demo`
+  (WEB-20), login/dev-login and auth/media server routes.
+- Server modules in `app/server/` own Better Auth, auth guards, dev login
+  and cookie→JWT media proxy. API requests use the generated backend client.
+- Dev root entry auto-logs in an unauthenticated dedicated dev user;
+  `/dev-login?role=admin` is explicit admin entry; `?auth=manual` skips
+  auto-login for that navigation and `/login` remains manual (AUTH-01).
+- `shared/api/generated/` derives from committed OpenAPI. Never hand-write
+  API response types or invent an endpoint because a draft mock uses it.
+- `shared/auth/` uses effective backend `/me` permissions.
+- All visible text goes through `messages/{ru,kk,en}.json`; use the
+  existing i18n script. Brand assets live locally under `frontend/public/`;
+  app operation must not require an external font/image CDN.
+- Baseline UI/branding contract: `docs/product-baseline.md`,
+  `docs/conventions.md`. Static examples must not masquerade as real results.
 
-- Routes `src/app/routes/`: `__root`, `_app` shell + `_app.index`
-  (home/meetings placeholder), `_app.capture` (`/capture`, mic/tab
-  capture UI — WEB-21), `_app.player` (`/player`, local-file playback —
-  WEB-PLAYER), `transcript-demo` (public synthetic sync demo — WEB-20),
-  `login`, `dev-login` + `api/dev-login`
-  (guarded dev auto-login — AUTH-01), `api/auth/$` (Better Auth
-  catch-all), `api/media/meetings/$meetingId/recordings/$recordingId`
-  (same-origin media proxy — on main).
-- Server code `src/app/server/`: `auth.server.ts` (Better Auth),
-  `auth-guards.server.ts`, `media.server.ts` (cookie→JWT media proxy).
-- Dev entry: `_app` auto-logs in a dev user via `POST /api/dev-login`
-  when unauthenticated; `/dev-login?role=admin` is explicit admin entry;
-  `?auth=manual` skips auto-login for that navigation; `/login` stays
-  manual. Server guards/accounts — AUTH-01.
-- Pages `src/pages/<slice>/{index.ts,ui/}` — thin route → page import.
-- `src/shared/api/generated/` — SDK from `contracts/openapi.json` via
-  `bun run api:generate`; NEVER hand-edit or hand-write API types.
-- `src/shared/auth/`: `permissions.ts`, `can.tsx`, `route-access.ts`,
-  `admin-access.ts`; effective rights from `GET /api/v1/me`.
-- `src/shared/ui/` — vendored shadcn/Base UI; reuse, don't fork.
+## Known Gaps
 
-## Rules
+- Artem owns #83/#84/#85 and wider UI/design/landing work; those branches
+  are not integrated into audited dev. Home is still a placeholder.
+- Mock meeting-level review/export routes (#85) differ from version-scoped
+  backend work (#13/#14); reconcile through an adapter/generated contract.
+- Ivan's protected recording selector and rich player are integrated in dev
+  `a2cfe28`; reported Ivan deploy passed HTTP probes, interactive QA is pending.
+  Server transcript fetching and the full review/export flow remain separate.
 
-Strings: only `messages/{ru,kk,en}.json`, add via
-`bun run --cwd frontend i18n:add <key> "<ru>" "<kk>" "<en>"`.
-Brand assets local (`frontend/public/`) — no required external CDN.
-Baseline forbids fake counters/static demos before real backend data.
-Media playback (#19/#20, Ivan): HTMLMediaElement + same-origin
-`/api/media/...` URL (see API-02).
-
-## UI lanes
-
-UI/UX, branding, landing and design-system work is Artem's lane —
-live list in `gh issue list --assignee letya999`. Placeholder states
-stay honest: no static demo data passed off as processing results
-(product-baseline rule).
+Last commit: `a2cfe28c10b214a8189b8c140d9d6b31167bf27a` (audited tree, 2026-09-23; not a live assertion).
