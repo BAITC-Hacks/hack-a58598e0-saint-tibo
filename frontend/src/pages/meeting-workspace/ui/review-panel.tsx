@@ -91,6 +91,7 @@ export function ReviewPanel({
     onError: () => setExtractError(true),
   });
   const canExtract =
+    import.meta.env.VITE_TRANSCRIPT_EXTRACTION_ENABLED === "true" &&
     review.source === "real" &&
     review.revision === 1 &&
     !review.reviewed &&
