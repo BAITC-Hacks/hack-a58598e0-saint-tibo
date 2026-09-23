@@ -3,8 +3,8 @@
 import { type InfiniteData, infiniteQueryOptions, queryOptions, type UseMutationOptions } from '@tanstack/react-query';
 
 import { client } from '../client.gen';
-import { createMeeting, createParticipant, createProcessingJob, createRecording, deleteMeeting, deleteParticipant, deleteRecording, finalizeRecording, getAccessPolicy, getCurrentUser, getLiveness, getMeeting, getProcessingJob, getReadiness, getRecording, getRecordingMedia, listMeetings, listParticipants, listProcessingJobs, listRecordings, type Options, updateMeeting, updateParticipant, uploadRecordingChunk, uploadRecordingFile } from '../sdk.gen';
-import type { CreateMeetingData, CreateMeetingError, CreateMeetingResponse, CreateParticipantData, CreateParticipantError, CreateParticipantResponse, CreateProcessingJobData, CreateProcessingJobError, CreateProcessingJobResponse, CreateRecordingData, CreateRecordingError, CreateRecordingResponse, DeleteMeetingData, DeleteMeetingError, DeleteMeetingResponse, DeleteParticipantData, DeleteParticipantError, DeleteParticipantResponse, DeleteRecordingData, DeleteRecordingError, DeleteRecordingResponse, FinalizeRecordingData, FinalizeRecordingError, FinalizeRecordingResponse, GetAccessPolicyData, GetAccessPolicyError, GetAccessPolicyResponse, GetCurrentUserData, GetCurrentUserError, GetCurrentUserResponse, GetLivenessData, GetLivenessError, GetLivenessResponse, GetMeetingData, GetMeetingError, GetMeetingResponse, GetProcessingJobData, GetProcessingJobError, GetProcessingJobResponse, GetReadinessData, GetReadinessError, GetReadinessResponse, GetRecordingData, GetRecordingError, GetRecordingMediaData, GetRecordingMediaError, GetRecordingMediaResponse, GetRecordingResponse, ListMeetingsData, ListMeetingsError, ListMeetingsResponse, ListParticipantsData, ListParticipantsError, ListParticipantsResponse, ListProcessingJobsData, ListProcessingJobsError, ListProcessingJobsResponse, ListRecordingsData, ListRecordingsError, ListRecordingsResponse, UpdateMeetingData, UpdateMeetingError, UpdateMeetingResponse, UpdateParticipantData, UpdateParticipantError, UpdateParticipantResponse, UploadRecordingChunkData, UploadRecordingChunkError, UploadRecordingChunkResponse, UploadRecordingFileData, UploadRecordingFileError, UploadRecordingFileResponse } from '../types.gen';
+import { createMeeting, createParticipant, createProcessingJob, createRecording, deleteMeeting, deleteParticipant, deleteRecording, finalizeRecording, getAccessPolicy, getCurrentUser, getLiveness, getMeeting, getProcessingJob, getReadiness, getRecording, getRecordingMedia, getResultVersion, listMeetings, listParticipants, listProcessingJobs, listRecordings, listResultVersions, listTranscriptSegments, type Options, updateMeeting, updateParticipant, uploadRecordingChunk, uploadRecordingFile } from '../sdk.gen';
+import type { CreateMeetingData, CreateMeetingError, CreateMeetingResponse, CreateParticipantData, CreateParticipantError, CreateParticipantResponse, CreateProcessingJobData, CreateProcessingJobError, CreateProcessingJobResponse, CreateRecordingData, CreateRecordingError, CreateRecordingResponse, DeleteMeetingData, DeleteMeetingError, DeleteMeetingResponse, DeleteParticipantData, DeleteParticipantError, DeleteParticipantResponse, DeleteRecordingData, DeleteRecordingError, DeleteRecordingResponse, FinalizeRecordingData, FinalizeRecordingError, FinalizeRecordingResponse, GetAccessPolicyData, GetAccessPolicyError, GetAccessPolicyResponse, GetCurrentUserData, GetCurrentUserError, GetCurrentUserResponse, GetLivenessData, GetLivenessError, GetLivenessResponse, GetMeetingData, GetMeetingError, GetMeetingResponse, GetProcessingJobData, GetProcessingJobError, GetProcessingJobResponse, GetReadinessData, GetReadinessError, GetReadinessResponse, GetRecordingData, GetRecordingError, GetRecordingMediaData, GetRecordingMediaError, GetRecordingMediaResponse, GetRecordingResponse, GetResultVersionData, GetResultVersionError, GetResultVersionResponse, ListMeetingsData, ListMeetingsError, ListMeetingsResponse, ListParticipantsData, ListParticipantsError, ListParticipantsResponse, ListProcessingJobsData, ListProcessingJobsError, ListProcessingJobsResponse, ListRecordingsData, ListRecordingsError, ListRecordingsResponse, ListResultVersionsData, ListResultVersionsError, ListResultVersionsResponse, ListTranscriptSegmentsData, ListTranscriptSegmentsError, ListTranscriptSegmentsResponse, UpdateMeetingData, UpdateMeetingError, UpdateMeetingResponse, UpdateParticipantData, UpdateParticipantError, UpdateParticipantResponse, UploadRecordingChunkData, UploadRecordingChunkError, UploadRecordingChunkResponse, UploadRecordingFileData, UploadRecordingFileError, UploadRecordingFileResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -575,6 +575,120 @@ export const getRecordingMediaOptions = (options: Options<GetRecordingMediaData>
     },
     queryKey: getRecordingMediaQueryKey(options)
 });
+
+export const listResultVersionsQueryKey = (options: Options<ListResultVersionsData>) => createQueryKey('listResultVersions', options, false, ['results']);
+
+/**
+ * List Versions
+ */
+export const listResultVersionsOptions = (options: Options<ListResultVersionsData>) => queryOptions<ListResultVersionsResponse, ListResultVersionsError, ListResultVersionsResponse, ReturnType<typeof listResultVersionsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listResultVersions({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listResultVersionsQueryKey(options)
+});
+
+export const listResultVersionsInfiniteQueryKey = (options: Options<ListResultVersionsData>): QueryKey<Options<ListResultVersionsData>> => createQueryKey('listResultVersions', options, true);
+
+/**
+ * List Versions
+ */
+export const listResultVersionsInfiniteOptions = (options: Options<ListResultVersionsData>) => {
+    const opts = infiniteQueryOptions<ListResultVersionsResponse, ListResultVersionsError, InfiniteData<ListResultVersionsResponse>, QueryKey<Options<ListResultVersionsData>>, number | Pick<QueryKey<Options<ListResultVersionsData>>[0], 'body' | 'headers' | 'path' | 'query'>>(
+    // @ts-ignore
+    {
+        queryFn: async ({ pageParam, queryKey, signal }) => {
+            // @ts-ignore
+            const page: Pick<QueryKey<Options<ListResultVersionsData>>[0], 'body' | 'headers' | 'path' | 'query'> = typeof pageParam === 'object' ? pageParam : {
+                query: {
+                    offset: pageParam
+                }
+            };
+            const params = createInfiniteParams(queryKey, page);
+            const { data } = await listResultVersions({
+                ...options,
+                ...params,
+                signal,
+                throwOnError: true
+            });
+            return data;
+        },
+        queryKey: listResultVersionsInfiniteQueryKey(options)
+    });
+    return opts as Omit<typeof opts, 'initialData'>;
+};
+
+export const getResultVersionQueryKey = (options: Options<GetResultVersionData>) => createQueryKey('getResultVersion', options, false, ['results']);
+
+/**
+ * Get Version
+ */
+export const getResultVersionOptions = (options: Options<GetResultVersionData>) => queryOptions<GetResultVersionResponse, GetResultVersionError, GetResultVersionResponse, ReturnType<typeof getResultVersionQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getResultVersion({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getResultVersionQueryKey(options)
+});
+
+export const listTranscriptSegmentsQueryKey = (options: Options<ListTranscriptSegmentsData>) => createQueryKey('listTranscriptSegments', options, false, ['results']);
+
+/**
+ * List Segments
+ */
+export const listTranscriptSegmentsOptions = (options: Options<ListTranscriptSegmentsData>) => queryOptions<ListTranscriptSegmentsResponse, ListTranscriptSegmentsError, ListTranscriptSegmentsResponse, ReturnType<typeof listTranscriptSegmentsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listTranscriptSegments({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listTranscriptSegmentsQueryKey(options)
+});
+
+export const listTranscriptSegmentsInfiniteQueryKey = (options: Options<ListTranscriptSegmentsData>): QueryKey<Options<ListTranscriptSegmentsData>> => createQueryKey('listTranscriptSegments', options, true);
+
+/**
+ * List Segments
+ */
+export const listTranscriptSegmentsInfiniteOptions = (options: Options<ListTranscriptSegmentsData>) => {
+    const opts = infiniteQueryOptions<ListTranscriptSegmentsResponse, ListTranscriptSegmentsError, InfiniteData<ListTranscriptSegmentsResponse>, QueryKey<Options<ListTranscriptSegmentsData>>, number | Pick<QueryKey<Options<ListTranscriptSegmentsData>>[0], 'body' | 'headers' | 'path' | 'query'>>(
+    // @ts-ignore
+    {
+        queryFn: async ({ pageParam, queryKey, signal }) => {
+            // @ts-ignore
+            const page: Pick<QueryKey<Options<ListTranscriptSegmentsData>>[0], 'body' | 'headers' | 'path' | 'query'> = typeof pageParam === 'object' ? pageParam : {
+                query: {
+                    offset: pageParam
+                }
+            };
+            const params = createInfiniteParams(queryKey, page);
+            const { data } = await listTranscriptSegments({
+                ...options,
+                ...params,
+                signal,
+                throwOnError: true
+            });
+            return data;
+        },
+        queryKey: listTranscriptSegmentsInfiniteQueryKey(options)
+    });
+    return opts as Omit<typeof opts, 'initialData'>;
+};
 
 export const getLivenessQueryKey = (options?: Options<GetLivenessData>) => createQueryKey('getLiveness', options, false, ['health']);
 
