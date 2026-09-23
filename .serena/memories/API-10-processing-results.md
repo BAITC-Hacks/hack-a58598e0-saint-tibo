@@ -26,20 +26,21 @@
 - Read-back: `GET /results`, `GET /results/{result_version_id}`,
   `GET /results/{result_version_id}/segments`. All are owner-scoped;
   foreign meeting/recording/job/version gives 404. Segments are paginated.
-- New processing creates a new version. Current stored versions have
-  `status=draft`, `revision=1`, `completed_stage=transcribe`.
+- New processing creates a new version, initially `status=draft`,
+  `revision=1`, `completed_stage=transcribe`. Manual review increments revision
+  and may set status=reviewed, retaining completed_stage=transcribe (API-13).
   Each segment has UUID, recording/version IDs, integer `start_ms/end_ms`
   and text; `speaker_id=null` until #12.
 - See `docs/processing-jobs.md`, `docs/transcription.md`, generated OpenAPI.
 
 ## Known Gaps
 
-- Diarization, extraction and manually reviewed results are separate work.
-  #13 must extend existing ResultVersion/Segment, not duplicate them.
+- Diarization and extraction are separate work. Manual review now extends
+  existing ResultVersion with immutable ResultReview snapshots (API-13).
 - Alternate audio-track selection and the full multi-stage pipeline remain open.
 - [#10 live evidence](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/10#issuecomment-5793355837):
   a fresh job succeeded; controlled restart produced interrupted/no result.
   Retry acceptance/idempotency passed, but completion of that retry was not
   proven after a temporary QA logger failed. Do not combine those claims.
 
-Last commit: `a2cfe28c10b214a8189b8c140d9d6b31167bf27a` (audited tree, 2026-09-23; not a live assertion).
+Last commit: `ab3d3312c3bafb3892bde93539383cea9e48b6de` (audited tree, 2026-09-23; live evidence is separate).
