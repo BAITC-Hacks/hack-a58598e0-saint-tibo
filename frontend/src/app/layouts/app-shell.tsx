@@ -6,7 +6,6 @@ import {
   CalendarDays,
   CirclePlay,
   ClipboardList,
-  FileAudio,
   House,
   ListTodo,
   LogOut,
@@ -15,6 +14,7 @@ import {
   Mic,
   NotebookTabs,
   Shield,
+  Settings,
   UserRound,
   Users,
   X,
@@ -24,6 +24,7 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 
 import { remindersQuery, REMINDERS_REFRESH_MS } from "#/pages/reminders";
+import { isMockApi } from "#/shared/api";
 import { authClient, useAccess } from "#/shared/auth";
 import { m } from "#/shared/lib/i18n/messages";
 import type { Locale } from "#/shared/lib/i18n/runtime";
@@ -48,7 +49,7 @@ type NavigationItem = {
   permission?: "users:read" | "access:read";
 };
 
-const navigation: NavigationItem[] = [
+const navigation = [
   { to: "/", icon: House, label: (locale) => m.nav_today({}, { locale }) },
   {
     to: "/meetings",
@@ -64,11 +65,6 @@ const navigation: NavigationItem[] = [
     to: "/player",
     icon: CirclePlay,
     label: (locale) => m.nav_player({}, { locale }),
-  },
-  {
-    to: "/workspace",
-    icon: FileAudio,
-    label: (locale) => m.workspace_title({}, { locale }),
   },
   {
     to: "/notifications",
@@ -116,6 +112,12 @@ const navigation: NavigationItem[] = [
     label: (locale) => m.nav_profile({}, { locale }),
   },
   {
+    to: "/settings",
+    icon: Settings,
+    label: (locale) =>
+      ({ ru: "Настройки", kk: "Баптаулар", en: "Settings" })[locale],
+  },
+  {
     to: "/admin/users",
     icon: Shield,
     label: (locale) => m.nav_admin_users({}, { locale }),
@@ -133,7 +135,7 @@ const navigation: NavigationItem[] = [
     label: (locale) => m.nav_admin_access({}, { locale }),
     permission: "access:read",
   },
-];
+] as const satisfies readonly NavigationItem[];
 
 const Navigation = ({
   onNavigate,
@@ -154,7 +156,7 @@ const Navigation = ({
       className="flex flex-col py-4"
     >
       {navigation
-        .filter(({ permission }) => !permission || can(permission))
+        .filter((item) => !("permission" in item) || can(item.permission))
         .map(({ to, icon: Icon, label }) => {
           const active =
             pathname === to || (to !== "/" && pathname.startsWith(`${to}/`));
@@ -282,6 +284,17 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
         </div>
       </header>
       <div className="h-[3px] bg-brand-gold" aria-hidden="true" />
+      {isMockApi() && (
+        <div className="bg-amber-100 px-4 py-1 text-center text-sm font-semibold text-amber-950">
+          {
+            {
+              ru: "Синтетические данные",
+              kk: "Синтетикалық деректер",
+              en: "Synthetic data",
+            }[locale]
+          }
+        </div>
+      )}
       <div className="flex min-h-[calc(100dvh-67px)]">
         <aside className="hidden w-[228px] shrink-0 flex-col bg-sidebar text-sidebar-foreground min-[1101px]:flex">
           <Navigation reminderCount={reminderCount} />

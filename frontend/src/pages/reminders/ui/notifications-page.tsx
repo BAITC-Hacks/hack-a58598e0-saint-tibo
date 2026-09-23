@@ -25,14 +25,16 @@ export function NotificationsPage() {
     refetchInterval: offset > 0 ? REMINDERS_REFRESH_MS : false,
     refetchIntervalInBackground: false,
   });
-  const status = inbox.error instanceof ReminderLoadError ? inbox.error.status : 0;
+  const status =
+    inbox.error instanceof ReminderLoadError ? inbox.error.status : 0;
   const signedOut = (!sessionPending && !session) || status === 401;
   const failed = inbox.isError || signedOut;
   const data = !failed && session ? inbox.data : undefined;
-  const date = (value: string) => new Intl.DateTimeFormat(locale, {
-    dateStyle: "medium",
-    timeZone: "UTC",
-  }).format(new Date(`${value}T00:00:00Z`));
+  const date = (value: string) =>
+    new Intl.DateTimeFormat(locale, {
+      dateStyle: "medium",
+      timeZone: "UTC",
+    }).format(new Date(`${value}T00:00:00Z`));
 
   return (
     <section className="mx-auto max-w-4xl space-y-5">
@@ -49,58 +51,96 @@ export function NotificationsPage() {
         {inbox.isFetching ? t.loading : t.refresh}
       </Button>
       {failed ? (
-        <div role="alert" className="space-y-3 rounded-xl border border-destructive/40 p-5">
-          <p>{signedOut ? t.signedOut : status === 403 ? t.forbidden : t.error}</p>
-          {signedOut && <Link to="/login" className="text-primary underline">{t.signIn}</Link>}
+        <div
+          role="alert"
+          className="space-y-3 rounded-xl border border-destructive/40 p-5"
+        >
+          <p>
+            {signedOut ? t.signedOut : status === 403 ? t.forbidden : t.error}
+          </p>
+          {signedOut && (
+            <Link to="/login" className="text-primary underline">
+              {t.signIn}
+            </Link>
+          )}
         </div>
       ) : sessionPending || inbox.isPending ? (
         <output className="block rounded-xl border p-5">{t.loading}</output>
-      ) : data && (
-        <>
-          <p className="text-sm text-muted-foreground">
-            {t.total}: {data.total} · {t.evaluated}: {new Intl.DateTimeFormat(locale, {
-              dateStyle: "medium", timeStyle: "short",
-            }).format(new Date(data.evaluated_at))}
-          </p>
-          {data.items.length ? (
-            <ul className="space-y-3">
-              {data.items.map((item) => (
-                <li key={item.id} className="space-y-2 rounded-xl border bg-card p-5">
-                  <p className={item.kind === "overdue" ? "text-sm font-medium text-destructive" : "text-sm font-medium"}>
-                    {item.kind === "overdue" ? t.overdue : t.upcoming}
-                    {" · "}<time dateTime={item.due_date}>{date(item.due_date)}</time>
-                    {" · "}{item.timezone}
-                  </p>
-                  <p className="whitespace-pre-wrap break-words">{item.text}</p>
-                  <Link
-                    to="/meetings/$meetingId"
-                    params={{ meetingId: item.meeting_id }}
-                    className="text-sm text-primary underline"
+      ) : (
+        data && (
+          <>
+            <p className="text-sm text-muted-foreground">
+              {t.total}: {data.total} · {t.evaluated}:{" "}
+              {new Intl.DateTimeFormat(locale, {
+                dateStyle: "medium",
+                timeStyle: "short",
+              }).format(new Date(data.evaluated_at))}
+            </p>
+            {data.items.length ? (
+              <ul className="space-y-3">
+                {data.items.map((item) => (
+                  <li
+                    key={item.id}
+                    className="space-y-2 rounded-xl border bg-card p-5"
                   >
-                    {t.openMeeting}: {item.meeting_title}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <div className="space-y-2 rounded-xl border p-5">
-              <h2 className="font-medium">{t.empty}</h2>
-              <p className="text-sm text-muted-foreground">
-                {offset > 0 && data.total > 0 ? t.emptyPage : t.emptyHelp}
-              </p>
-            </div>
-          )}
-          {(offset > 0 || data.total > REMINDERS_PAGE_SIZE) && (
-            <div className="flex items-center gap-3">
-              <Button variant="outline" disabled={offset === 0} onClick={() => setOffset(Math.max(0, offset - REMINDERS_PAGE_SIZE))}>
-                {t.previous}
-              </Button>
-              <Button variant="outline" disabled={offset + REMINDERS_PAGE_SIZE >= data.total} onClick={() => setOffset(offset + REMINDERS_PAGE_SIZE)}>
-                {t.next}
-              </Button>
-            </div>
-          )}
-        </>
+                    <p
+                      className={
+                        item.kind === "overdue"
+                          ? "text-sm font-medium text-destructive"
+                          : "text-sm font-medium"
+                      }
+                    >
+                      {item.kind === "overdue" ? t.overdue : t.upcoming}
+                      {" · "}
+                      <time dateTime={item.due_date}>
+                        {date(item.due_date)}
+                      </time>
+                      {" · "}
+                      {item.timezone}
+                    </p>
+                    <p className="break-words whitespace-pre-wrap">
+                      {item.text}
+                    </p>
+                    <Link
+                      to="/meetings/$meetingId"
+                      params={{ meetingId: item.meeting_id }}
+                      className="text-sm text-primary underline"
+                    >
+                      {t.openMeeting}: {item.meeting_title}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="space-y-2 rounded-xl border p-5">
+                <h2 className="font-medium">{t.empty}</h2>
+                <p className="text-sm text-muted-foreground">
+                  {offset > 0 && data.total > 0 ? t.emptyPage : t.emptyHelp}
+                </p>
+              </div>
+            )}
+            {(offset > 0 || data.total > REMINDERS_PAGE_SIZE) && (
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="outline"
+                  disabled={offset === 0}
+                  onClick={() =>
+                    setOffset(Math.max(0, offset - REMINDERS_PAGE_SIZE))
+                  }
+                >
+                  {t.previous}
+                </Button>
+                <Button
+                  variant="outline"
+                  disabled={offset + REMINDERS_PAGE_SIZE >= data.total}
+                  onClick={() => setOffset(offset + REMINDERS_PAGE_SIZE)}
+                >
+                  {t.next}
+                </Button>
+              </div>
+            )}
+          </>
+        )
       )}
     </section>
   );

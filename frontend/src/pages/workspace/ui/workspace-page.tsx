@@ -50,9 +50,16 @@ function RequestError({ error }: { error: unknown }) {
   ) : null;
 }
 
-export function WorkspacePage() {
+export function WorkspacePage({
+  embedded = false,
+  initialMeetingId = "",
+}: {
+  embedded?: boolean;
+  initialMeetingId?: string;
+}) {
   const t = useWorkspaceText();
-  const [selected, setSelected] = useState("");
+  const [selectedState, setSelected] = useState(initialMeetingId);
+  const selected = initialMeetingId || selectedState;
   const [offset, setOffset] = useState(0);
   const meetings = useQuery(
     listMeetingsOptions({ client: backendClient, query: { limit: 20, offset } })
@@ -81,14 +88,19 @@ export function WorkspacePage() {
   const current =
     meetings.data?.items.find((item) => item.id === selected) ??
     meetings.data?.items[0];
+  const Container = embedded ? "div" : "main";
   return (
-    <main className="mx-auto max-w-6xl space-y-6">
-      <header className="space-y-2">
-        <h1 className="text-3xl font-semibold tracking-tight">
-          {t("workspace_title")}
-        </h1>
-        <p className="text-sm text-muted-foreground">{t("workspace_intro")}</p>
-      </header>
+    <Container className="mx-auto max-w-6xl space-y-6">
+      {!embedded && (
+        <header className="space-y-2">
+          <h1 className="text-3xl font-semibold tracking-tight">
+            {t("workspace_title")}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {t("workspace_intro")}
+          </p>
+        </header>
+      )}
       <section className={sectionClass}>
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-lg font-semibold">{t("workspace_meetings")}</h2>
@@ -101,7 +113,7 @@ export function WorkspacePage() {
           </Button>
         </div>
         <RequestError error={meetings.error} />
-        {meetings.isPending && <p role="status">{t("workspace_loading")}</p>}
+        {meetings.isPending && <output>{t("workspace_loading")}</output>}
         {meetings.data?.items.length === 0 && (
           <p>{t("workspace_empty_meetings")}</p>
         )}
@@ -193,7 +205,7 @@ export function WorkspacePage() {
         </details>
       </section>
       {current && <MeetingWorkspace key={current.id} meeting={current} />}
-    </main>
+    </Container>
   );
 }
 
@@ -333,7 +345,7 @@ function MeetingWorkspace({ meeting }: { meeting: MeetingRead }) {
           {t(upload.isPending ? "workspace_uploading" : "workspace_upload")}
         </Button>
         <RequestError error={upload.error || recordings.error} />
-        {recordings.isPending && <p role="status">{t("workspace_loading")}</p>}
+        {recordings.isPending && <output>{t("workspace_loading")}</output>}
         {recordings.data?.items.length === 0 && (
           <p>{t("workspace_empty_recordings")}</p>
         )}
@@ -408,6 +420,7 @@ function RecordingWorkspace({
       query: { limit: 100 },
     })
   );
+  const refetchResults = results.refetch;
   const latest = jobs.data?.items[0];
   const active =
     jobs.data?.items.some((job) =>
@@ -418,18 +431,21 @@ function RecordingWorkspace({
     onError: () => {},
     onSuccess: async () => {
       requestKey.current = null;
+      setResultId("");
       await jobs.refetch();
     },
   });
+  const selectedResultId =
+    resultId ||
+    (latest?.status === "succeeded" ? latest.result_version_id : "");
   const result =
-    results.data?.items.find((item) => item.id === resultId) ??
+    results.data?.items.find((item) => item.id === selectedResultId) ??
     results.data?.items[0];
   useEffect(() => {
     if (latest?.status === "succeeded" && latest.result_version_id) {
-      setResultId(latest.result_version_id);
-      void results.refetch();
+      void refetchResults();
     }
-  }, [latest?.id, latest?.status, latest?.result_version_id]);
+  }, [latest?.id, latest?.status, latest?.result_version_id, refetchResults]);
   const canProcess =
     !!recording.media_url &&
     (recording.status === "ready" ||
@@ -444,9 +460,9 @@ function RecordingWorkspace({
     <>
       <section className={sectionClass}>
         {recording.status === "incomplete" && (
-          <p role="status" className="font-medium">
+          <output className="block font-medium">
             {t("workspace_incomplete")}
-          </p>
+          </output>
         )}
         {recording.status === "receiving" && <p>{t("workspace_receiving")}</p>}
         {recording.status === "failed" && (
@@ -518,12 +534,12 @@ function RecordingWorkspace({
         )}
         <RequestError error={start.error || jobs.error || results.error} />
         {statusKey && (
-          <p role="status">
+          <output>
             {t(statusKey)}
             {latest?.progress != null && active
               ? ` · ${Math.round(latest.progress * 100)}%`
               : ""}
-          </p>
+          </output>
         )}
         <p className="text-sm text-muted-foreground">
           {t("workspace_manual_notice")}
@@ -633,7 +649,7 @@ function ResultWorkspace({
         />
       )}
       <RequestError error={segments.error || review.error} />
-      {segments.isPending && <p role="status">{t("workspace_loading")}</p>}
+      {segments.isPending && <output>{t("workspace_loading")}</output>}
       {segments.isSuccess && rows.length === 0 && (
         <p>{t("workspace_empty_transcript")}</p>
       )}

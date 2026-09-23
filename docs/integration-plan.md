@@ -1,10 +1,12 @@
 # Saint Tibo: remaining integration plan
 
-Owner: Danil (rldyourmnd). The verified GPU baseline `1adbcb5` is in production. [PR #127](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/pull/127) adds the now-authorized PR #124 workspace, targeted draft/export guards and the final knowledge handoff. Exact deployment revisions are in the release receipt; ready teammate source is included. [Current facts](current-state.md), [DEMO](../DEMO.md), [coordination #94](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/94).
+Owner: Danil (rldyourmnd). The verified GPU baseline is `1adbcb5`; [PR #127](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/pull/127) subsequently shipped the authorized PR #124 editor and draft/export guards to both hosts as `3676470`. Ivan's follow-up `12abf23` integrates that editor into /player and redirects /workspace. Exact final deployment revisions and the changed-screen proof are in the [coordination #94 receipt](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/94); ready teammate source is included. [Current facts](current-state.md), [DEMO](../DEMO.md).
 
 ## Delivered release
 
 The full private recording → GPU STT → diarization → GPU draft pipeline runs through the real application. Review, approval reset/CAS, PDF/DOCX, confirmed speaker labels, persistent/solo playback, person briefing, saved overview and automatically refreshed curator reminders are integrated. #14, #15, #104, #105, #107 and #120 have completed evidence. Actual GPU case-two processing took 152.05 seconds; automatic content is still a draft.
+
+The final shared source `b435586` adds the versioned facilitator canvas, trilingual landing and capture/development-fixture refinements. Read the #94 receipt for the combined release's actual live proof; merging source alone does not complete each feature's acceptance.
 
 No extra model, workflow engine, external messaging channel or organizational-memory system is needed to demonstrate this release.
 

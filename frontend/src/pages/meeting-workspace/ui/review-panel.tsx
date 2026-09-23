@@ -315,6 +315,7 @@ export function ReviewPanel({
             {t.markReviewed}
           </label>
           <Button
+            data-testid="review-save"
             disabled={!canEdit || !dirty || save.isPending || reload.isPending}
             onClick={() => {
               setSaveError("");
@@ -335,6 +336,7 @@ export function ReviewPanel({
             {save.isPending ? t.loading : t.save}
           </Button>
           <Button
+            data-testid="review-export-pdf"
             variant="outline"
             disabled={
               !canEdit || dirty || !review.reviewed || download.isPending
@@ -344,6 +346,7 @@ export function ReviewPanel({
             {t.pdf}
           </Button>
           <Button
+            data-testid="review-export-docx"
             variant="outline"
             disabled={
               !canEdit || dirty || !review.reviewed || download.isPending
@@ -709,6 +712,48 @@ export function ReviewPanel({
                   </section>
                 )
               )}
+              {!!review.segments.length && (
+                <div className="space-y-2 rounded-xl border bg-card p-4">
+                  <span className="text-sm font-medium">{t.source}</span>
+                  <div className="flex flex-wrap gap-2">
+                    {draft.summary_source_segment_ids?.map((id) => (
+                      <button
+                        key={id}
+                        type="button"
+                        className="text-xs text-primary underline"
+                        onClick={() => seekSource(id)}
+                      >
+                        {t.source}{" "}
+                        {transcriptTime(segmentById.get(id)?.start_ms ?? 0)}
+                      </button>
+                    ))}
+                  </div>
+                  <select
+                    aria-label={t.chooseSource}
+                    className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+                    value=""
+                    onChange={(event) => {
+                      const id = event.target.value;
+                      if (id && !draft.summary_source_segment_ids?.includes(id))
+                        editDraft((current) => ({
+                          ...current,
+                          summary_source_segment_ids: [
+                            ...(current.summary_source_segment_ids ?? []),
+                            id,
+                          ],
+                        }));
+                    }}
+                  >
+                    <option value="">{t.chooseSource}</option>
+                    {review.segments.map((segment) => (
+                      <option key={segment.id} value={segment.id}>
+                        {transcriptTime(segment.start_ms)} ·{" "}
+                        {segment.text.slice(0, 80)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
             <aside className="rounded-xl border bg-card p-4">
               <h3 className="font-medium">{t.speakers}</h3>
@@ -787,12 +832,9 @@ export function ReviewPanel({
                         </button>
                       )}
                       {assignmentPending && (
-                        <p
-                          role="status"
-                          className="text-xs font-medium text-amber-700 dark:text-amber-300"
-                        >
+                        <output className="text-xs font-medium text-amber-700 dark:text-amber-300">
                           {t.voiceAssignmentPending}
-                        </p>
+                        </output>
                       )}
                       {speaker.merged_into_speaker_id && (
                         <p className="text-xs text-muted-foreground">
@@ -1026,6 +1068,39 @@ export function ReviewPanel({
                     </button>
                   ))}
                 </div>
+                {!!review.segments.length && (
+                  <select
+                    aria-label={t.chooseSource}
+                    className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+                    value=""
+                    onChange={(event) => {
+                      const id = event.target.value;
+                      if (id && !item.source_segment_ids.includes(id))
+                        editDraft((current) => ({
+                          ...current,
+                          action_items: current.action_items.map((entry, i) =>
+                            i === index
+                              ? {
+                                  ...entry,
+                                  source_segment_ids: [
+                                    ...entry.source_segment_ids,
+                                    id,
+                                  ],
+                                }
+                              : entry
+                          ),
+                        }));
+                    }}
+                  >
+                    <option value="">{t.chooseSource}</option>
+                    {review.segments.map((segment) => (
+                      <option key={segment.id} value={segment.id}>
+                        {transcriptTime(segment.start_ms)} ·{" "}
+                        {segment.text.slice(0, 80)}
+                      </option>
+                    ))}
+                  </select>
+                )}
                 <Button
                   size="sm"
                   variant="ghost"

@@ -24,6 +24,7 @@ class TranscriptSegment(BaseModel):
 class ResultVersionRead(ReadModel):
     id: UUID
     recording_id: UUID
+    canvas_version_id: UUID | None
     job_id: UUID
     revision: int
     status: Literal["draft", "reviewed"]

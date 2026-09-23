@@ -13,16 +13,18 @@
 | Dev Данила | https://dev-danil.saint-tibo.win/login | https://dev-danil.saint-tibo.win/meetings?auth=manual |
 | Production | https://saint-tibo.win/login | https://saint-tibo.win/meetings |
 
-Дополнительный интерфейс `/workspace` включён через
-[PR #124](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/pull/124):
+В `/player` доступны сохранённый протокол и раскрываемый редактор:
 получение транскрипта, ручная проверка, история версий и выбор источников.
-Для полного GPU-конвейера и основного демо используйте `/meetings`.
+Старый адрес `/workspace` перенаправляет в `/player`.
+Для запуска полного GPU-конвейера используйте `/meetings`.
 
-Текущий выпуск от 23 сентября 2026: dev-danil `420aac5`, production
-`1adbcb5` — общая реализация из dev слита через
-[PR #119](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/pull/119)
-и развёрнута на обоих серверах. Обычный production-доступ под демо-аккаунтом
-и сохранность пользовательской встречи подтверждены после деплоя.
+GPU-конвейер выпущен через [PR #119](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/pull/119),
+защита редактора — через [PR #127](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/pull/127).
+Следующее изменение Ивана `12abf23` объединяет плеер и редактор.
+Точный текущий SHA обоих серверов и результат проверки этого экрана смотрите
+в [последней записи #94](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/94).
+Обычный production-доступ под демо-аккаунтом и сохранность пользовательской
+встречи подтверждены после деплоя.
 [Финальная браузерная проверка](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/94#issuecomment-5794894930).
 
 Для обоих окружений:
