@@ -1,7 +1,5 @@
 # WEB-20 — transcript synchronization
 
-Last commit: 16cd152 (implementation), 818b7d9 (integration guide).
-
 ## Current Behavior
 
 - `frontend/src/shared/ui/transcript-sync` exports `useTranscriptSync`,

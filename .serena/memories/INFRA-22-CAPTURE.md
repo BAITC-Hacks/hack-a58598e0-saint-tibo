@@ -1,8 +1,5 @@
 # External meeting capture kernel
 
-Last commit: 190900d22c8ea3c99b522409d4fc730a6e642cab (docs),
-59a075fca5e4b340ff32d63424226bf76989673e (implementation).
-
 ## Current Behavior
 
 - `tools/meeting-capture/url.ts`: closed HTTPS Teams/Meet/Zoom link policy;
