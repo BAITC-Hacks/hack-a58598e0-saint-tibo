@@ -19,10 +19,13 @@
   Default lease 60s, heartbeat at lease/3, attempt timeout 2h.
   Lost lease/SIGTERM cannot publish success; logs contain IDs/stage/error codes.
 - States: queued/running/succeeded/failed/interrupted. A successful
-  `target_stage=transcribe` means transcript ready. Polling guidance: 2s.
+  `target_stage=transcribe` means transcript ready. Canonical UI polls every 3s
+  while active; older contract guidance says 2s.
 - Worker supervises the separate local STT process (MODELS-01); complete
   output atomically publishes one ResultVersion plus segments and job link.
   Empty/malformed/oversized output fails; no partial successful version.
+- Canonical duration is ceil(frames*1000/sample_rate), checked by exact equality;
+  persisted model_id/revision now comes from the verified small/turbo bundle.
 - Read-back: `GET /results`, `GET /results/{result_version_id}`,
   `GET /results/{result_version_id}/segments`. All are owner-scoped;
   foreign meeting/recording/job/version gives 404. Segments are paginated.
@@ -30,7 +33,7 @@
   `revision=1`, `completed_stage=transcribe`. Manual review increments revision
   and may set status=reviewed, retaining completed_stage=transcribe (API-13).
   Each segment has UUID, recording/version IDs, integer `start_ms/end_ms`
-  and text; `speaker_id=null` until #12.
+  and text; `speaker_id=null` in core 6ed682e. Shared #12 is not deployed yet.
 - See `docs/processing-jobs.md`, `docs/transcription.md`, generated OpenAPI.
 
 ## Known Gaps
@@ -43,4 +46,4 @@
   Retry acceptance/idempotency passed, but completion of that retry was not
   proven after a temporary QA logger failed. Do not combine those claims.
 
-Last commit: `ab3d3312c3bafb3892bde93539383cea9e48b6de` (audited tree, 2026-09-23; live evidence is separate).
+Last commit: `6ed682e734620ec6cc710ad59192350e3f46ed39` (audited core release tree, 2026-09-23; production 7d5b481 LIVE-OK; TEST-01).

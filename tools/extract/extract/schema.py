@@ -88,6 +88,12 @@ def validate(payload: Any, known_segment_ids: set[int]) -> dict[str, Any]:
         for key in ("assignee_text", "due_text"):
             if item[key] is not None:
                 _text(item[key], 200)
+        # An explicit absence marker is not a deadline. Preserve all actual
+        # relative/event-based phrases and leave attribution to human review.
+        if item["due_text"] is not None and " ".join(item["due_text"].casefold().split()) in {
+            "не указан", "не указано", "срок не указан",
+        }:
+            item["due_text"] = None
         _check(item["due_date"] is None)
     summary = payload["summary"]
     _check(isinstance(summary, dict) and set(summary) == {"topics", "decisions", "open_questions"})
