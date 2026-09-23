@@ -1,0 +1,19 @@
+# Same CUDA/cuBLAS/cuDNN versions as CTranslate2 v4.8.2's official Dockerfile.
+FROM nvidia/cuda:12.8.1-base-ubuntu22.04@sha256:001469ea0f3dec85a1ca929aeea3b58ae369d4c11228b10aec1f642bb6ca7a6f
+COPY --from=ghcr.io/astral-sh/uv:0.12.13 /uv /bin/uv
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      ca-certificates libgomp1 libcublas-12-8=12.8.4.1-1 libcudnn9-cuda-12=9.10.2.21-1 \
+    && apt-get purge -y cuda-compat-12-8 \
+    && rm -rf /var/lib/apt/lists/*
+ENV UV_PYTHON_INSTALL_DIR=/opt/python UV_PYTHON_PREFERENCE=only-managed \
+    UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
+RUN uv python install 3.13.14
+WORKDIR /opt/stt
+COPY tools/transcribe/pyproject.toml tools/transcribe/uv.lock ./
+RUN --mount=type=cache,target=/root/.cache/uv uv sync --locked --no-dev --python 3.13.14 \
+    && chmod -R a+rX /opt/python /opt/stt
+COPY tools/transcribe/transcribe.py tools/transcribe/prepare_model.py ./
+ENV PYTHONUNBUFFERED=1 HF_HUB_OFFLINE=1 HF_HUB_DISABLE_TELEMETRY=1 DO_NOT_TRACK=1 \
+    OMP_NUM_THREADS=4 CUDA_MODULE_LOADING=LAZY
+USER 10001:10001
+ENTRYPOINT ["/opt/stt/.venv/bin/python", "/opt/stt/transcribe.py"]

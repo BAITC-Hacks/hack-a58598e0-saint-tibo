@@ -18,6 +18,7 @@ import type {
   MeetingCreate,
   MeetingUpdate,
   ParticipantCreate,
+  ProcessingJobCreate,
   ProcessingJobRead,
   RecordingRead,
 } from "#/shared/api";
@@ -156,10 +157,13 @@ export async function uploadFile(
   return uploaded;
 }
 
+export type ProcessingTarget = NonNullable<ProcessingJobCreate["target_stage"]>;
+
 export const startProcessing = async (
   meetingId: string,
   recordingId: string,
-  retryOfJobId?: string
+  retryOfJobId?: string,
+  targetStage: ProcessingTarget = "transcribe"
 ) =>
   required(
     await createProcessingJob({
@@ -168,6 +172,7 @@ export const startProcessing = async (
       body: {
         request_key: crypto.randomUUID(),
         language: "auto",
+        target_stage: targetStage,
         ...(retryOfJobId ? { retry_of_job_id: retryOfJobId } : {}),
       },
     })

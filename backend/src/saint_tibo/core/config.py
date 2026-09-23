@@ -19,6 +19,8 @@ class Settings(BaseSettings):
     http_timeout_seconds: float = Field(default=5, gt=0)
     database_timeout_seconds: float = Field(default=5, gt=0)
     log_level: str = "INFO"
+    honcho_url: str | None = None
+    honcho_jwt_secret: str | None = None
 
     recording_storage_path: Path = Path("../.data/recordings")
     recording_max_bytes: int = Field(default=512 * 1024 * 1024, ge=1)
@@ -34,3 +36,25 @@ class Settings(BaseSettings):
     stt_python_path: Path = Path("/app/stt/.venv/bin/python")
     stt_script_path: Path = Path("/app/stt/transcribe.py")
     stt_model_path: Path = Path("/models/small")
+
+    extract_script_path: Path = Path("/app/extract/run.py")
+    extract_runtime_path: Path = Path("/llama/llama-server")
+    extract_model_path: Path = Path("/extract-model/Qwen3-8B-Q4_K_M.gguf")
+    extract_remote_enabled: bool = False
+    extract_remote_identity_file: Path = Path("/run/stt-ssh/extract_ed25519")
+    extract_remote_runner_path: str = Field(
+        default="/opt/saint-tibo/extract/remote_runner.py", pattern=r"^/[A-Za-z0-9_./-]+$"
+    )
+    diarization_python_path: Path = Path("/app/diarize/.venv/bin/python")
+    diarization_script_path: Path = Path("/app/diarize/diarize.py")
+    diarization_model_path: Path = Path("/models/diarization-v1")
+
+    stt_remote_enabled: bool = False
+    stt_remote_host: str = Field(default="", pattern=r"^[A-Za-z0-9.:-]*$")
+    stt_remote_user: str = Field(default="saint-stt", pattern=r"^[a-z_][a-z0-9_-]*$")
+    stt_remote_port: int = Field(default=22, ge=1, le=65535)
+    stt_remote_identity_file: Path = Path("/run/stt-ssh/id_ed25519")
+    stt_remote_known_hosts_file: Path = Path("/run/stt-ssh/known_hosts")
+    stt_remote_runner_path: str = Field(
+        default="/opt/saint-tibo/stt/remote_runner.py", pattern=r"^/[A-Za-z0-9_./-]+$"
+    )

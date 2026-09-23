@@ -6,4 +6,5 @@ export type TranscriptSegment = {
   start_ms: number;
   end_ms: number;
   text: string;
+  speaker_id?: string | null;
 };

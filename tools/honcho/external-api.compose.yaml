@@ -1,0 +1,9 @@
+# Temporary owner-authorized external model mode. Use only with an explicit
+# provider URL/key in tools/honcho/.env and disclose participant-data egress.
+services:
+  api:
+    networks: [honcho, model_egress]
+  deriver:
+    networks: [honcho, model_egress]
+networks:
+  model_egress: {}

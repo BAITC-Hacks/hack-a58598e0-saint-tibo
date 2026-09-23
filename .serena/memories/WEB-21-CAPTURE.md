@@ -17,6 +17,8 @@
   finalizeRecording, using owner JWT from backendClient.
 - `createCaptureTarget` and `saveCapture` keep capture and transport
   separate. A wired SDK adapter is not evidence of an end-to-end live upload.
+- #106 stores immutable started_at/timezone at MediaRecorder start and carries
+  them in CaptureResult/createMeeting. Later saves/retries no longer use save time.
 - Docs: `docs/capture.md`, `docs/meeting-contract.md`.
   Implementation `a35e16e`, real transport `abae259`; historical synthetic
   checks are documented, not rerun in this memory synchronization.
@@ -24,12 +26,11 @@
 ## Known Gaps
 
 - OS/browser picker permission, real upload and protected playback need
-  current live acceptance; #21 remains open. Latest
-  [#21 claim](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/21#issuecomment-5793186318)
-  is Ivan's capture→upload→media verification, not a success report.
+  current live acceptance; #21/#106 remain open. [#106 integration](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/106#issuecomment-5794071073)
+  is code/build proof, not completed OS/browser capture-to-save acceptance.
 - Route loss/reload requires downloading local output if it has not been
   saved; there is no durable browser recovery.
 - External meeting bot AudioSink/service authentication is #81 and INFRA-22,
   not the browser's existing owner-authenticated upload adapter.
 
-Last commit: `a2cfe28c10b214a8189b8c140d9d6b31167bf27a` (audited tree, 2026-09-23; not a live assertion).
+Last commit: `6ed682e734620ec6cc710ad59192350e3f46ed39` (audited core release tree, 2026-09-23; production 7d5b481 LIVE-OK; TEST-01).

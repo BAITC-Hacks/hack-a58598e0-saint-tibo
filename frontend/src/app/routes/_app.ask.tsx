@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { SurfacesPage } from "#/pages/meeting-workspace";
+import { OrgAskPage } from "#/pages/org-ask";
 
 export const Route = createFileRoute("/_app/ask")({
-  component: () => <SurfacesPage kind="ask" />,
+  component: OrgAskPage,
 });
