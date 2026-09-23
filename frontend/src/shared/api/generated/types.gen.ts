@@ -191,6 +191,28 @@ export type PageParticipantRead = {
 };
 
 /**
+ * PageProcessingJobRead
+ */
+export type PageProcessingJobRead = {
+    /**
+     * Items
+     */
+    items: Array<ProcessingJobRead>;
+    /**
+     * Limit
+     */
+    limit: number;
+    /**
+     * Offset
+     */
+    offset: number;
+    /**
+     * Total
+     */
+    total: number;
+};
+
+/**
  * PageRecordingRead
  */
 export type PageRecordingRead = {
@@ -274,6 +296,104 @@ export type ParticipantUpdate = {
  * Permission
  */
 export type Permission = 'profile:read' | 'meeting:read' | 'meeting:write' | 'access:read' | 'users:read' | 'users:manage' | 'sessions:revoke';
+
+/**
+ * ProcessingJobCreate
+ */
+export type ProcessingJobCreate = {
+    /**
+     * Allow Incomplete
+     */
+    allow_incomplete?: boolean;
+    /**
+     * Language
+     */
+    language?: 'auto' | 'ru' | 'kk' | 'mixed';
+    /**
+     * Request Key
+     *
+     * Generate once per user action; reuse on HTTP retries.
+     */
+    request_key: string;
+    /**
+     * Retry Of Job Id
+     *
+     * Retry a failed/interrupted job of this recording as a new job.
+     */
+    retry_of_job_id?: string | null;
+};
+
+/**
+ * ProcessingJobRead
+ */
+export type ProcessingJobRead = {
+    /**
+     * Allow Incomplete
+     */
+    allow_incomplete: boolean;
+    /**
+     * Attempt
+     */
+    attempt: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Error Code
+     */
+    error_code: string | null;
+    /**
+     * Finished At
+     */
+    finished_at: string | null;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Language
+     */
+    language: 'auto' | 'ru' | 'kk' | 'mixed';
+    /**
+     * Progress
+     *
+     * Measured progress within this stage.
+     */
+    progress: number | null;
+    /**
+     * Recording Id
+     */
+    recording_id: string;
+    /**
+     * Request Key
+     */
+    request_key: string;
+    /**
+     * Result Version Id
+     */
+    result_version_id: string | null;
+    /**
+     * Retry Of Job Id
+     */
+    retry_of_job_id: string | null;
+    /**
+     * Stage
+     */
+    stage: 'decode' | 'transcribe' | 'diarize' | 'extract' | 'complete';
+    /**
+     * Started At
+     */
+    started_at: string | null;
+    /**
+     * Status
+     */
+    status: 'queued' | 'running' | 'succeeded' | 'failed' | 'interrupted';
+    /**
+     * Updated At
+     */
+    updated_at: string;
+};
 
 /**
  * RecordingCreate
@@ -1664,6 +1784,193 @@ export type FinalizeRecordingResponses = {
 };
 
 export type FinalizeRecordingResponse = FinalizeRecordingResponses[keyof FinalizeRecordingResponses];
+
+export type ListProcessingJobsData = {
+    body?: never;
+    path: {
+        /**
+         * Meeting Id
+         */
+        meeting_id: string;
+        /**
+         * Recording Id
+         */
+        recording_id: string;
+    };
+    query?: {
+        /**
+         * Limit
+         */
+        limit?: number;
+        /**
+         * Offset
+         */
+        offset?: number;
+    };
+    url: '/api/v1/meetings/{meeting_id}/recordings/{recording_id}/jobs';
+};
+
+export type ListProcessingJobsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ErrorResponse;
+    /**
+     * Internal Server Error
+     */
+    500: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
+};
+
+export type ListProcessingJobsError = ListProcessingJobsErrors[keyof ListProcessingJobsErrors];
+
+export type ListProcessingJobsResponses = {
+    /**
+     * Successful Response
+     */
+    200: PageProcessingJobRead;
+};
+
+export type ListProcessingJobsResponse = ListProcessingJobsResponses[keyof ListProcessingJobsResponses];
+
+export type CreateProcessingJobData = {
+    body: ProcessingJobCreate;
+    path: {
+        /**
+         * Meeting Id
+         */
+        meeting_id: string;
+        /**
+         * Recording Id
+         */
+        recording_id: string;
+    };
+    query?: never;
+    url: '/api/v1/meetings/{meeting_id}/recordings/{recording_id}/jobs';
+};
+
+export type CreateProcessingJobErrors = {
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ErrorResponse;
+    /**
+     * Internal Server Error
+     */
+    500: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
+};
+
+export type CreateProcessingJobError = CreateProcessingJobErrors[keyof CreateProcessingJobErrors];
+
+export type CreateProcessingJobResponses = {
+    /**
+     * Successful Response
+     */
+    202: ProcessingJobRead;
+};
+
+export type CreateProcessingJobResponse = CreateProcessingJobResponses[keyof CreateProcessingJobResponses];
+
+export type GetProcessingJobData = {
+    body?: never;
+    path: {
+        /**
+         * Meeting Id
+         */
+        meeting_id: string;
+        /**
+         * Recording Id
+         */
+        recording_id: string;
+        /**
+         * Job Id
+         */
+        job_id: string;
+    };
+    query?: never;
+    url: '/api/v1/meetings/{meeting_id}/recordings/{recording_id}/jobs/{job_id}';
+};
+
+export type GetProcessingJobErrors = {
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ErrorResponse;
+    /**
+     * Internal Server Error
+     */
+    500: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
+};
+
+export type GetProcessingJobError = GetProcessingJobErrors[keyof GetProcessingJobErrors];
+
+export type GetProcessingJobResponses = {
+    /**
+     * Successful Response
+     */
+    200: ProcessingJobRead;
+};
+
+export type GetProcessingJobResponse = GetProcessingJobResponses[keyof GetProcessingJobResponses];
 
 export type GetRecordingMediaData = {
     body?: never;
