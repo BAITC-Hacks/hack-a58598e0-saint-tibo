@@ -1,9 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 
+import { createCaptureTarget, saveCapture } from "#/shared/api/capture-upload";
+import type { CaptureTarget } from "#/shared/api/capture-upload";
+import type { RecordingRead } from "#/shared/api/generated";
 import { AudioCapture, initialCaptureState } from "#/shared/lib/audio-capture";
 import type { CaptureIssue, CaptureSource } from "#/shared/lib/audio-capture";
 import { m } from "#/shared/lib/i18n/messages";
 import { useLocale } from "#/shared/lib/locales";
+import { MeetingPlayer } from "#/shared/ui/meeting-player";
 import { Button } from "#/shared/ui/shadcn/button";
 
 export const MeetingCapture = () => {
@@ -13,13 +17,21 @@ export const MeetingCapture = () => {
   const [notified, setNotified] = useState(false);
   const [url, setUrl] = useState<string>();
   const [playbackError, setPlaybackError] = useState(false);
+  const [title, setTitle] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const [saved, setSaved] = useState<RecordingRead>();
+  const [targetCreated, setTargetCreated] = useState(false);
   const objectUrl = useRef<string | undefined>(undefined);
   const capture = useRef<AudioCapture | null>(null);
+  const target = useRef<CaptureTarget | null>(null);
+  const saveAbort = useRef<AbortController | null>(null);
   const busy = ["requesting", "recording", "stopping"].includes(state.phase);
   const t = { locale };
   useEffect(
     () => () => {
       capture.current?.dispose();
+      saveAbort.current?.abort();
       if (objectUrl.current) URL.revokeObjectURL(objectUrl.current);
     },
     []
@@ -28,9 +40,10 @@ export const MeetingCapture = () => {
     const warn = (event: BeforeUnloadEvent) => {
       event.preventDefault();
     };
-    if (busy || state.result) window.addEventListener("beforeunload", warn);
+    if (busy || saving || (state.result && !saved))
+      window.addEventListener("beforeunload", warn);
     return () => window.removeEventListener("beforeunload", warn);
-  }, [busy, state.result]);
+  }, [busy, saving, saved, state.result]);
   const issues: Record<CaptureIssue, string> = {
     unsupported: m.capture_error_unsupported({}, t),
     permission: m.capture_error_permission({}, t),
@@ -49,6 +62,10 @@ export const MeetingCapture = () => {
     error: m.capture_error({}, t),
   };
   const start = () => {
+    target.current = null;
+    setTargetCreated(false);
+    setSaved(undefined);
+    setSaveError("");
     capture.current?.dispose();
     capture.current = new AudioCapture((next) => {
       if (next.result) {
@@ -62,6 +79,13 @@ export const MeetingCapture = () => {
     void capture.current.start(source);
   };
   const reset = () => {
+    saveAbort.current?.abort();
+    saveAbort.current = null;
+    target.current = null;
+    setTargetCreated(false);
+    setSaving(false);
+    setSaveError("");
+    setSaved(undefined);
     capture.current?.dispose();
     capture.current = null;
     if (objectUrl.current) URL.revokeObjectURL(objectUrl.current);
@@ -69,6 +93,39 @@ export const MeetingCapture = () => {
     setUrl(undefined);
     setState(initialCaptureState);
     setPlaybackError(false);
+  };
+  const save = async () => {
+    if (!state.result || saving) return;
+    const controller = new AbortController();
+    saveAbort.current = controller;
+    setSaving(true);
+    setSaveError("");
+    try {
+      target.current ??= await createCaptureTarget(
+        state.result,
+        title.trim() || m.capture_save_default_title({}, t),
+        controller.signal
+      );
+      setTargetCreated(true);
+      const recording = await saveCapture(
+        state.result,
+        target.current,
+        controller.signal
+      );
+      if (!controller.signal.aborted) setSaved(recording);
+    } catch (error) {
+      if (!controller.signal.aborted)
+        setSaveError(
+          error instanceof Error && error.message
+            ? error.message
+            : m.capture_save_error({}, t)
+        );
+    } finally {
+      if (saveAbort.current === controller) {
+        saveAbort.current = null;
+        setSaving(false);
+      }
+    }
   };
   const seconds = Math.floor(state.elapsedMs / 1000);
   return (
@@ -138,7 +195,7 @@ export const MeetingCapture = () => {
             : m.capture_stop({}, t)}
         </Button>
         {state.result && (
-          <Button variant="outline" onClick={reset}>
+          <Button variant="outline" disabled={saving} onClick={reset}>
             {m.capture_discard({}, t)}
           </Button>
         )}
@@ -205,6 +262,48 @@ export const MeetingCapture = () => {
           >
             {m.capture_download({}, t)}
           </a>
+        </div>
+      )}
+      {state.result && (
+        <div className="space-y-3 rounded-lg border p-3">
+          <label className="grid gap-2 text-sm">
+            {m.capture_save_title({}, t)}
+            <input
+              className="rounded-md border bg-background p-2"
+              value={title}
+              disabled={saving || Boolean(saved) || targetCreated}
+              placeholder={m.capture_save_default_title({}, t)}
+              onChange={(event) => setTitle(event.target.value)}
+            />
+          </label>
+          {!saved && (
+            <Button disabled={saving} onClick={() => void save()}>
+              {saving
+                ? m.capture_saving({}, t)
+                : targetCreated
+                  ? m.capture_save_retry({}, t)
+                  : m.capture_save({}, t)}
+            </Button>
+          )}
+          {saveError && (
+            <p role="alert" className="text-sm text-destructive">
+              {saveError}
+            </p>
+          )}
+          {saved && (
+            <output className="block text-sm">
+              {m.capture_saved({ status: saved.status }, t)}
+            </output>
+          )}
+          {saved?.media_url && (
+            <MeetingPlayer
+              source={{
+                id: saved.id,
+                url: saved.media_url,
+                title: saved.original_filename,
+              }}
+            />
+          )}
         </div>
       )}
       <p className="text-sm text-muted-foreground">{m.capture_limits({}, t)}</p>

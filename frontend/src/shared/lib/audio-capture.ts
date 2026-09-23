@@ -48,7 +48,7 @@ export const initialCaptureState: CaptureState = {
   chunkCount: 0,
   sources: [],
 };
-// hack: bounded local RAM only; wire durable capture and the generated transport with #9.
+// Bounded local RAM; durable upload begins only after capture stops.
 const MAX_BYTES = 64 * 1024 * 1024;
 const MAX_CHUNK_BYTES = 8 * 1024 * 1024;
 const MAX_DURATION_MS = 30 * 60 * 1000;
