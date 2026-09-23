@@ -107,15 +107,22 @@ async def transcribe(
         ) from exc
     finally:
         if process.returncode is None:
+            kill_group = getattr(os, "killpg", None)
             try:
-                os.killpg(process.pid, signal.SIGTERM)
+                if kill_group is None:
+                    process.terminate()
+                else:
+                    kill_group(process.pid, signal.SIGTERM)
             except ProcessLookupError:
                 pass
             try:
                 await asyncio.wait_for(process.wait(), timeout=5)
             except TimeoutError:
                 try:
-                    os.killpg(process.pid, signal.SIGKILL)
+                    if kill_group is None:
+                        process.kill()
+                    else:
+                        kill_group(process.pid, getattr(signal, "SIGKILL", signal.SIGTERM))
                 except ProcessLookupError:
                     pass
                 await process.wait()
