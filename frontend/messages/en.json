@@ -87,9 +87,14 @@
   "transcript_source": "Source at {time}",
   "transcript_source_missing": "Source unavailable",
   "transcript_demo_title": "Transcript synchronization demo",
-  "transcript_demo_help": "Synthetic data only. Eight tones start every four seconds; each lasts three seconds, followed by silence. Click a segment or task source to seek without changing play/pause. No audio or text is uploaded.",
+  "transcript_demo_help": "Choose the synthetic timeline to test synchronization, or one of the two published meeting recordings to listen to. Timed segments are not available for the real recordings yet.",
   "transcript_demo_audio": "Synthetic tones · 32 seconds",
   "transcript_demo_segment": "Signal {number} · {frequency} Hz. This is a synthetic transcript marker.",
   "transcript_demo_action": "Example action item",
-  "transcript_demo_action_text": "Compare signals 3 and 7. The buttons use source_segment_ids; an unavailable reference is disabled."
+  "transcript_demo_action_text": "Compare signals 3 and 7. The buttons use source_segment_ids; an unavailable reference is disabled.",
+  "transcript_demo_choose": "Recording to play",
+  "transcript_demo_synthetic": "Synthetic recording · 32 seconds",
+  "transcript_demo_meeting_one": "Meeting 1 · MP3",
+  "transcript_demo_meeting_two": "Meeting 2 · MP3",
+  "transcript_demo_no_transcript": "This recording has no timed segments yet. Highlighting and source jumps will be available after the recording is processed."
 }
