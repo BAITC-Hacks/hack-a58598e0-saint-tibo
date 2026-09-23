@@ -5,7 +5,7 @@ models. No external API, no hidden fallback, no transcript to external
 LLM. Must work with egress disabled after model bundle is prepared.
 `models/` is gitignored — weights never enter git.
 
-## Feasibility (docs/stt-feasibility.md, verified 2026-09-23)
+## Feasibility (per `docs/stt-feasibility.md`)
 
 - First CPU baseline: `Systran/faster-whisper-small` (MIT), CTranslate2,
   `device=cpu`, `compute_type=int8`, 4 threads, one file at a time.

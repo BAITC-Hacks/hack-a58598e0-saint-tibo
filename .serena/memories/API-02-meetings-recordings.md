@@ -15,14 +15,12 @@ ActionItem(id, result_version_id, source segments).
 Timeline = integer ms from THAT recording start; `started_at`+`timezone`
 required or relative deadlines stay unnormalized. Names/labels are never IDs.
 
-## Implemented — IN `main` since 62b137d (PR #80)
+## Implemented — on `main` (PR #80, 62b137d)
 
-Status 2026-09-23: shipped. Path was codex/9-meeting-storage e9a9f75 →
-`danil` eca53f9 (verified on saint-dev-danil) → `dev` 23e1207 → `main`.
 All endpoints live in `contracts/openapi.json`. Files:
 `backend/src/saint_tibo/modules/meetings/*`, `api/router.py`,
 `auth/policy.py`, `core/config.py`, migration `0002_meetings`.
-Prod deploy is manual — `main` updated ≠ saint-tibo.win redeployed.
+Prod deploys manually from `main` only — see INFRA-01.
 
 Endpoints `/api/v1`: meetings CRUD; participants CRUD;
 `PUT /meetings/{m}/recordings/{r}` raw stream (≤512 MiB, source=file);

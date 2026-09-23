@@ -14,7 +14,7 @@ import models in `migrations/env.py`; parallel checkouts need unique
 
 ## Table state
 
-- `main`/`dev` (since 62b137d/23e1207): `0001_app_schema` +
+- `main`/`dev` (since PR #80): `0001_app_schema` +
   `0002_meetings` → `meetings`, `participants`, `recordings`,
   `recording_chunks` (PK (recording_id, sequence);
   start_ms/end_ms/sha256 per chunk).
