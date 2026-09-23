@@ -31,7 +31,7 @@ writer ends `await session.commit()`.
   NOT bypass ownership. Timestamps RFC 3339, server returns UTC.
 - Unauthorized → 401. Mixins: `UUIDPrimaryKey`, `OwnedByUser`, `Timestamps`.
 
-## State on `main` (62b137d)
+## State on `main`
 
 Auth, `/api/v1/me`, `/api/v1/admin/access`, `/health/*`, plus the full
 meetings surface (meetings/participants/recordings/chunks/finalize/media
