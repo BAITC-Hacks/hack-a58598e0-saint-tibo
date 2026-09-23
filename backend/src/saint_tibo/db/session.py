@@ -10,6 +10,7 @@ from saint_tibo.core.config import Settings
 def create_engine(settings: Settings) -> AsyncEngine:
     return create_async_engine(
         str(settings.database_url),
+        hide_parameters=True,
         pool_pre_ping=True,
         pool_timeout=settings.database_timeout_seconds,
         connect_args={
