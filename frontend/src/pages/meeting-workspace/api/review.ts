@@ -71,6 +71,8 @@ function realDocument(
   data: ReviewRead,
   segments: SegmentRead[]
 ): ReviewDocument {
+  if ("source" in data && String(data.source) === "mock")
+    return reviewSchema.parse({ ...data, segments });
   return {
     source: "real",
     recording_id: data.recording_id,
@@ -160,16 +162,7 @@ async function realTranscript(
 export async function loadReview(
   meetingId: string
 ): Promise<ReviewDocument | null> {
-  if (!(import.meta.env.DEV && import.meta.env.VITE_API_MODE === "mock"))
-    return realTranscript(meetingId);
-  const result = await backendClient.get({
-    url: `/api/v1/meetings/${encodeURIComponent(meetingId)}/review`,
-    security: [{ scheme: "bearer", type: "http" }],
-  });
-  if (result.response?.status === 404) return null;
-  if (result.error || result.data === undefined)
-    throw new Error(apiErrorMessage(result.error, "Could not load review"));
-  return reviewSchema.parse(result.data);
+  return realTranscript(meetingId);
 }
 
 export const reviewQuery = (meetingId: string) =>
@@ -218,13 +211,14 @@ export async function saveReview(meetingId: string, review: ReviewDocument) {
   }
   const result = await backendClient.patch({
     ...jsonBodySerializer,
-    url: `/api/v1/meetings/${encodeURIComponent(meetingId)}/review`,
+    url: `/api/v1/meetings/${encodeURIComponent(meetingId)}/recordings/${encodeURIComponent(review.recording_id ?? "")}/results/${encodeURIComponent(review.result_version_id)}/review`,
     security: [{ scheme: "bearer", type: "http" }],
     headers: { "Content-Type": "application/json" },
     body: {
       revision: review.revision,
       summary: review.summary,
       speakers: review.speakers,
+      segments: review.segments,
       action_items: review.action_items,
       reviewed: review.reviewed,
     },
@@ -240,14 +234,8 @@ export async function downloadReview(
   review: ReviewDocument
 ) {
   const result = await backendClient.get<Blob>({
-    url:
-      review.source === "mock"
-        ? `/api/v1/meetings/${encodeURIComponent(meetingId)}/export`
-        : `/api/v1/meetings/${encodeURIComponent(meetingId)}/recordings/${encodeURIComponent(review.recording_id ?? "")}/results/${encodeURIComponent(review.result_version_id)}/export`,
-    query:
-      review.source === "mock"
-        ? { format }
-        : { format, revision: review.revision },
+    url: `/api/v1/meetings/${encodeURIComponent(meetingId)}/recordings/${encodeURIComponent(review.recording_id ?? "")}/results/${encodeURIComponent(review.result_version_id)}/export`,
+    query: { format, revision: review.revision },
     parseAs: "blob",
     security: [{ scheme: "bearer", type: "http" }],
   });

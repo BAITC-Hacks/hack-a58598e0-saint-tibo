@@ -10,6 +10,7 @@ import {
   MessageCircleQuestion,
   NotebookTabs,
   Shield,
+  Settings,
   UserRound,
   Users,
   X,
@@ -18,6 +19,7 @@ import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
 import type { ReactNode } from "react";
 
+import { isMockApi } from "#/shared/api/backend-client";
 import { authClient, useAccess } from "#/shared/auth";
 import { m } from "#/shared/lib/i18n/messages";
 import type { Locale } from "#/shared/lib/i18n/runtime";
@@ -88,6 +90,12 @@ const navigation: NavigationItem[] = [
     to: "/profile",
     icon: UserRound,
     label: (locale) => m.nav_profile({}, { locale }),
+  },
+  {
+    to: "/settings",
+    icon: Settings,
+    label: (locale) =>
+      ({ ru: "Настройки", kk: "Баптаулар", en: "Settings" })[locale],
   },
   {
     to: "/admin/users",
@@ -236,6 +244,17 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
         </div>
       </header>
       <div className="h-[3px] bg-brand-gold" aria-hidden="true" />
+      {isMockApi() && (
+        <div className="bg-amber-100 px-4 py-1 text-center text-sm font-semibold text-amber-950">
+          {
+            {
+              ru: "Синтетические данные",
+              kk: "Синтетикалық деректер",
+              en: "Synthetic data",
+            }[locale]
+          }
+        </div>
+      )}
       <div className="flex min-h-[calc(100dvh-67px)]">
         <aside className="hidden w-[228px] shrink-0 flex-col bg-sidebar text-sidebar-foreground min-[1101px]:flex">
           <Navigation />

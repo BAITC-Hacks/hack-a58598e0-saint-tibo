@@ -3,7 +3,8 @@ import { Link } from "@tanstack/react-router";
 import { Search } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import { authClient } from "#/shared/auth";
+import { isMockApi } from "#/shared/api";
+import { authClient, useAccess } from "#/shared/auth";
 import { useLocale } from "#/shared/lib/locales";
 import { Button } from "#/shared/ui/shadcn/button";
 import { Input } from "#/shared/ui/shadcn/input";
@@ -37,6 +38,7 @@ export function SurfacesPage({
   const t = useCopy();
   const locale = useLocale();
   const session = authClient.useSession();
+  const access = useAccess();
   const meetings = useQuery(meetingsQuery(0));
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
@@ -63,18 +65,27 @@ export function SurfacesPage({
   const people = useMemo(() => {
     const map = new Map<
       string,
-      { id: string; name: string; role: string | null; meetingIds: string[] }
+      {
+        id: string;
+        name: string;
+        role: string | null;
+        meetingIds: string[];
+        participantIds: string[];
+      }
     >();
     participantQueries.forEach((query, index) => {
       query.data?.items.forEach((participant) => {
-        const current = map.get(participant.id);
-        if (current) current.meetingIds.push(meetingIds[index]);
-        else
-          map.set(participant.id, {
+        const current = map.get(participant.display_name.toLocaleLowerCase());
+        if (current) {
+          current.meetingIds.push(meetingIds[index]);
+          current.participantIds.push(participant.id);
+        } else
+          map.set(participant.display_name.toLocaleLowerCase(), {
             id: participant.id,
             name: participant.display_name,
             role: participant.role,
             meetingIds: [meetingIds[index]],
+            participantIds: [participant.id],
           });
       });
     });
@@ -95,11 +106,43 @@ export function SurfacesPage({
   const filteredTasks = tasks.filter(
     (item) =>
       (status === "all" || item.status === status) &&
-      (owner === "all" || item.assignee_participant_id === owner) &&
+      (owner === "all" ||
+        people
+          .find((person) => person.id === owner)
+          ?.participantIds.includes(item.assignee_participant_id ?? "")) &&
       `${item.text} ${item.meetingTitle} ${item.assignee_text ?? ""}`
         .toLocaleLowerCase()
         .includes(search.toLocaleLowerCase())
   );
+  const visibleTasks =
+    kind === "person"
+      ? filteredTasks.filter((item) =>
+          people
+            .find((person) => person.id === personId)
+            ?.participantIds.includes(item.assignee_participant_id ?? "")
+        )
+      : kind === "agenda"
+        ? filteredTasks
+            .filter(
+              (item) =>
+                (item.status === "open" || item.status === "in_progress") &&
+                item.due_date &&
+                item.due_date >= new Date().toISOString().slice(0, 10)
+            )
+            .toSorted((a, b) =>
+              (a.due_date ?? "9999").localeCompare(b.due_date ?? "9999")
+            )
+        : kind === "today"
+          ? filteredTasks
+              .filter(
+                (item) =>
+                  item.status === "open" || item.status === "in_progress"
+              )
+              .toSorted((a, b) =>
+                (a.due_date ?? "9999").localeCompare(b.due_date ?? "9999")
+              )
+              .slice(0, 6)
+          : filteredTasks;
   const title = t[kind === "person" ? "people" : kind];
   const unavailable = [
     "ask",
@@ -118,12 +161,37 @@ export function SurfacesPage({
             {session.data?.user.email ?? ""}
           </p>
         </div>
-        <p className="rounded-xl border p-5 text-sm text-muted-foreground">
-          {t.detailsUnavailable}
-        </p>
+        <div className="rounded-xl border p-5 text-sm">
+          <p>{access.user?.role ?? t.unknown}</p>
+          <p>{access.user?.permissions.join(" · ") ?? t.detailsUnavailable}</p>
+        </div>
       </section>
     );
   }
+
+  if (unavailable && isMockApi())
+    return (
+      <DemoExtras
+        kind={kind}
+        title={title}
+        search={search}
+        setSearch={setSearch}
+        meetings={meetings.data?.items ?? []}
+        reviews={reviewQueries.map((query) => query.data)}
+        people={people}
+        loading={loading}
+        error={
+          meetings.isError ||
+          reviewError ||
+          participantQueries.some((query) => query.isError)
+        }
+        retry={() => {
+          void meetings.refetch();
+          reviewQueries.forEach((query) => void query.refetch());
+          participantQueries.forEach((query) => void query.refetch());
+        }}
+      />
+    );
 
   if (unavailable)
     return (
@@ -193,7 +261,7 @@ export function SurfacesPage({
           </Button>
         )}
       </header>
-      {import.meta.env.DEV && import.meta.env.VITE_API_MODE === "mock" && (
+      {isMockApi() && (
         <p className="rounded-lg border border-amber-400/50 bg-amber-50 p-3 text-sm text-amber-950 dark:bg-amber-950/30 dark:text-amber-100">
           {t.sample}
         </p>
@@ -280,22 +348,7 @@ export function SurfacesPage({
                 </div>
               )}
               <div className="overflow-hidden rounded-xl border bg-card">
-                {(kind === "person"
-                  ? filteredTasks.filter(
-                      (item) => item.assignee_participant_id === personId
-                    )
-                  : kind === "agenda"
-                    ? filteredTasks
-                        .filter((item) => item.status === "open")
-                        .toSorted((a, b) =>
-                          (a.due_date ?? "9999").localeCompare(
-                            b.due_date ?? "9999"
-                          )
-                        )
-                    : kind === "today"
-                      ? filteredTasks.slice(0, 6)
-                      : filteredTasks
-                ).map((item) => (
+                {visibleTasks.map((item) => (
                   <Link
                     key={`${item.meetingId}:${item.id}`}
                     className="block border-b p-4 last:border-0 hover:bg-muted/40 focus-visible:outline-2 focus-visible:outline-ring"
@@ -309,8 +362,10 @@ export function SurfacesPage({
                       </span>
                     </div>
                     <div className="mt-1 text-sm text-muted-foreground">
-                      {people.find(
-                        (person) => person.id === item.assignee_participant_id
+                      {people.find((person) =>
+                        person.participantIds.includes(
+                          item.assignee_participant_id ?? ""
+                        )
                       )?.name ??
                         item.assignee_text ??
                         t.unknown}{" "}
@@ -318,7 +373,7 @@ export function SurfacesPage({
                     </div>
                   </Link>
                 ))}
-                {!filteredTasks.length && (
+                {!visibleTasks.length && (
                   <p className="p-6 text-sm text-muted-foreground">
                     {t.noItems}
                   </p>
@@ -537,6 +592,22 @@ export function SurfacesPage({
                             <li key={index}>{item.text}</li>
                           ))}
                         </ul>
+                        <h3 className="mt-3 text-sm font-semibold">
+                          {t.decisions}
+                        </h3>
+                        <ul className="list-inside list-disc text-sm">
+                          {review.summary.decisions.map((item, index) => (
+                            <li key={index}>{item.text}</li>
+                          ))}
+                        </ul>
+                        <h3 className="mt-3 text-sm font-semibold">
+                          {t.openQuestions}
+                        </h3>
+                        <ul className="list-inside list-disc text-sm">
+                          {review.summary.open_questions.map((item, index) => (
+                            <li key={index}>{item.text}</li>
+                          ))}
+                        </ul>
                       </section>
                     )
                 )}
@@ -562,5 +633,253 @@ function Stat({ label, value }: { label: string; value: number }) {
       <div className="text-sm text-muted-foreground">{label}</div>
       <div className="mt-1 text-2xl font-semibold tabular-nums">{value}</div>
     </div>
+  );
+}
+
+function readDemoAccess(key: string): Record<string, boolean> {
+  if (typeof window === "undefined") return {};
+  try {
+    const parsed: unknown = JSON.parse(localStorage.getItem(key) ?? "{}");
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed))
+      return Object.fromEntries(
+        Object.entries(parsed).filter(
+          ([role, value]) =>
+            ["user", "admin"].includes(role) && typeof value === "boolean"
+        )
+      );
+  } catch {
+    localStorage.removeItem(key);
+  }
+  return {};
+}
+
+function DemoExtras({
+  kind,
+  title,
+  search,
+  setSearch,
+  meetings,
+  reviews,
+  people,
+  loading,
+  error,
+  retry,
+}: {
+  kind: SurfaceKind;
+  title: string;
+  search: string;
+  setSearch: (value: string) => void;
+  meetings: { id: string; title: string }[];
+  reviews: (
+    | {
+        segments: { id: string; start_ms: number; text: string }[];
+        summary: {
+          decisions: { text: string; source_segment_ids: string[] }[];
+        };
+      }
+    | null
+    | undefined
+  )[];
+  people: {
+    id: string;
+    name: string;
+    role: string | null;
+    meetingIds: string[];
+  }[];
+  loading: boolean;
+  error: boolean;
+  retry: () => void;
+}) {
+  const locale = useLocale();
+  const { data: session } = authClient.useSession();
+  const [question, setQuestion] = useState("");
+  const accessKey = `saint-tibo-demo-access:${session?.user.id ?? ""}`;
+  const [accessState, setAccessState] = useState<{
+    key: string;
+    values: Record<string, boolean>;
+  }>({ key: "", values: {} });
+  const access =
+    accessState.key === accessKey
+      ? accessState.values
+      : readDemoAccess(accessKey);
+  const questions = reviews.flatMap(
+    (review, index) =>
+      review?.summary.decisions.slice(0, 1).map((decision) => ({
+        question: {
+          ru: `Что решили на встрече «${meetings[index]?.title}»?`,
+          kk: `«${meetings[index]?.title}» кездесуінде не шешілді?`,
+          en: `What was decided at “${meetings[index]?.title}”?`,
+        }[locale],
+        answer: decision.text,
+        meetingId: meetings[index]?.id,
+        segment: review.segments.find((segment) =>
+          decision.source_segment_ids.includes(segment.id)
+        ),
+      })) ?? []
+  );
+  const answer = questions.find((item) => item.question === question);
+  const users = people.slice(0, 8).map((person, index) => ({
+    ...person,
+    email: `demo${index + 1}@synthetic.invalid`,
+    role: index === 0 ? "admin" : "user",
+  }));
+  const label = {
+    ru: "Синтетические данные",
+    kk: "Синтетикалық деректер",
+    en: "Synthetic data",
+  }[locale];
+  return (
+    <section className="mx-auto max-w-5xl space-y-5">
+      <h1 className="text-2xl font-semibold">{title}</h1>
+      <p className="rounded-lg border border-amber-400 bg-amber-50 p-3 text-sm text-amber-950">
+        {label}
+      </p>
+      {loading ? (
+        <output className="block rounded-xl border p-6">
+          {{ ru: "Загрузка…", kk: "Жүктелуде…", en: "Loading…" }[locale]}
+        </output>
+      ) : error ? (
+        <div role="alert">
+          <p>
+            {
+              {
+                ru: "Ошибка загрузки",
+                kk: "Жүктеу қатесі",
+                en: "Loading failed",
+              }[locale]
+            }
+          </p>
+          <Button onClick={retry}>↻</Button>
+        </div>
+      ) : kind === "ask" ? (
+        <div className="space-y-4">
+          <label className="block space-y-2">
+            <span>{{ ru: "Вопрос", kk: "Сұрақ", en: "Question" }[locale]}</span>
+            <Input
+              value={question}
+              onChange={(event) => setQuestion(event.target.value)}
+            />
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {questions.slice(0, 5).map((item) => (
+              <Button
+                key={item.question}
+                variant="outline"
+                onClick={() => setQuestion(item.question)}
+              >
+                {item.question}
+              </Button>
+            ))}
+          </div>
+          {question && (
+            <div className="rounded-xl border bg-card p-5">
+              {answer ? (
+                <>
+                  <p>{answer.answer}</p>
+                  {answer.segment && answer.meetingId && (
+                    <Link
+                      className="mt-2 inline-block text-primary underline"
+                      to="/meetings/$meetingId"
+                      params={{ meetingId: answer.meetingId }}
+                    >
+                      {
+                        meetings.find(
+                          (meeting) => meeting.id === answer.meetingId
+                        )?.title
+                      }{" "}
+                      · {Math.floor(answer.segment.start_ms / 1000)} с ·{" "}
+                      {answer.segment.text}
+                    </Link>
+                  )}
+                </>
+              ) : (
+                <p>
+                  {
+                    {
+                      ru: "В демо нет ответа на этот вопрос.",
+                      kk: "Демода бұл сұраққа жауап жоқ.",
+                      en: "The demo has no answer to this question.",
+                    }[locale]
+                  }
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      ) : kind === "adminAccess" ? (
+        <div className="space-y-3">
+          {["user", "admin"].map((role) => (
+            <div key={role} className="rounded-xl border bg-card p-4">
+              <strong>{role}</strong>
+              <p className="text-sm">
+                {role === "admin"
+                  ? "users:read · access:read · meeting:write"
+                  : "profile:read · meeting:read"}
+              </p>
+              <label className="mt-2 flex gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={access[role] ?? role === "admin"}
+                  onChange={(event) => {
+                    const next = { ...access, [role]: event.target.checked };
+                    setAccessState({ key: accessKey, values: next });
+                    localStorage.setItem(accessKey, JSON.stringify(next));
+                  }}
+                />
+                {
+                  { ru: "Демо-доступ", kk: "Демо рұқсаты", en: "Demo access" }[
+                    locale
+                  ]
+                }
+              </label>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <>
+          <Input
+            type="search"
+            aria-label="Search"
+            placeholder="Search"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+          />
+          <div className="rounded-xl border bg-card">
+            {kind === "adminUsers"
+              ? users
+                  .filter((user) =>
+                    `${user.name} ${user.email}`
+                      .toLowerCase()
+                      .includes(search.toLowerCase())
+                  )
+                  .map((user) => (
+                    <details key={user.id} className="border-b p-4">
+                      <summary className="cursor-pointer">
+                        {user.name} · {user.role}
+                      </summary>
+                      <p className="mt-2 text-sm">{user.email}</p>
+                    </details>
+                  ))
+              : people
+                  .filter((person) =>
+                    person.name.toLowerCase().includes(search.toLowerCase())
+                  )
+                  .map((person) => (
+                    <Link
+                      key={person.id}
+                      to="/people/$personId"
+                      params={{ personId: person.id }}
+                      className="block border-b p-4 hover:bg-muted"
+                    >
+                      {person.name} · {person.role} · {person.meetingIds.length}
+                    </Link>
+                  ))}
+            {!people.filter((person) =>
+              person.name.toLowerCase().includes(search.toLowerCase())
+            ).length && <p className="p-4">—</p>}
+          </div>
+        </>
+      )}
+    </section>
   );
 }

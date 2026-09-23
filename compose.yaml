@@ -25,7 +25,8 @@ x-backend: &backend
 services:
   mock-api:
     profiles: [mock]
-    image: python:3.13-alpine
+    image: saint-tibo-backend:local
+    build: ./backend
     working_dir: /mock
     command: ["python", "server.py"]
     environment:
@@ -35,8 +36,6 @@ services:
       MOCK_FRONTEND_ORIGIN: http://localhost:${FRONTEND_PORT:-3000}
     volumes:
       - ./tools/mock-api:/mock:ro
-    ports:
-      - "127.0.0.1:${MOCK_API_PORT:-8015}:8015"
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8015/health/ready', timeout=2)"]
       interval: 5s
@@ -136,6 +135,8 @@ services:
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?run `bun run setup` first}
       BETTER_AUTH_JWT_AUDIENCE: ${BETTER_AUTH_JWT_AUDIENCE:-saint_tibo-api}
       DEV_LOGIN_ENABLED: ${DEV_LOGIN_ENABLED:-false}
+      MOCK_API_ENABLED: ${MOCK_API_ENABLED:-false}
+      MOCK_API_INTERNAL_URL: http://mock-api:8015
     ports:
       - "127.0.0.1:${FRONTEND_PORT:-3000}:3000"
     depends_on:

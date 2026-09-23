@@ -4,6 +4,7 @@ import { AlertCircle, FileAudio, Plus, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import type { ProcessingJobRead, RecordingRead } from "#/shared/api";
+import { isMockApi } from "#/shared/api";
 import { useLocale } from "#/shared/lib/locales";
 import { Button } from "#/shared/ui/shadcn/button";
 import { Input } from "#/shared/ui/shadcn/input";
@@ -132,7 +133,7 @@ export function MeetingPage({ meetingId }: { meetingId: string }) {
         </div>
       </header>
 
-      {import.meta.env.DEV && import.meta.env.VITE_API_MODE === "mock" && (
+      {isMockApi() && (
         <p className="rounded-lg border border-amber-400/50 bg-amber-50 p-3 text-sm text-amber-950 dark:bg-amber-950/30 dark:text-amber-100">
           {t.sample}
         </p>

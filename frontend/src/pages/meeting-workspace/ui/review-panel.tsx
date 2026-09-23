@@ -9,11 +9,11 @@ import { Input } from "#/shared/ui/shadcn/input";
 import { Textarea } from "#/shared/ui/shadcn/textarea";
 import { transcriptTime, useTranscriptSync } from "#/shared/ui/transcript-sync";
 
-import { downloadReview, saveReview } from "../api/review";
+import { downloadReview, loadReview, saveReview } from "../api/review";
 import type { ReviewDocument } from "../api/review";
 import { useCopy } from "../lib/copy";
 
-type Tab = "summary" | "transcript" | "actions";
+type Tab = "summary" | "transcript" | "speakers" | "actions";
 const actionStatuses = ["open", "in_progress", "done", "cancelled"] as const;
 
 export function ReviewPanel({
@@ -55,7 +55,7 @@ export function ReviewPanel({
   const canPlay =
     recording?.status === "ready" || recording?.status === "incomplete";
   const segmentById = new Map(
-    review.segments.map((segment) => [segment.id, segment])
+    draft.segments.map((segment) => [segment.id, segment])
   );
   const participantById = new Map(
     participants.map((participant) => [participant.id, participant])
@@ -63,7 +63,7 @@ export function ReviewPanel({
   const speakerById = new Map(
     draft.speakers.map((speaker) => [speaker.id, speaker])
   );
-  const selectedSegments = review.segments
+  const selectedSegments = draft.segments
     .filter(
       (segment) =>
         (!speakerFilter || segment.speaker_id === speakerFilter) &&
@@ -178,9 +178,37 @@ export function ReviewPanel({
         </div>
       </div>
       {(saveError || exportError) && (
-        <p role="alert" className="text-sm text-destructive">
-          {saveError || exportError}
-        </p>
+        <div
+          role="alert"
+          className="flex items-center gap-3 text-sm text-destructive"
+        >
+          <p>{saveError || exportError}</p>
+          {saveError && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                void loadReview(meetingId)
+                  .then((fresh) => {
+                    if (fresh) {
+                      setDraft(fresh);
+                      client.setQueryData(["review", meetingId], fresh);
+                      setSaveError("");
+                    }
+                  })
+                  .catch((error: unknown) =>
+                    setSaveError(
+                      error instanceof Error
+                        ? error.message
+                        : t.detailsUnavailable
+                    )
+                  )
+              }
+            >
+              {t.retry}
+            </Button>
+          )}
+        </div>
       )}
       {(!canEdit || !review.reviewed || dirty) && (
         <p className="text-sm text-muted-foreground">
@@ -201,23 +229,25 @@ export function ReviewPanel({
         role="tablist"
         aria-label={t.review}
       >
-        {(["summary", "transcript", "actions"] as Tab[]).map((name) => (
-          <button
-            key={name}
-            type="button"
-            role="tab"
-            aria-selected={tab === name}
-            onClick={() => setTab(name)}
-            className="rounded-md px-3 py-1.5 text-sm focus-visible:outline-2 focus-visible:outline-ring aria-selected:bg-background aria-selected:shadow-sm"
-          >
-            {t[name]}
-            {name === "transcript"
-              ? ` (${review.segments.length})`
-              : name === "actions"
-                ? ` (${draft.action_items.length})`
-                : ""}
-          </button>
-        ))}
+        {(["summary", "transcript", "speakers", "actions"] as Tab[]).map(
+          (name) => (
+            <button
+              key={name}
+              type="button"
+              role="tab"
+              aria-selected={tab === name}
+              onClick={() => setTab(name)}
+              className="rounded-md px-3 py-1.5 text-sm focus-visible:outline-2 focus-visible:outline-ring aria-selected:bg-background aria-selected:shadow-sm"
+            >
+              {t[name]}
+              {name === "transcript"
+                ? ` (${review.segments.length})`
+                : name === "actions"
+                  ? ` (${draft.action_items.length})`
+                  : ""}
+            </button>
+          )
+        )}
       </div>
 
       {tab === "summary" && !canEdit && (
@@ -225,86 +255,90 @@ export function ReviewPanel({
           {t.detailsUnavailable}
         </p>
       )}
-      {tab === "summary" && canEdit && (
+      {(tab === "summary" || tab === "speakers") && canEdit && (
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_260px]">
-          <div className="space-y-5">
-            {(["topics", "decisions", "open_questions"] as const).map(
-              (section) => (
-                <section
-                  key={section}
-                  className="rounded-xl border bg-card p-4"
-                >
-                  <h3 className="mb-3 font-medium">
-                    {section === "topics"
-                      ? t.topics
-                      : section === "decisions"
-                        ? t.decisions
-                        : t.openQuestions}
-                  </h3>
-                  <div className="space-y-3">
-                    {draft.summary[section].map((entry, index) => (
-                      <div key={`${section}-${index}`} className="space-y-1">
-                        <Textarea
-                          aria-label={`${section} ${index + 1}`}
-                          value={entry.text}
-                          onChange={(event) =>
-                            setDraft((current) => ({
-                              ...current,
-                              summary: {
-                                ...current.summary,
-                                [section]: current.summary[section].map(
-                                  (item, i) =>
-                                    i === index
-                                      ? { ...item, text: event.target.value }
-                                      : item
-                                ),
-                              },
-                            }))
-                          }
-                        />
-                        {entry.source_segment_ids.map((id) => (
-                          <button
-                            key={id}
-                            className="text-xs text-primary underline"
-                            type="button"
-                            disabled={!segmentById.has(id)}
-                            onClick={() => seekSource(id)}
-                          >
-                            {t.source}{" "}
-                            {transcriptTime(segmentById.get(id)?.start_ms ?? 0)}
-                          </button>
-                        ))}
-                      </div>
-                    ))}
-                    {draft.summary[section].length === 0 && (
-                      <p className="text-sm text-muted-foreground">
-                        {t.noItems}
-                      </p>
-                    )}
-                  </div>
-                  <Button
-                    className="mt-3"
-                    size="sm"
-                    variant="outline"
-                    onClick={() =>
-                      setDraft((current) => ({
-                        ...current,
-                        summary: {
-                          ...current.summary,
-                          [section]: [
-                            ...current.summary[section],
-                            { text: "", source_segment_ids: [] },
-                          ],
-                        },
-                      }))
-                    }
+          {tab === "summary" && (
+            <div className="space-y-5">
+              {(["topics", "decisions", "open_questions"] as const).map(
+                (section) => (
+                  <section
+                    key={section}
+                    className="rounded-xl border bg-card p-4"
                   >
-                    {t.add}
-                  </Button>
-                </section>
-              )
-            )}
-          </div>
+                    <h3 className="mb-3 font-medium">
+                      {section === "topics"
+                        ? t.topics
+                        : section === "decisions"
+                          ? t.decisions
+                          : t.openQuestions}
+                    </h3>
+                    <div className="space-y-3">
+                      {draft.summary[section].map((entry, index) => (
+                        <div key={`${section}-${index}`} className="space-y-1">
+                          <Textarea
+                            aria-label={`${section} ${index + 1}`}
+                            value={entry.text}
+                            onChange={(event) =>
+                              setDraft((current) => ({
+                                ...current,
+                                summary: {
+                                  ...current.summary,
+                                  [section]: current.summary[section].map(
+                                    (item, i) =>
+                                      i === index
+                                        ? { ...item, text: event.target.value }
+                                        : item
+                                  ),
+                                },
+                              }))
+                            }
+                          />
+                          {entry.source_segment_ids.map((id) => (
+                            <button
+                              key={id}
+                              className="text-xs text-primary underline"
+                              type="button"
+                              disabled={!segmentById.has(id)}
+                              onClick={() => seekSource(id)}
+                            >
+                              {t.source}{" "}
+                              {transcriptTime(
+                                segmentById.get(id)?.start_ms ?? 0
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      ))}
+                      {draft.summary[section].length === 0 && (
+                        <p className="text-sm text-muted-foreground">
+                          {t.noItems}
+                        </p>
+                      )}
+                    </div>
+                    <Button
+                      className="mt-3"
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        setDraft((current) => ({
+                          ...current,
+                          summary: {
+                            ...current.summary,
+                            [section]: [
+                              ...current.summary[section],
+                              { text: "", source_segment_ids: [] },
+                            ],
+                          },
+                        }))
+                      }
+                    >
+                      {t.add}
+                    </Button>
+                  </section>
+                )
+              )}
+            </div>
+          )}
           <aside className="rounded-xl border bg-card p-4">
             <h3 className="font-medium">{t.speakers}</h3>
             <div className="mt-3 space-y-3">
@@ -388,19 +422,22 @@ export function ReviewPanel({
             {selectedSegments.map((segment) => {
               const speaker = speakerById.get(segment.speaker_id ?? "");
               return (
-                <button
+                <div
                   key={segment.id}
                   data-segment-id={segment.id}
-                  type="button"
-                  className="grid w-full grid-cols-[54px_minmax(0,1fr)] gap-3 rounded-lg p-3 text-left hover:bg-muted/50 focus-visible:outline-2 focus-visible:outline-ring aria-current:bg-accent"
+                  className="grid w-full grid-cols-[54px_minmax(0,1fr)] gap-3 rounded-lg p-3 text-left hover:bg-muted/50 aria-current:bg-accent"
                   aria-current={
                     sync.activeSegmentId === segment.id ? "true" : undefined
                   }
-                  onClick={() => sync.seekSegment(segment.id)}
                 >
-                  <time className="text-xs text-muted-foreground tabular-nums">
+                  <button
+                    type="button"
+                    className="self-start text-left text-xs text-primary tabular-nums underline"
+                    onClick={() => sync.seekSegment(segment.id)}
+                    aria-label={`${t.source} ${transcriptTime(segment.start_ms)}`}
+                  >
                     {transcriptTime(segment.start_ms)}
-                  </time>
+                  </button>
                   <span>
                     <strong className="block text-sm">
                       {participantById.get(speaker?.participant_id ?? "")
@@ -408,9 +445,26 @@ export function ReviewPanel({
                         speaker?.label ??
                         t.unknown}
                     </strong>
-                    <span className="text-sm">{segment.text}</span>
+                    {draft.source === "mock" ? (
+                      <Textarea
+                        aria-label={`${t.transcript} ${segment.id}`}
+                        value={segment.text}
+                        onChange={(event) =>
+                          setDraft((current) => ({
+                            ...current,
+                            segments: current.segments.map((item) =>
+                              item.id === segment.id
+                                ? { ...item, text: event.target.value }
+                                : item
+                            ),
+                          }))
+                        }
+                      />
+                    ) : (
+                      <span className="text-sm">{segment.text}</span>
+                    )}
                   </span>
-                </button>
+                </div>
               );
             })}
             {!selectedSegments.length && (
