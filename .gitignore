@@ -1,0 +1,16 @@
+.DS_Store
+.vscode/
+.tsprofiles/
+.env
+.env.*
+!.env.example
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+dist/
+coverage/
+*.log
+.data/
+uploads/
+models/
