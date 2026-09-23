@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 
-import { mockModeKey } from "#/shared/api/backend-client";
+import { mockModeKey } from "#/shared/api";
 import { authClient } from "#/shared/auth";
 import { useLocale } from "#/shared/lib/locales";
 import { Button } from "#/shared/ui/shadcn/button";

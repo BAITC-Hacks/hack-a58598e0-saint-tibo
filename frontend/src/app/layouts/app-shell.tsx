@@ -25,7 +25,7 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 
 import { remindersQuery, REMINDERS_REFRESH_MS } from "#/pages/reminders";
-import { isMockApi } from "#/shared/api/backend-client";
+import { isMockApi } from "#/shared/api";
 import { authClient, useAccess } from "#/shared/auth";
 import { m } from "#/shared/lib/i18n/messages";
 import type { Locale } from "#/shared/lib/i18n/runtime";
