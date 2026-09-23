@@ -1,6 +1,8 @@
+from typing import Any
 from uuid import UUID
 
 from sqlalchemy import CheckConstraint, ForeignKey, Index, String, Text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from saint_tibo.db.base import Base
@@ -42,3 +44,18 @@ class Segment(UUIDPrimaryKey, Base):
     start_ms: Mapped[int]
     end_ms: Mapped[int]
     text: Mapped[str] = mapped_column(Text)
+
+
+class ResultReview(Base):
+    """Append-only human revisions, including the metadata used by exports."""
+
+    __tablename__ = "result_reviews"
+    __table_args__ = (CheckConstraint("revision >= 2", name="valid_revision"),)
+
+    result_version_id: Mapped[UUID] = mapped_column(
+        ForeignKey("app.result_versions.id", ondelete="CASCADE"), primary_key=True
+    )
+    revision: Mapped[int] = mapped_column(primary_key=True)
+    # hack: bounded action items live in the revision snapshot; normalize when
+    # reminders (#15) need cross-meeting queries, retaining these export snapshots.
+    payload: Mapped[dict[str, Any]] = mapped_column(JSONB)
