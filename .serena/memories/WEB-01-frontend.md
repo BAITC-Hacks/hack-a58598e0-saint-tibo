@@ -6,7 +6,10 @@ TanStack Start SPA, one origin with auth. Conventions:
 ## Structure
 
 - Routes `src/app/routes/`: `__root`, `_app` shell + `_app.index`
-  (home/meetings placeholder), `login`, `dev-login` + `api/dev-login`
+  (home/meetings placeholder), `_app.capture` (`/capture`, mic/tab
+  capture UI — WEB-21), `_app.player` (`/player`, local-file playback —
+  WEB-PLAYER), `transcript-demo` (public synthetic sync demo — WEB-20),
+  `login`, `dev-login` + `api/dev-login`
   (guarded dev auto-login — AUTH-01), `api/auth/$` (Better Auth
   catch-all), `api/media/meetings/$meetingId/recordings/$recordingId`
   (same-origin media proxy — on main).

@@ -13,6 +13,8 @@ via uv 0.12.13 (uv.lock locked). Exact deps: lockfiles only.
 | `frontend/drizzle/auth/` | Drizzle, schema `auth` only — Better Auth owns it |
 | `contracts/openapi.json` | Checked API snapshot; regenerate, don't hand-edit |
 | `tools/api-client/` | Isolated generator (TS 6 on purpose) |
+| `tools/transcribe/` | Separate STT env: own Dockerfile/pyproject, `prepare_model.py` pins the CT2 model, `transcribe.py` = worker subprocess (MODELS-01) |
+| `tools/meeting-capture/` | Capture kernel + Teams/Meet/Zoom browser adapters (INFRA-22) |
 | `scripts/` | `deploy.sh`, `dev-deploy.sh`, `benchmark-stt.py` |
 | `input-audio/` | Case fixtures (owner-approved exception, #32) |
 

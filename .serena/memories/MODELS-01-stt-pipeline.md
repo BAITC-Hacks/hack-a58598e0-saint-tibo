@@ -19,6 +19,26 @@ LLM. Must work with egress disabled after model bundle is prepared.
 - `scripts/benchmark-stt.py` = reproducible offline benchmark;
   run RU/KK/mixed matrix on `saint-dev-danil` before choosing prod model.
 
+## Integrated STT (#11) — on `dev`
+
+Ops doc: `docs/transcription.md` (model prep path, one worker/one job at
+a time, CPU INT8 4 threads).
+
+`tools/transcribe/` is a separate Python env with its own Dockerfile:
+`prepare_model.py` pins `Systran/faster-whisper-small` by revision +
+model.bin SHA256 into `models/`; `transcribe.py` loads it CPU/int8,
+4 threads, `local_files_only=True`, streams segments as JSONL to the
+worker. `processing-worker` builds `saint-tibo-processing:local`,
+mounts `recordings_data` + `${STT_MODELS_PATH:-./models}` read-only.
+Worker supervises the subprocess via bounded pipe (≤32 MB, ≤20k
+segments → 422 `transcript_too_large`; missing runtime/model →
+503 `transcription_unavailable`). stderr/logs never carry transcript
+text. Success writes ResultVersion + segments (API-02).
+
+Still open for #11 acceptance: manual RU/KK/mixed sample review per
+`docs/stt-feasibility.md` (all samples pending); KK model swap and
+RTF/RSS numbers on our AMD box unproven.
+
 ## Fixtures
 
 `input-audio/Совещание №1.mp3` 274.25 s and `№2` 206.03 s — 48 kHz mono

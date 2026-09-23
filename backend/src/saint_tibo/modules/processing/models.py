@@ -34,6 +34,7 @@ class ProcessingJob(UUIDPrimaryKey, Timestamps, Base):
     retry_of_job_id: Mapped[UUID | None]
     allow_incomplete: Mapped[bool]
     language: Mapped[str] = mapped_column(String(10))
+    target_stage: Mapped[str] = mapped_column(String(20), server_default="transcribe")
     attempt: Mapped[int]
     status: Mapped[str] = mapped_column(String(20), default="queued")
     stage: Mapped[str] = mapped_column(String(20), default="decode")
