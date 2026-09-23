@@ -1,0 +1,46 @@
+{
+  "schema": 2,
+  "role": "project-stack",
+  "note": "Runtime and architecture choices. Exact dependency versions are recorded in frontend/bun.lock, backend/uv.lock and tools/api-client/bun.lock.",
+  "runtime": {
+    "bun": "1.4.2",
+    "python": ">=3.13,<3.14",
+    "uv": "0.12.13"
+  },
+  "frontend": {
+    "react": "19.3.x",
+    "vite": "8.3.x",
+    "typescript": "7.0.2",
+    "framework": "@tanstack/react-start (SPA mode; Vite-based)",
+    "router": "@tanstack/react-router",
+    "query": "@tanstack/react-query",
+    "forms": "react-hook-form + zodResolver",
+    "schema": "zod 4",
+    "ui": "shadcn 4.21.0 vendored via `bun run ui:add`, Base UI base-vega",
+    "i18n": "ru (default) / kk (label KZ) / en"
+  },
+  "backend": {
+    "framework": "fastapi>=0.141",
+    "orm": "sqlalchemy[asyncio]>=2.0.54 + alembic>=1.20 (schema `app`)",
+    "auth": "better-auth + drizzle-orm (owns ONLY the `auth` schema)",
+    "python_manager": "uv only; uv.lock locked"
+  },
+  "data": {
+    "postgres": "SoT — schemas: `app` (Alembic), `auth` (Drizzle)"
+  },
+  "do_not_use": [
+    "next.js",
+    "pnpm",
+    "npm",
+    "yarn",
+    "typescript@6",
+    "a second JS lockfile",
+    "drizzle over the `app` schema"
+  ],
+  "decisions": [
+    "TanStack Start serves the SPA and Better Auth on one origin.",
+    "Better Auth/Drizzle owns auth; FastAPI/SQLAlchemy/Alembic owns app.",
+    "The API client generator is isolated with TypeScript 6; the frontend uses TypeScript 7.",
+    "Audio and meeting text must only be processed by local or self-hosted models."
+  ]
+}

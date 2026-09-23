@@ -1,0 +1,95 @@
+# Override COMPOSE_PROJECT_NAME per worktree so parallel checkouts get their own containers.
+name: ${COMPOSE_PROJECT_NAME:-saint_tibo}
+
+x-backend: &backend
+  image: saint-tibo-backend:local
+  build: ./backend
+  environment:
+    BACKEND_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-saint_tibo}:${POSTGRES_PASSWORD:-saint_tibo}@postgres:5432/${POSTGRES_DB:-saint_tibo}
+    BACKEND_AUTH_JWKS_URL: ${BACKEND_DOCKER_AUTH_JWKS_URL:-http://frontend:3000/api/auth/jwks}
+    BACKEND_AUTH_ISSUER: ${BACKEND_AUTH_ISSUER:-http://localhost:3000}
+    BACKEND_AUTH_AUDIENCE: ${BACKEND_AUTH_AUDIENCE:-saint_tibo-api}
+    BACKEND_CORS_ORIGINS: '${BACKEND_CORS_ORIGINS:-["http://localhost:3000"]}'
+  extra_hosts:
+    - host.docker.internal:host-gateway
+
+services:
+  postgres:
+    image: postgres:17-bookworm
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-saint_tibo}
+      POSTGRES_USER: ${POSTGRES_USER:-saint_tibo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-saint_tibo}
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  migrate:
+    profiles: [app]
+    <<: *backend
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  backend:
+    profiles: [app]
+    <<: *backend
+    ports:
+      - "127.0.0.1:${BACKEND_PORT:-8000}:8000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=5)"]
+      interval: 10s
+      timeout: 6s
+      retries: 5
+
+  # Drizzle owns the `auth` schema and only exists in the build stage, which has the dev tools.
+  auth-migrate:
+    profiles: [app]
+    build:
+      context: ./frontend
+      # `deps` stops before the frontend build: drizzle-kit only needs the dependencies.
+      target: deps
+    environment:
+      AUTH_DATABASE_URL: postgresql://${POSTGRES_USER:-saint_tibo}:${POSTGRES_PASSWORD:-saint_tibo}@postgres:5432/${POSTGRES_DB:-saint_tibo}
+    command: ["bun", "run", "auth:db:migrate"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    profiles: [app]
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
+    environment:
+      FRONTEND_PORT: 3000
+      AUTH_DATABASE_URL: postgresql://${POSTGRES_USER:-saint_tibo}:${POSTGRES_PASSWORD:-saint_tibo}@postgres:5432/${POSTGRES_DB:-saint_tibo}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:3000}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?run `bun run setup` first}
+      BETTER_AUTH_JWT_AUDIENCE: ${BETTER_AUTH_JWT_AUDIENCE:-saint_tibo-api}
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+      auth-migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "bun", "-e", "const r = await fetch('http://127.0.0.1:3000/'); if (!r.ok) process.exit(1)"]
+      interval: 10s
+      timeout: 6s
+      retries: 5
+
+volumes:
+  postgres_data:
