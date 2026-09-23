@@ -8,7 +8,7 @@ COPY . .
 FROM deps AS builder
 # Client-side env is baked into the bundle, so it must be a browser-reachable URL.
 ARG VITE_API_URL=http://localhost:8000
-ARG VITE_APP_TITLE="Saint Tibo"
+ARG VITE_APP_TITLE="Хаттама"
 # Prerendering the shell boots the server bundle, so the build needs the server variables to
 # exist. Real values are injected at runtime.
 ENV VITE_API_URL=$VITE_API_URL \

@@ -3,10 +3,10 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 
 import { authClient } from "#/shared/auth";
-import { env } from "#/shared/config";
 import { m } from "#/shared/lib/i18n/messages";
 import { useLocale } from "#/shared/lib/locales";
 import { A11yPanel } from "#/shared/ui/a11y-panel";
+import { BrandLockup } from "#/shared/ui/brand-lockup";
 import LocaleSwitcher from "#/shared/ui/locale-switcher";
 import { Button } from "#/shared/ui/shadcn/button";
 import { Input } from "#/shared/ui/shadcn/input";
@@ -68,16 +68,17 @@ export const LoginPage = () => {
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <header className="flex flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6">
-        <span className="text-sm font-semibold">{env.VITE_APP_TITLE}</span>
-        <div className="flex max-w-full min-w-0 flex-wrap items-center gap-1">
+      <header className="brand-header flex min-h-16 flex-wrap items-center gap-3 px-4 py-2 sm:px-5">
+        <BrandLockup />
+        <div className="ml-auto flex max-w-full min-w-0 flex-wrap items-center gap-1">
           <LocaleSwitcher />
           <ThemeToggle />
           <A11yPanel />
         </div>
       </header>
-      <main className="flex flex-1 items-center justify-center px-6 py-12">
-        <div className="w-full max-w-sm">
+      <div className="h-[3px] bg-brand-gold" aria-hidden="true" />
+      <main className="flex flex-1 items-center justify-center px-4 py-12">
+        <div className="w-full max-w-sm rounded-[2px] border border-border bg-card p-5 shadow-[0_8px_24px_rgba(23,51,93,0.08)] sm:p-7">
           {isPending ? (
             <output>{m.auth_loading({}, { locale })}</output>
           ) : session?.user ? (

@@ -112,7 +112,7 @@ class RequestIdMiddleware:
             await self.app(scope, receive, send_with_request_id)
         except Exception as exc:
             # The outer error handler and Uvicorn run after this context resets.
-            setattr(exc, "_saint_request_id", identifier)
+            exc._saint_request_id = identifier  # type: ignore[attr-defined]
             raise
         finally:
             _request_id.reset(token)
