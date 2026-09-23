@@ -14,12 +14,14 @@ import models in `migrations/env.py`; parallel checkouts need unique
 
 ## Table state
 
-- `main`/`dev` (since PR #80): `0001_app_schema` +
+- `main` (since PR #80): `0001_app_schema` +
   `0002_meetings` → `meetings`, `participants`, `recordings`,
   `recording_chunks` (PK (recording_id, sequence);
   start_ms/end_ms/sha256 per chunk).
-- Contract tables ProcessingJob/ResultVersion/Speaker/Segment/ActionItem —
-  not yet migrated; come with #10/#12/#13.
+- `dev` additionally: `0003_processing_jobs` → `processing_jobs`
+  (status/stage/progress/attempt/request_key/lease — API-02).
+- Contract tables ResultVersion/Speaker/Segment/ActionItem —
+  not yet migrated; come with #11–#13.
 
 ## Auth → app sync
 
