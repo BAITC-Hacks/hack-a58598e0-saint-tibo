@@ -32,10 +32,10 @@ writer ends `await session.commit()`.
   NOT bypass ownership. Timestamps RFC 3339, server returns UTC.
 - Unauthorized → 401. Mixins: `UUIDPrimaryKey`, `OwnedByUser`, `Timestamps`.
 
-## State on `main`
+## State
 
-Auth, `/api/v1/me`, `/api/v1/admin/access`, `/health/*`, plus the full
-meetings surface (meetings/participants/recordings/chunks/finalize/media
-— see API-02). Next domain work: jobs (#10) then STT (#11)+.
+`main`: auth, `/api/v1/me`, `/api/v1/admin/access`, `/health/*`, plus
+the full meetings surface — see API-02. `dev` additionally carries
+processing jobs (#10, STT boundary) and the exports renderers (#14).
 `contracts/openapi.json` is the truth of what's implemented;
 docs drafts ≠ endpoints.

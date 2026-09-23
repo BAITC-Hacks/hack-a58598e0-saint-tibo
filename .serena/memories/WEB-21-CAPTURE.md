@@ -1,10 +1,6 @@
 # WEB — local capture #21
 
-Last commit: a35e16e (implementation), e2313d8 (integration documentation).
-
 ## Current Behavior
-
-- Isolated branch `ivan/feat-21-local-capture`, based on origin/dev 436eab0.
 - `frontend/src/shared/lib/audio-capture.ts`: microphone/shared audio/both,
   one MediaRecorder, per-source meters, bounded immutable chunks, final Blob.
 - `frontend/src/shared/ui/meeting-capture/index.tsx`: localized capture UI,
