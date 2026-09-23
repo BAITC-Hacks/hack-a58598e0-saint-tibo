@@ -10,7 +10,7 @@ import time
 import wave
 import zipfile
 from html import escape
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 from uuid import NAMESPACE_URL, uuid5
@@ -646,4 +646,4 @@ if __name__ == "__main__":
     host = os.environ.get("MOCK_API_HOST", "127.0.0.1")
     port = int(os.environ.get("MOCK_API_PORT", "8015"))
     print(f"Synthetic mock API on {host}:{port}; no database or recordings are read", flush=True)
-    HTTPServer((host, port), Handler).serve_forever()
+    ThreadingHTTPServer((host, port), Handler).serve_forever()
