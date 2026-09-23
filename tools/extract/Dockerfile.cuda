@@ -1,0 +1,12 @@
+# Provisioned local image: official llama.cpp b11120 CUDA 12.8 binaries/libraries
+# on Ubuntu 24.04. See docs/remote-extract.md for the verified source hashes.
+FROM saint-tibo-llama-b11120-cuda:local@sha256:a2c4f59e1bf1bac875e775eb952065750a33b8b3de619ca7cc0c95784b15d6c1
+USER root
+RUN apt-get update && apt-get install -y --no-install-recommends python3 \
+    && rm -rf /var/lib/apt/lists/*
+COPY tools/extract/run.py /opt/extract/run.py
+COPY tools/extract/extract/ /opt/extract/extract/
+ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 HF_HUB_OFFLINE=1 \
+    HF_HUB_DISABLE_TELEMETRY=1 DO_NOT_TRACK=1
+USER 10001:10001
+ENTRYPOINT ["/usr/bin/python3", "/opt/extract/run.py"]

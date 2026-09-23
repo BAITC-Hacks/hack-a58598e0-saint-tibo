@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { AlertCircle, FileAudio, Plus, RefreshCw } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type { ProcessingJobRead, RecordingRead } from "#/shared/api";
 import { isMockApi } from "#/shared/api";
@@ -18,6 +18,7 @@ import {
   startProcessing,
   uploadFile,
 } from "../api/meetings";
+import type { ProcessingTarget } from "../api/meetings";
 import { reviewQuery } from "../api/review";
 import { useCopy } from "../lib/copy";
 import { ReviewPanel } from "./review-panel";
@@ -35,6 +36,9 @@ export function MeetingPage({ meetingId }: { meetingId: string }) {
   const [participantError, setParticipantError] = useState("");
   const [uploadError, setUploadError] = useState("");
   const [processingError, setProcessingError] = useState("");
+  const [targetStage, setTargetStage] = useState<ProcessingTarget>("transcribe");
+  const [reviewDirty, setReviewDirty] = useState(false);
+  const loadedJob = useRef<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadStep, setUploadStep] = useState(0);
   const add = useMutation({
@@ -48,7 +52,7 @@ export function MeetingPage({ meetingId }: { meetingId: string }) {
     }: {
       recordingId: string;
       retryOfJobId?: string;
-    }) => startProcessing(meetingId, recordingId, retryOfJobId),
+    }) => startProcessing(meetingId, recordingId, retryOfJobId, targetStage),
   });
   const latestRecording = recordings.data?.items[0] ?? null;
   const jobs = useQuery({
@@ -56,12 +60,29 @@ export function MeetingPage({ meetingId }: { meetingId: string }) {
     enabled: !!latestRecording,
   });
   const latestJob = jobs.data?.items[0] ?? null;
+  const retryJob =
+    latestJob &&
+    ["failed", "interrupted"].includes(latestJob.status) &&
+    latestJob.target_stage === targetStage
+      ? latestJob
+      : null;
+  const processingActive =
+    jobs.data?.items.some(
+      (job) => job.status === "queued" || job.status === "running"
+    ) ?? false;
   const result = review.data;
   const refetchReview = review.refetch;
 
   useEffect(() => {
-    if (latestJob?.status === "succeeded") void refetchReview();
-  }, [latestJob?.status, refetchReview]);
+    if (
+      latestJob?.status === "succeeded" &&
+      !reviewDirty &&
+      loadedJob.current !== latestJob.id
+    ) {
+      loadedJob.current = latestJob.id;
+      void refetchReview();
+    }
+  }, [latestJob?.id, latestJob?.status, refetchReview, reviewDirty]);
 
   if (meeting.isPending)
     return <output className="block rounded-xl border p-8">{t.loading}</output>;
@@ -225,24 +246,57 @@ export function MeetingPage({ meetingId }: { meetingId: string }) {
           <section className="rounded-xl border bg-card p-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h2 className="font-semibold">{t.processing}</h2>
-              {latestRecording?.status === "ready" &&
-                (!latestJob ||
-                  ["failed", "interrupted"].includes(latestJob.status)) && (
-                  <Button
-                    disabled={process.isPending}
-                    onClick={() =>
-                      void submitProcessing(latestRecording, latestJob?.id)
-                    }
-                  >
-                    {latestJob ? (
-                      <RefreshCw aria-hidden="true" />
-                    ) : (
-                      <Plus aria-hidden="true" />
-                    )}
-                    {latestJob ? t.retryProcessing : t.startProcessing}
-                  </Button>
-                )}
+              {latestRecording?.status === "ready" && (
+                <Button
+                  disabled={
+                    process.isPending || processingActive || jobs.isPending || reviewDirty
+                  }
+                  onClick={() =>
+                    void submitProcessing(latestRecording, retryJob?.id)
+                  }
+                >
+                  {retryJob ? (
+                    <RefreshCw aria-hidden="true" />
+                  ) : (
+                    <Plus aria-hidden="true" />
+                  )}
+                  {retryJob ? t.retryProcessing : t.startProcessing}
+                </Button>
+              )}
             </div>
+            <label className="mt-4 block space-y-1 text-sm">
+              <span>{t.processingMode}</span>
+              <select
+                className="h-9 w-full rounded-md border border-input bg-background px-2"
+                value={targetStage}
+                disabled={process.isPending || processingActive}
+                onChange={(event) => {
+                  if (
+                    event.target.value === "transcribe" ||
+                    event.target.value === "diarize" ||
+                    event.target.value === "extract"
+                  )
+                    setTargetStage(event.target.value);
+                }}
+              >
+                <option value="transcribe">{t.transcriptionOnly}</option>
+                <option value="diarize">{t.transcriptionSpeakers}</option>
+                <option value="extract">{t.fullPipeline}</option>
+              </select>
+            </label>
+            {targetStage === "diarize" && (
+              <p className="mt-2 text-sm text-muted-foreground">
+                {t.diarizationHelp}
+              </p>
+            )}
+            {targetStage === "extract" && (
+              <p className="mt-2 text-sm text-muted-foreground">{t.extractionHelp}</p>
+            )}
+            {reviewDirty && (
+              <p className="mt-2 text-sm text-muted-foreground">
+                {t.processingSaveFirst}
+              </p>
+            )}
             {processingError && (
               <p role="alert" className="mt-3 text-sm text-destructive">
                 {processingError}
@@ -375,6 +429,7 @@ export function MeetingPage({ meetingId }: { meetingId: string }) {
           key={`${result.result_version_id}:${result.revision}`}
           meetingId={meetingId}
           review={result}
+          onDirtyChange={setReviewDirty}
           participants={participants.data?.items ?? []}
           recording={
             recordings.data?.items.find(
@@ -410,7 +465,7 @@ function JobStatus({ job }: { job: ProcessingJobRead }) {
     <div className="mt-4 space-y-2">
       <div className="flex flex-wrap justify-between gap-2 text-sm">
         <span>
-          {label} · {job.stage}
+          {label} · {job.stage === "extract" ? t.extracting : job.stage === "diarize" ? t.diarizing : job.stage}
         </span>
         {job.progress !== null && (
           <span>{Math.round(job.progress * 100)}%</span>
@@ -424,9 +479,21 @@ function JobStatus({ job }: { job: ProcessingJobRead }) {
           aria-label={t.processing}
         />
       )}
+      <p className="text-xs text-muted-foreground">
+        {job.target_stage === "extract"
+          ? t.fullPipeline
+          : job.target_stage === "diarize"
+          ? t.transcriptionSpeakers
+          : t.transcriptionOnly}
+      </p>
+      {job.target_stage === "extract" && ["queued", "running"].includes(job.status) && (
+        <p className="text-sm text-muted-foreground">{t.extractionHelp}</p>
+      )}
       {job.error_code && (
         <p role="alert" className="text-sm text-destructive">
-          {job.error_code}
+          {job.error_code === "diarization_model_unavailable"
+            ? t.diarizationUnavailable
+            : job.error_code}
         </p>
       )}
     </div>

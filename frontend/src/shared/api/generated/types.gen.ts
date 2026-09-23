@@ -22,6 +22,28 @@ export type AccessPolicy = {
 export type ActionItemStatus = 'open' | 'in_progress' | 'done' | 'cancelled';
 
 /**
+ * Answer
+ */
+export type Answer = {
+    /**
+     * Answer
+     */
+    answer: string;
+    /**
+     * Meeting Count
+     */
+    meeting_count: number;
+    /**
+     * Participant Count
+     */
+    participant_count: number;
+    /**
+     * Provider
+     */
+    provider?: string;
+};
+
+/**
  * CurrentUser
  */
 export type CurrentUser = {
@@ -47,6 +69,93 @@ export type CurrentUser = {
 };
 
 /**
+ * DiarizationProvenance
+ */
+export type DiarizationProvenance = {
+    /**
+     * Bundle Id
+     */
+    bundle_id: string;
+    /**
+     * Cluster Threshold
+     */
+    cluster_threshold: number;
+    /**
+     * Model Sha256
+     */
+    model_sha256: {
+        [key: string]: string;
+    };
+    /**
+     * Requested Num Speakers
+     */
+    requested_num_speakers: number;
+    /**
+     * Sherpa Onnx Version
+     */
+    sherpa_onnx_version: string;
+};
+
+/**
+ * DiarizationRead
+ */
+export type DiarizationRead = {
+    /**
+     * Duration Ms
+     */
+    duration_ms: number;
+    provenance: DiarizationProvenance;
+    /**
+     * Recording Id
+     */
+    recording_id: string;
+    /**
+     * Result Version Id
+     */
+    result_version_id: string;
+    /**
+     * Speakers
+     */
+    speakers: Array<DiarizationSpeaker>;
+    /**
+     * Turns
+     */
+    turns: Array<DiarizationTurn>;
+};
+
+/**
+ * DiarizationSpeaker
+ */
+export type DiarizationSpeaker = {
+    /**
+     * Label
+     */
+    label: string;
+    /**
+     * Speaker Id
+     */
+    speaker_id: string;
+};
+
+/**
+ * DiarizationTurn
+ */
+export type DiarizationTurn = {
+    /**
+     * End Ms
+     */
+    end_ms: number;
+    /**
+     * Speaker Id
+     */
+    speaker_id: string;
+    /**
+     * Start Ms
+     */
+    start_ms: number;
+};
+
+/**
  * ErrorDetail
  */
 export type ErrorDetail = {
@@ -69,6 +178,32 @@ export type ErrorDetail = {
  */
 export type ErrorResponse = {
     error: ErrorDetail;
+};
+
+/**
+ * ExtractionProvenance
+ */
+export type ExtractionProvenance = {
+    /**
+     * Model Id
+     */
+    model_id: string;
+    /**
+     * Model Revision
+     */
+    model_revision: string;
+    /**
+     * Model Sha256
+     */
+    model_sha256: string;
+    /**
+     * Prompt Sha256
+     */
+    prompt_sha256: string;
+    /**
+     * Runtime Id
+     */
+    runtime_id: string;
 };
 
 /**
@@ -373,9 +508,9 @@ export type ProcessingJobCreate = {
     /**
      * Target Stage
      *
-     * Success means transcript ready; extraction is separate.
+     * Diarize adds anonymous speaker intervals; extract also adds an unreviewed local-model draft.
      */
-    target_stage?: 'transcribe';
+    target_stage?: 'transcribe' | 'diarize' | 'extract';
 };
 
 /**
@@ -447,11 +582,21 @@ export type ProcessingJobRead = {
     /**
      * Target Stage
      */
-    target_stage: 'transcribe';
+    target_stage: 'transcribe' | 'diarize' | 'extract';
     /**
      * Updated At
      */
     updated_at: string;
+};
+
+/**
+ * Question
+ */
+export type Question = {
+    /**
+     * Query
+     */
+    query: string;
 };
 
 /**
@@ -550,13 +695,113 @@ export type RecordingSource = 'file' | 'live' | 'teams' | 'google_meet' | 'zoom'
 export type RecordingStatus = 'receiving' | 'ready' | 'incomplete' | 'failed';
 
 /**
+ * ReminderPage
+ */
+export type ReminderPage = {
+    /**
+     * Channel
+     */
+    channel?: 'in_app';
+    /**
+     * Curator Policy
+     */
+    curator_policy?: 'meeting_owner';
+    /**
+     * Evaluated At
+     */
+    evaluated_at: string;
+    /**
+     * Items
+     */
+    items: Array<ReminderRead>;
+    /**
+     * Limit
+     */
+    limit: number;
+    /**
+     * Offset
+     */
+    offset: number;
+    /**
+     * Total
+     */
+    total: number;
+};
+
+/**
+ * ReminderRead
+ */
+export type ReminderRead = {
+    /**
+     * Action Item Id
+     */
+    action_item_id: string;
+    /**
+     * Assignee Participant Id
+     */
+    assignee_participant_id: string | null;
+    /**
+     * Assignee Text
+     */
+    assignee_text: string | null;
+    /**
+     * Days Until Due
+     */
+    days_until_due: number;
+    /**
+     * Due Date
+     */
+    due_date: string;
+    /**
+     * Due Text
+     */
+    due_text: string | null;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Kind
+     */
+    kind: 'upcoming' | 'overdue';
+    /**
+     * Meeting Id
+     */
+    meeting_id: string;
+    /**
+     * Meeting Title
+     */
+    meeting_title: string;
+    /**
+     * Recording Id
+     */
+    recording_id: string;
+    /**
+     * Result Version Id
+     */
+    result_version_id: string;
+    /**
+     * Revision
+     */
+    revision: number;
+    /**
+     * Text
+     */
+    text: string;
+    /**
+     * Timezone
+     */
+    timezone: string;
+};
+
+/**
  * ResultVersionRead
  */
 export type ResultVersionRead = {
     /**
      * Completed Stage
      */
-    completed_stage: 'transcribe';
+    completed_stage: 'transcribe' | 'diarize' | 'extract';
     /**
      * Created At
      */
@@ -729,6 +974,7 @@ export type ReviewRead = {
      * Action Items
      */
     action_items: Array<ReviewActionItemRead>;
+    extraction_provenance?: ExtractionProvenance | null;
     /**
      * Is Incomplete
      */
@@ -762,7 +1008,51 @@ export type ReviewRead = {
      * Source
      */
     source?: 'persisted';
+    /**
+     * Speakers
+     */
+    speakers?: Array<ReviewSpeakerRead>;
     summary: ReviewSummary;
+};
+
+/**
+ * ReviewSpeakerAssignment
+ */
+export type ReviewSpeakerAssignment = {
+    /**
+     * Merged Into Speaker Id
+     */
+    merged_into_speaker_id?: string | null;
+    /**
+     * Participant Id
+     */
+    participant_id?: string | null;
+    /**
+     * Speaker Id
+     */
+    speaker_id: string;
+};
+
+/**
+ * ReviewSpeakerRead
+ */
+export type ReviewSpeakerRead = {
+    /**
+     * Label
+     */
+    label: string;
+    /**
+     * Merged Into Speaker Id
+     */
+    merged_into_speaker_id?: string | null;
+    /**
+     * Participant Id
+     */
+    participant_id?: string | null;
+    /**
+     * Speaker Id
+     */
+    speaker_id: string;
 };
 
 /**
@@ -803,6 +1093,10 @@ export type ReviewUpdate = {
      * Revision
      */
     revision: number;
+    /**
+     * Speakers
+     */
+    speakers?: Array<ReviewSpeakerAssignment> | null;
     summary?: ReviewSummary | null;
 };
 
@@ -2627,6 +2921,68 @@ export type GetResultVersionResponses = {
 
 export type GetResultVersionResponse = GetResultVersionResponses[keyof GetResultVersionResponses];
 
+export type GetResultDiarizationData = {
+    body?: never;
+    path: {
+        /**
+         * Meeting Id
+         */
+        meeting_id: string;
+        /**
+         * Recording Id
+         */
+        recording_id: string;
+        /**
+         * Result Version Id
+         */
+        result_version_id: string;
+    };
+    query?: never;
+    url: '/api/v1/meetings/{meeting_id}/recordings/{recording_id}/results/{result_version_id}/diarization';
+};
+
+export type GetResultDiarizationErrors = {
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ErrorResponse;
+    /**
+     * Internal Server Error
+     */
+    500: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
+};
+
+export type GetResultDiarizationError = GetResultDiarizationErrors[keyof GetResultDiarizationErrors];
+
+export type GetResultDiarizationResponses = {
+    /**
+     * Successful Response
+     */
+    200: DiarizationRead;
+};
+
+export type GetResultDiarizationResponse = GetResultDiarizationResponses[keyof GetResultDiarizationResponses];
+
 export type ExportReviewedResultData = {
     body?: never;
     path: {
@@ -2697,6 +3053,68 @@ export type ExportReviewedResultResponses = {
 };
 
 export type ExportReviewedResultResponse = ExportReviewedResultResponses[keyof ExportReviewedResultResponses];
+
+export type ExtractResultDraftData = {
+    body?: never;
+    path: {
+        /**
+         * Meeting Id
+         */
+        meeting_id: string;
+        /**
+         * Recording Id
+         */
+        recording_id: string;
+        /**
+         * Result Version Id
+         */
+        result_version_id: string;
+    };
+    query?: never;
+    url: '/api/v1/meetings/{meeting_id}/recordings/{recording_id}/results/{result_version_id}/extract';
+};
+
+export type ExtractResultDraftErrors = {
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ErrorResponse;
+    /**
+     * Internal Server Error
+     */
+    500: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
+};
+
+export type ExtractResultDraftError = ExtractResultDraftErrors[keyof ExtractResultDraftErrors];
+
+export type ExtractResultDraftResponses = {
+    /**
+     * Successful Response
+     */
+    200: ReviewRead;
+};
+
+export type ExtractResultDraftResponse = ExtractResultDraftResponses[keyof ExtractResultDraftResponses];
 
 export type GetResultReviewData = {
     body?: never;
@@ -2889,6 +3307,97 @@ export type ListTranscriptSegmentsResponses = {
 };
 
 export type ListTranscriptSegmentsResponse = ListTranscriptSegmentsResponses[keyof ListTranscriptSegmentsResponses];
+
+export type AskOrganizationQuestionData = {
+    body: Question;
+    path?: never;
+    query?: never;
+    url: '/api/v1/org/questions';
+};
+
+export type AskOrganizationQuestionErrors = {
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ErrorResponse;
+    /**
+     * Internal Server Error
+     */
+    500: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
+};
+
+export type AskOrganizationQuestionError = AskOrganizationQuestionErrors[keyof AskOrganizationQuestionErrors];
+
+export type AskOrganizationQuestionResponses = {
+    /**
+     * Successful Response
+     */
+    200: Answer;
+};
+
+export type AskOrganizationQuestionResponse = AskOrganizationQuestionResponses[keyof AskOrganizationQuestionResponses];
+
+export type ListRemindersData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Limit
+         */
+        limit?: number;
+        /**
+         * Offset
+         */
+        offset?: number;
+    };
+    url: '/api/v1/reminders';
+};
+
+export type ListRemindersErrors = {
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ErrorResponse;
+    /**
+     * Internal Server Error
+     */
+    500: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
+};
+
+export type ListRemindersError = ListRemindersErrors[keyof ListRemindersErrors];
+
+export type ListRemindersResponses = {
+    /**
+     * Successful Response
+     */
+    200: ReminderPage;
+};
+
+export type ListRemindersResponse = ListRemindersResponses[keyof ListRemindersResponses];
 
 export type GetLivenessData = {
     body?: never;

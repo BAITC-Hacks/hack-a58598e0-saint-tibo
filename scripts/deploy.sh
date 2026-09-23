@@ -112,6 +112,24 @@ local = Path('.env')
 if not local.exists():
     local.symlink_to(environment)
 PY
+# Persist the explicit GPU opt-in across normal deployments without sourcing
+# secret-bearing dotenv values as shell code.
+remote_stt=$(python3 - <<'PY'
+from pathlib import Path
+values = dict(
+    line.split('=', 1)
+    for line in Path('/opt/saint-tibo/.env').read_text().splitlines()
+    if '=' in line and not line.startswith('#')
+)
+enabled = values.get('STT_REMOTE_ENABLED', 'false').strip().lower()
+if enabled not in {'true', 'false'}:
+    raise SystemExit('STT_REMOTE_ENABLED must be true or false.')
+print(enabled)
+PY
+)
+if [ "$remote_stt" = true ]; then
+  export COMPOSE_FILE=compose.yaml:tools/transcribe/compose.remote.yaml
+fi
 profiles="--profile app --profile edge"
 if [ "$dev_login" = true ]; then profiles="$profiles --profile mock"; fi
 docker compose $profiles config --quiet

@@ -7,13 +7,20 @@ import {
   jsonBodySerializer,
 } from "#/shared/api";
 import {
+  extractResultDraft,
+  getResultDiarization,
   getResultReview,
   listRecordings,
   listResultVersions,
   listTranscriptSegments,
   updateResultReview,
 } from "#/shared/api";
-import type { ResultVersionRead, ReviewRead, SegmentRead } from "#/shared/api";
+import type {
+  DiarizationRead,
+  ResultVersionRead,
+  ReviewRead,
+  SegmentRead,
+} from "#/shared/api";
 
 const segment = z.object({
   id: z.string(),
@@ -29,6 +36,7 @@ const speaker = z.object({
   result_version_id: z.string(),
   label: z.string(),
   participant_id: z.string().nullable(),
+  merged_into_speaker_id: z.string().nullable().default(null),
 });
 const action = z.object({
   id: z.string(),
@@ -51,6 +59,7 @@ export const reviewSchema = z.object({
   result_version_id: z.string(),
   revision: z.number().int().nonnegative(),
   reviewed: z.boolean(),
+  has_extraction_draft: z.boolean().optional(),
   summary: z.object({
     topics: z.array(summaryEntry),
     decisions: z.array(summaryEntry),
@@ -62,14 +71,19 @@ export const reviewSchema = z.object({
   action_items: z.array(action),
 });
 
-export type ReviewDocument = z.infer<typeof reviewSchema>;
+export type ReviewDocument = z.infer<typeof reviewSchema> & {
+  diarization?: DiarizationRead;
+};
+
+export class ReviewConflictError extends Error {}
 
 const summaryEntries = (items: string[]) =>
   items.map((text) => ({ text, source_segment_ids: [] as string[] }));
 
 function realDocument(
   data: ReviewRead,
-  segments: SegmentRead[]
+  segments: SegmentRead[],
+  diarization?: DiarizationRead
 ): ReviewDocument {
   if ("source" in data && String(data.source) === "mock")
     return reviewSchema.parse({ ...data, segments });
@@ -79,8 +93,16 @@ function realDocument(
     result_version_id: data.result_version_id,
     revision: data.revision,
     reviewed: data.reviewed,
+    has_extraction_draft: data.extraction_provenance != null,
     segments,
-    speakers: [],
+    diarization,
+    speakers: (data.speakers ?? []).map((item) => ({
+      id: item.speaker_id,
+      result_version_id: data.result_version_id,
+      label: item.label,
+      participant_id: item.participant_id ?? null,
+      merged_into_speaker_id: item.merged_into_speaker_id ?? null,
+    })),
     action_items: data.action_items.map((item) => ({
       id: item.id ?? crypto.randomUUID(),
       result_version_id: item.result_version_id,
@@ -156,7 +178,21 @@ async function realTranscript(
   });
   if (!review.data)
     throw new Error(apiErrorMessage(review.error, "Could not load review"));
-  return realDocument(review.data, segments);
+  let diarization: DiarizationRead | undefined;
+  if (latest.completed_stage === "diarize" || latest.completed_stage === "extract") {
+    const result = await getResultDiarization({
+      client: backendClient,
+      path: {
+        meeting_id: meetingId,
+        recording_id: latest.recording_id,
+        result_version_id: latest.id,
+      },
+    });
+    if (!result.data)
+      throw new Error(apiErrorMessage(result.error, "Could not load speakers"));
+    diarization = result.data;
+  }
+  return realDocument(review.data, segments, diarization);
 }
 
 export async function loadReview(
@@ -169,8 +205,26 @@ export const reviewQuery = (meetingId: string) =>
   queryOptions({
     queryKey: ["review", meetingId],
     enabled: typeof window !== "undefined",
+    // A background refresh would remount the revision-keyed editor and erase its draft.
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
     queryFn: () => loadReview(meetingId),
   });
+
+export async function extractReview(meetingId: string, review: ReviewDocument) {
+  if (review.source !== "real" || !review.recording_id)
+    throw new Error("Extraction requires a saved recording");
+  const result = await extractResultDraft({
+    client: backendClient,
+    path: {
+      meeting_id: meetingId,
+      recording_id: review.recording_id,
+      result_version_id: review.result_version_id,
+    },
+  });
+  if (!result.data) throw new Error("Extraction unavailable");
+  return realDocument(result.data, review.segments, review.diarization);
+}
 
 export async function saveReview(meetingId: string, review: ReviewDocument) {
   if (review.source === "real") {
@@ -185,6 +239,11 @@ export async function saveReview(meetingId: string, review: ReviewDocument) {
       body: {
         revision: review.revision,
         reviewed: review.reviewed,
+        speakers: review.speakers.map((item) => ({
+          speaker_id: item.id,
+          participant_id: item.participant_id,
+          merged_into_speaker_id: item.merged_into_speaker_id,
+        })),
         summary: {
           topics: review.summary.topics.map((entry) => entry.text),
           decisions: review.summary.decisions.map((entry) => entry.text),
@@ -205,9 +264,11 @@ export async function saveReview(meetingId: string, review: ReviewDocument) {
         })),
       },
     });
+    if (result.response?.status === 409)
+      throw new ReviewConflictError("Review revision changed");
     if (!result.data)
       throw new Error(apiErrorMessage(result.error, "Could not save review"));
-    return realDocument(result.data, review.segments);
+    return realDocument(result.data, review.segments, review.diarization);
   }
   const result = await backendClient.patch({
     ...jsonBodySerializer,
@@ -223,9 +284,31 @@ export async function saveReview(meetingId: string, review: ReviewDocument) {
       reviewed: review.reviewed,
     },
   });
+  if (result.response?.status === 409)
+    throw new ReviewConflictError("Review revision changed");
   if (result.error || result.data === undefined)
     throw new Error(apiErrorMessage(result.error, "Could not save review"));
   return reviewSchema.parse(result.data);
+}
+
+export async function reloadReview(meetingId: string, review: ReviewDocument) {
+  if (review.source === "mock") {
+    const loaded = await loadReview(meetingId);
+    if (!loaded) throw new Error("Review unavailable");
+    return loaded;
+  }
+  if (!review.recording_id) throw new Error("Recording unavailable");
+  const result = await getResultReview({
+    client: backendClient,
+    path: {
+      meeting_id: meetingId,
+      recording_id: review.recording_id,
+      result_version_id: review.result_version_id,
+    },
+  });
+  if (!result.data)
+    throw new Error(apiErrorMessage(result.error, "Could not load review"));
+  return realDocument(result.data, review.segments, review.diarization);
 }
 
 export async function downloadReview(

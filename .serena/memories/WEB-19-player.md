@@ -1,47 +1,38 @@
-# WEB-19 Protected and local recording player
+# WEB-19 Protected recording player
 
 ## Current Behavior
 
-- Integrated dev `a2cfe28` includes protected selector `c55d1a9` and rich
-  timeline `c026616`; source: `frontend/src/pages/player/`,
-  `frontend/src/shared/ui/meeting-player/`, `docs/player.md`.
-- Protected `/player` queries generated listMeetings/listRecordings,
-  filters records with media URL/type and passes server `media_url` to
-  MeetingPlayer. Cookie media proxy handles auth/Range; no second login.
-- MeetingPlayer accepts MediaSource (`id,url,title`), optional waveform
-  and TimelineMarker list, integer-ms position/duration callback and
-  `seek(timeMs)/pause()` handle. New id/URL replaces playback session.
-- Controls: play/pause, ±10s, position, speed, volume, loading/buffering/
-  error/end; seeking preserves play state and is bounded by media duration.
-- Local audio/video remains in the browser and is not uploaded/transcribed.
-  `lib/audio-waveform.ts` samples decoded local audio into 180 peaks
-  only for files <=32 MiB; unsupported/large files show no fake waveform.
-  Server media is not downloaded in full for visualization.
-- Local STT JSON uses `lib/local-transcript.ts`: required `audio_sha256`
-  and segment `index,start_ms,end_ms,text`; hash must match selected audio.
-  Limits: 8 MiB JSON, 256 MiB audio for hashing, 10k segments.
-- Up to eight local transcript markers derive from actual segment timestamps;
-  WEB-20 handles click-to-seek and follow. Switching sources clears local data.
-- Dev `34062c4` adds #98 browser-generated 32s WAV/eight tone intervals,
-  fictional speakers/dialogue and a source jump at 0:08. RU/KK/EN labels
-  explicitly say tones are not speech/transcription and nothing is uploaded.
-  Code: `lib/synthetic-recording.ts`; documentation: `docs/player.md`.
-- Dev `ab3d331` adds `w-full min-w-0` to keep the marker strip in its viewport
-  (fix 4775b8c); this does not by itself prove responsive/browser acceptance.
+- `frontend/src/pages/player/` now uses only owner-authorized recordings;
+  #110 removed local import/synthetic samples and public /transcript-demo.
+  The previous sample/JSON hash workflow is historical, not current product UI.
+- Generated listMeetings/listRecordings supply media_url; cookie media proxy
+  handles Range/auth. No separate token or uploaded fixture is embedded.
+- MeetingPlayer accepts source id/url/title, integer-ms position/duration,
+  seek/pause handle, optional waveform and real transcript markers.
+  Source replacement unloads old playback; seeking preserves play/pause.
+- Page selects latest completed server result and loads every segment page
+  (WEB-20). Markers, transcript and playback share recording/version IDs.
+  Missing/loading/error/empty result states stay distinct.
+- A waveform fetch is allowed only when declared server media size <=32 MiB;
+  same-origin cookie fetch checks actual Blob size, then local Web Audio decodes.
+  Oversized/unsupported audio has no fabricated waveform.
+- Controls include play/pause, ±10s, position, rate, volume and loading/error.
+  Marker overflow fix 4775b8c constrains its strip to the viewport.
+- Related canonical workspace uses the same player/source navigation.
+  Code map and current integration: `docs/player.md`, WEB-01/WEB-20.
+  Media cancellation patch and its evidence remain in WEB-102.
 
 ## Known Gaps
 
-- Server selector loads first 100 meetings and first 100 recordings per meeting;
-  it does not exhaust pagination or fetch server result versions/segments.
-- [#95 deploy report](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/95#issuecomment-5793559235)
-  reports Ivan dev at a2cfe28 with readiness/player HTTP 200. Interactive
-  waveform/marker seek, protected selector/playback and browser logs were
-  explicitly not verified in that run; #19/#20/#95 remain open.
-- Earlier local playback/STT proof and backend review/export LIVE-OK 97e804e
-  cannot establish the new selector's interactive acceptance.
-- The #98 synthetic walkthrough is integrated; its browser acceptance is
-  pending. Fictional text/tone synchronization proves no STT or diarization.
-- Ivan owns player code; Artem owns global navigation/meeting workspace.
-  Full server result/action-source/editor integration is still separate.
+- Recording selector still loads first 100 meetings and first 100 recordings
+  per meeting; result/segment helpers do exhaust their own pagination.
+- [Real case2 browser proof 6ed682e](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/94#issuecomment-5794265640)
+  confirms transcript seek 44.9s→play 52.1s/pause and empty warning/error capture.
+  Earlier synthetic checks are separate. This does not complete unexercised
+  mobile/locale/OS-capture/cancellation scenarios. Production proof: TEST-01.
+- #101 resume-across-navigation feature 99f99e23 is handed off; not yet in
+  fetched main/dev. Do not attribute it to deployed 7d5b481.
+- Ivan owns player/capture; Artem owns canonical workspace/navigation.
+  UI source links do not establish STT accuracy or automatic extraction.
 
-Last commit: `ab3d3312c3bafb3892bde93539383cea9e48b6de` (audited tree, 2026-09-23; live evidence is separate).
+Last commit: `6ed682e734620ec6cc710ad59192350e3f46ed39` (audited core release tree, 2026-09-23; production 7d5b481 LIVE-OK; TEST-01).

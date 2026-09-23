@@ -21,7 +21,10 @@ export async function latestCompletedResult(
       throwOnError: true,
     });
     const completed = data.items.find(
-      (version) => version.completed_stage === "transcribe"
+      (version) =>
+        version.completed_stage === "transcribe" ||
+        version.completed_stage === "diarize" ||
+        version.completed_stage === "extract"
     );
     if (completed) return completed;
     offset += data.items.length;

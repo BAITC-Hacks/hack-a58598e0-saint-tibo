@@ -1,13 +1,18 @@
-import { useNavigate, useRouterState } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   BarChart3,
+  Bell,
   CalendarDays,
+  CirclePlay,
   ClipboardList,
+  FileAudio,
   House,
   ListTodo,
   LogOut,
   Menu,
   MessageCircleQuestion,
+  Mic,
   NotebookTabs,
   Shield,
   Settings,
@@ -20,6 +25,7 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 
 import { isMockApi } from "#/shared/api/backend-client";
+import { remindersQuery, REMINDERS_REFRESH_MS } from "#/pages/reminders";
 import { authClient, useAccess } from "#/shared/auth";
 import { m } from "#/shared/lib/i18n/messages";
 import type { Locale } from "#/shared/lib/i18n/runtime";
@@ -50,6 +56,26 @@ const navigation: NavigationItem[] = [
     to: "/meetings",
     icon: NotebookTabs,
     label: (locale) => m.nav_meetings({}, { locale }),
+  },
+  {
+    to: "/capture",
+    icon: Mic,
+    label: (locale) => m.nav_capture({}, { locale }),
+  },
+  {
+    to: "/player",
+    icon: CirclePlay,
+    label: (locale) => m.nav_player({}, { locale }),
+  },
+  {
+    to: "/workspace",
+    icon: FileAudio,
+    label: (locale) => m.workspace_title({}, { locale }),
+  },
+  {
+    to: "/notifications",
+    icon: Bell,
+    label: (locale) => m.nav_notifications({}, { locale }),
   },
   {
     to: "/calendar",
@@ -117,7 +143,13 @@ const navigation: NavigationItem[] = [
   },
 ];
 
-const Navigation = ({ onNavigate }: { onNavigate?: () => void }) => {
+const Navigation = ({
+  onNavigate,
+  reminderCount,
+}: {
+  onNavigate?: () => void;
+  reminderCount?: number;
+}) => {
   const locale = useLocale();
   const { can } = useAccess();
   const pathname = useRouterState({
@@ -135,9 +167,9 @@ const Navigation = ({ onNavigate }: { onNavigate?: () => void }) => {
           const active =
             pathname === to || (to !== "/" && pathname.startsWith(`${to}/`));
           return (
-            <a
+            <Link
               key={to}
-              href={to}
+              to={to}
               onClick={onNavigate}
               aria-current={active ? "page" : undefined}
               className="flex min-h-10 items-center gap-2.5 border-l-[3px] border-transparent px-[18px] py-2 text-[15px] text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:bg-sidebar-accent focus-visible:text-sidebar-accent-foreground aria-[current=page]:border-brand-gold aria-[current=page]:bg-white/10 aria-[current=page]:font-bold aria-[current=page]:text-white"
@@ -147,7 +179,12 @@ const Navigation = ({ onNavigate }: { onNavigate?: () => void }) => {
                 aria-hidden="true"
               />
               {label(locale)}
-            </a>
+              {to === "/notifications" && reminderCount !== undefined && (
+                <span className="ms-auto text-xs tabular-nums">
+                  {reminderCount}
+                </span>
+              )}
+            </Link>
           );
         })}
     </nav>
@@ -157,6 +194,12 @@ const Navigation = ({ onNavigate }: { onNavigate?: () => void }) => {
 export const AppShell = ({ children }: { children: ReactNode }) => {
   const locale = useLocale();
   const { data: session } = authClient.useSession();
+  const reminders = useQuery({
+    ...remindersQuery(session?.session.id),
+    refetchInterval: REMINDERS_REFRESH_MS,
+    refetchIntervalInBackground: false,
+  });
+  const reminderCount = reminders.isError ? undefined : reminders.data?.total;
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
@@ -238,7 +281,10 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
                   <X aria-hidden="true" />
                 </SheetClose>
               </div>
-              <Navigation onNavigate={() => setMenuOpen(false)} />
+              <Navigation
+                reminderCount={reminderCount}
+                onNavigate={() => setMenuOpen(false)}
+              />
             </SheetContent>
           </Sheet>
         </div>
@@ -257,7 +303,7 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
       )}
       <div className="flex min-h-[calc(100dvh-67px)]">
         <aside className="hidden w-[228px] shrink-0 flex-col bg-sidebar text-sidebar-foreground min-[1101px]:flex">
-          <Navigation />
+          <Navigation reminderCount={reminderCount} />
           <div className="mt-auto flex items-center gap-2.5 border-t border-sidebar-border px-[18px] py-3">
             <img src="/brand-bird.svg" alt="" className="h-7 w-[18px]" />
             <small className="text-[11px] leading-[1.3] text-sidebar-foreground">

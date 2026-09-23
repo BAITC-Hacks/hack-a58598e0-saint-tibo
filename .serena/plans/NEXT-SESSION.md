@@ -1,60 +1,60 @@
-# NEXT-SESSION — Saint Tibo synchronization wave
+# NEXT-SESSION — core release handoff
 
-Snapshot: 2026-09-23. Refresh GitHub refs/claims before acting.
-Last commit: `ab3d3312c3bafb3892bde93539383cea9e48b6de` (audited tree; live evidence below).
+Snapshot: 2026-09-23; refresh refs and #94 before acting.
+Last commit: `6ed682e734620ec6cc710ad59192350e3f46ed39` (pinned core; production 7d5b481 LIVE-OK; TEST-01).
 
 ## Current law and ownership
 
-- Saint Tibo only. Preserve other worktrees/WIP; no private data in git/issues.
-  No repository test/linter suites this wave.
-- Feature → personal lane → dev with --no-ff; no history rewriting.
-  Parent coordinator schedules shared merges/deploys. Current-wave main/prod
-  Release is user-authorized after QA; #69 is not a gate. No internal task IDs/local paths in issue comments.
-- Serena writer: `feat/94-serena-reviewed-export`, only memories and this
-  deliberately tracked index; broad ignore rules remain unchanged.
-- #13/#14 feature `0203111` is handed off. #69 continuation
-  `feat/69-extraction-continuation` owns extractor/benchmark and coordinated
-  processing/results/codegen updates; original Devin WIP remains preserved.
-- Parent owns current-state/integration-plan docs and release scheduling;
-  independent verifier owns live receipts. Personal user chat is not a worker.
-- Artem owns UI/design/#83–85; Ivan owns player/capture/#95/#96/#98.
-  API-03-mock.md name is reserved by #85. Recheck current issue claims.
-- Finish bounded slices and narrow remaining acceptance; avoid new subsystems.
+- Saint Tibo only; preserve other worktrees/WIP. No private audio/transcripts
+  or infrastructure secrets in git/issues; no repository test/linter suites.
+- Feature → personal lane → dev/main with --no-ff; no history rewriting.
+  Parent serializes release from `codex/94-reviewed-core-release` pinned to 6ed682e.
+- Serena owns memories/this tracked index on `feat/94-serena-release-handoff`;
+  Preserve incoming Artem/Ivan notes.   Core receipts accepted; knowledge publication authorized by coordinator.
+- Artem owns canonical /meetings UI; Ivan owns player/capture/Honcho tools.
+  #107 fallback b095035 stays UNMERGED; its a8886bd confirmation fix is integrated.
+- #12 UI e99f43a, #69 integration 63a34f8 and #113 1c7da97 are in dev 269fcbb,
+  not deployed; remote GPU is off. Preserve original Devin WIP.
+  New dev pushes must not expand the pinned first release.
+- Preserve persistent demo identities/meetings. DEMO update 5bc719c documents
+  manual content; 590aaf4 preserves old LLM, #101 99f99e23 handed off; none in main.
 
-## Done and evidence boundaries
+## Pinned release code and newer dev
 
-- Fetched main `62b137d`, danil `5427d19`, dev `ab3d331`.
-  Dev includes #13/#14/migration 0005 at `97e804e`, synthetic player
-  `34062c4` and marker overflow fix `4775b8c` integrated at `ab3d331`.
-- Independent [review/export LIVE-OK](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/14#issuecomment-5793710152)
-  is exact `97e804ed7c941408ecf22145d72497214b5002c4` on Danil dev.
-  Real JWT/ACL/save/conflict/422 validation and immutable historical JSON/
-  decoded PDF/DOCX passed; r3 draft blocked, r4 approved current exported.
-  First run: 54 passes stopped on QA-only whitespace; continuation: 57/57 passed;
-  own app/auth cleanup counts 0. RU/KK/multipage layout also visually checked.
-- #14 CLOSED for backend download/renderer; UI buttons remain Artem's work.
-  Human review keeps completed_stage=transcribe; #13 auto-extraction stays open.
-- Earlier RU STT/storage proof remains `58ee537`; it is a separate scenario.
-  CT2 small synthetic mixed CER 53.16%/Kazakh omissions block a quality pass;
-  RU 7.11%/KK 12.60% smoke is not reference-based real-meeting acceptance.
-- New player frontend still needs scheduled dev/browser proof before release.
-  No production deployment or current-wave UI success is claimed here.
+- Core 6ed682e → PR114/main 7d5b481; production LIVE-OK, login/UI PASS.
+  Runtime remains dev 6ed682e/prod 7d5b481; newer dev 269fcbb is not deployed.
+- Shared: canonical UI 117d9b8/6988054, pinned turbo/provenance 52efb76,
+  strict ceil duration 8c95950, safe logs #105, capture metadata #106, media cancel #102.
+  /player uses real server results; #110 removed synthetic/local/public demos.
+- [Review/export LIVE 97e804e](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/14#issuecomment-5793710152): real JWT/ACL/CAS/422/immutable documents,
+  57/57 continuation, owned cleanup 0; #14 CLOSED. Human review is not extraction.
+- [#104/#105 LIVE b1e33cb](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/104#issuecomment-5793915724):
+  19093ms audio→STT 7 segments→review r2→PDF/DOCX; private marker absent;
+  scoped cleanup 0. Both issues CLOSED; isolated 500 proof was separate.
+- [Browser PASS 6ed682e](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/94#issuecomment-5794265640):
+  actual case2/54 segments, review/approval/edit reset/two-tab 409/reload,
+  PDF 50243B/DOCX 37890B and seek 44.9→play 52.1; #107 CLOSED, demo retained.
+- Turbo synthetic CER RU 6.28 / KK 5.91 / mixed 12.24% improves small; still no
+  real-speech/reference quality acceptance or #11/#70 closure.
+- Honcho 3005fd3 is isolated tools only. Core migrations end 0005; shared dev 0007
+  and extraction 0008→0007 are not deployed. App Honcho/#103 remains open.
 
-## Critical next work
+## Remaining work and release boundary
 
-1. Parent deploys the selected current player tip, verifies browser behavior,
-   then integrates/releases the authorized wave to main/prod and records #94.
-2. Serena refreshes final release receipts only on that signal; feature-only
-   push, no deployment or shared-branch merge from this memory worktree.
-3. #69 local extraction continues separately; stronger STT candidate evaluation
-   must not be confused with accepted model deployment or delay this release.
-4. #12 diarization, #15 reminders, #81 sink, #11/#70/#89 quality and server
-   transcript/UI integration remain scoped work. Keep #96 outside the minimum.
+1. [Prod 7d5b481 LIVE-OK](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/94#issuecomment-5794357831):
+   ordinary login→RU turbo 7 segments/19093ms/20.76s→manual r2→PDF/DOCX; cleanup 0.
+2. #69 R2 completes 2435 tokens/16 actions in 925.271s; private DB/CAS proof passed
+   and cleaned. Deadline duplication/omissions remain; model is not accepted.
+3. #12 has 45 local checks and shared integration; deployment/UI acceptance remains.
+   Brev L4 READY/image building ($25 cap); root owns runtime, actual GPU unverified.
+4. #113 1c7da97 integrated, remote off; #15 backend 0972e69 ready, UI pending
+   (stateless/no migration). #11/#70/#89, #81 and #103 remain open.
+5. Preserve user test1/Совещание №1; mobile/locale/capture/cancellation need proof.
 
 ## Domain index
 
-- [API architecture](../memories/API-01-backend-architecture.md), [recordings](../memories/API-02-meetings-recordings.md), [jobs/results](../memories/API-10-processing-results.md), [review/export](../memories/API-13-review-export.md)
-- [Auth](../memories/AUTH-01-auth-access.md), [database](../memories/DB-01-schemas-migrations.md), [stack](../memories/STACK-01-stack-layout.md)
-- [Deployment](../memories/INFRA-01-environments-deploy.md), [capture kernel](../memories/INFRA-22-CAPTURE.md), [connectors](../memories/INFRA-23-connectors.md), [local models](../memories/MODELS-01-stt-pipeline.md)
-- [Frontend](../memories/WEB-01-frontend.md), [player](../memories/WEB-19-player.md), [transcript sync](../memories/WEB-20-transcript-sync.md), [browser capture](../memories/WEB-21-CAPTURE.md)
-- [Team/ownership](../memories/TEAM-01-workflow.md), [verification](../memories/TEST-01-verification.md)
+- [API](../memories/API-01-backend-architecture.md), [recordings](../memories/API-02-meetings-recordings.md), [DEV mocks](../memories/API-03-mock.md), [jobs/results](../memories/API-10-processing-results.md), [review/export](../memories/API-13-review-export.md)
+- [Auth](../memories/AUTH-01-auth-access.md), [DB](../memories/DB-01-schemas-migrations.md), [stack](../memories/STACK-01-stack-layout.md)
+- [Deploy](../memories/INFRA-01-environments-deploy.md), [capture kernel](../memories/INFRA-22-CAPTURE.md), [connectors/Honcho](../memories/INFRA-23-connectors.md), [models](../memories/MODELS-01-stt-pipeline.md)
+- [Workspace](../memories/WEB-01-frontend.md), [player](../memories/WEB-19-player.md), [transcript](../memories/WEB-20-transcript-sync.md), [capture](../memories/WEB-21-CAPTURE.md), [media cancellation](../memories/WEB-102-media-abort.md)
+- [Team](../memories/TEAM-01-workflow.md), [proof](../memories/TEST-01-verification.md)

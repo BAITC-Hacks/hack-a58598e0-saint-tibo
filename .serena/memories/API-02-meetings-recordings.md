@@ -15,6 +15,9 @@
 - `storage.py` selects the audio stream explicitly (MP3 cover art is safe)
   and produces canonical 16 kHz mono PCM WAV while preserving the timeline.
   Incomplete recordings remain distinguishable from complete ones.
+- #104 uses integer-ceil milliseconds from decoded WAV frames consistently
+  in storage/worker/CLI; supervisor and result publication require exact
+  equality. A transient ±1ms tolerance was superseded by fix 8c95950.
 - `GET/HEAD /media` enforces owner access and Range/If-Range, with
   206/416 semantics. Deletion removes stored files and cascades jobs/results.
 - Browser playback uses cookie route
@@ -35,4 +38,4 @@
 - Storage/STT functional proof is the [#94 LIVE-OK report](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/94#issuecomment-5793355510)
   on `58ee537`; later review/export LIVE-OK 97e804e is recorded in API-13.
 
-Last commit: `ab3d3312c3bafb3892bde93539383cea9e48b6de` (audited tree, 2026-09-23; live evidence is separate).
+Last commit: `6ed682e734620ec6cc710ad59192350e3f46ed39` (audited core release tree, 2026-09-23; production 7d5b481 LIVE-OK; TEST-01).
