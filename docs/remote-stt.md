@@ -84,6 +84,11 @@ STT_REMOTE_PORT=22
 STT_SSH_PATH=/private/saint-tibo-stt-ssh
 ```
 
+After the required firewall and runtime proof, set `STT_REMOTE_ENABLED=true`
+in the application host's deployment environment. The normal manual deployment
+script then includes the remote override on every deployment. The default is
+false; merely configuring a host or preparing credentials does not enable it.
+
 The opt-in override enables only the processing worker:
 
 ```sh
