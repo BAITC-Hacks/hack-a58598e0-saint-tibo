@@ -15,12 +15,12 @@ from saint_tibo.modules.processing.diarization import DiarizationOutput
 from saint_tibo.modules.processing.models import ProcessingJob
 from saint_tibo.modules.results.models import ResultReview, ResultVersion, Segment
 from saint_tibo.modules.results.schemas import (
-    ExtractionDraft,
     DiarizationData,
     DiarizationProvenance,
     DiarizationRead,
     DiarizationSpeaker,
     DiarizationTurn,
+    ExtractionDraft,
     ReviewActionItemRead,
     ReviewMeeting,
     ReviewParticipant,
@@ -184,6 +184,7 @@ async def publish_transcript(
         ResultVersion(
             id=version_id,
             recording_id=media.id,
+            canvas_version_id=media.canvas_version_id,
             job_id=job.id,
             is_incomplete=media.status == "incomplete",
             language=language,
@@ -293,8 +294,11 @@ async def initial_review(
         .where(Participant.meeting_id == meeting_row.id)
         .order_by(Participant.created_at, Participant.id)
     )
-    draft = (ExtractionDraft.model_validate(version.extraction_draft)
-             if version.extraction_draft is not None else None)
+    draft = (
+        ExtractionDraft.model_validate(version.extraction_draft)
+        if version.extraction_draft is not None
+        else None
+    )
     return ReviewRead(
         extraction_provenance=draft.provenance if draft is not None else None,
         result_version_id=version.id,
@@ -308,7 +312,9 @@ async def initial_review(
         action_items=[
             ReviewActionItemRead(**item.model_dump(), result_version_id=version.id)
             for item in draft.action_items
-        ] if draft is not None else [],
+        ]
+        if draft is not None
+        else [],
         summary=draft.summary if draft is not None else ReviewSummary(),
         speakers=default_speakers(version),
     )

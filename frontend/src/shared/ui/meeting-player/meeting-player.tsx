@@ -391,9 +391,8 @@ function PlayerSession({
             className="h-6 w-full accent-primary"
           />
           {speakerIntervals.length > 0 && duration !== null && (
-            <div
+            <fieldset
               className="relative h-5 overflow-hidden rounded-md bg-muted"
-              role="group"
               aria-label={
                 locale === "ru"
                   ? "Говорящие на записи"
@@ -421,7 +420,7 @@ function PlayerSession({
                   }}
                 />
               ))}
-            </div>
+            </fieldset>
           )}
           {markers.length > 0 && duration !== null && (
             <fieldset

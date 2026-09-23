@@ -20,6 +20,19 @@ export const Disabled: Story = { args: { disabled: true } };
 export const Loading: Story = {
   args: { disabled: true, children: "Сохранение…" },
 };
+export const Sizes: Story = {
+  render: () => (
+    <div className="flex flex-wrap items-center gap-3">
+      <Button size="xs">XS</Button>
+      <Button size="sm">Small</Button>
+      <Button>Default</Button>
+      <Button size="lg">Large</Button>
+      <Button size="icon" aria-label="Добавить">
+        +
+      </Button>
+    </div>
+  ),
+};
 export const LongLabels: Story = {
   render: () => (
     <div className="flex max-w-96 flex-wrap gap-2">

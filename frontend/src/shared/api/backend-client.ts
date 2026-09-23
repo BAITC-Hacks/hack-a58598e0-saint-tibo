@@ -29,40 +29,49 @@ const expiresAt = (token: string): number => {
  */
 export const backendClient = client;
 
-// The build and preview bundles must never route requests to fixture data.
-if (env.VITE_API_MODE === "mock" && !import.meta.env.DEV) {
-  throw new Error(
-    "Mock API mode is available only in the local Vite dev server."
-  );
-}
+export const mockModeKey = (userId: string) => `saint-tibo-mock:${userId}`;
 
-export const isMockApi = import.meta.env.DEV && env.VITE_API_MODE === "mock";
+export const isMockApi = () =>
+  typeof window !== "undefined" &&
+  window.sessionStorage.getItem("saint-tibo-active-user") !== null &&
+  window.localStorage.getItem(
+    mockModeKey(window.sessionStorage.getItem("saint-tibo-active-user") ?? "")
+  ) === "mock";
 
-if (isMockApi) {
-  backendClient.interceptors.request.use((request) => {
-    const url = new URL(request.url);
-    if (
-      url.pathname === "/api/v1/meetings" ||
-      url.pathname.startsWith("/api/v1/meetings/")
-    ) {
-      const mockUrl = new URL(url.pathname + url.search, env.VITE_MOCK_API_URL);
-      if (
-        typeof window !== "undefined" &&
-        request.method === "GET" &&
-        url.pathname === "/api/v1/meetings"
-      ) {
-        const scenario = new URLSearchParams(window.location.search).get(
-          "mock"
-        );
-        if (scenario && ["empty", "loading", "error"].includes(scenario)) {
-          mockUrl.searchParams.set("scenario", scenario);
-        }
-      }
-      return new Request(mockUrl, request);
+function routeMockRequest(request: Request) {
+  if (!isMockApi()) return request;
+  const url = new URL(request.url);
+  if (
+    url.pathname === "/api/v1/meetings" ||
+    url.pathname.startsWith("/api/v1/meetings/")
+  ) {
+    if (request.method === "GET" && url.pathname === "/api/v1/meetings") {
+      const scenario = new URLSearchParams(window.location.search).get("mock");
+      if (scenario && ["empty", "loading", "error"].includes(scenario))
+        url.searchParams.set("scenario", scenario);
     }
-    return request;
-  });
+    const makeRequest = (body?: ArrayBuffer) =>
+      new Request(
+        new URL(
+          `/api/mock${url.pathname}${url.search}`,
+          window.location.origin
+        ),
+        {
+          method: request.method,
+          headers: request.headers,
+          body,
+          credentials: "same-origin",
+          signal: request.signal,
+        }
+      );
+    return ["GET", "HEAD"].includes(request.method)
+      ? makeRequest()
+      : request.arrayBuffer().then(makeRequest);
+  }
+  return request;
 }
+
+backendClient.interceptors.request.use(routeMockRequest);
 
 export const forgetAccessToken = () => {
   cached = null;

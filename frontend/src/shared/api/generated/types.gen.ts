@@ -44,6 +44,94 @@ export type Answer = {
 };
 
 /**
+ * CanvasRead
+ */
+export type CanvasRead = {
+    /**
+     * Agenda Structure
+     */
+    agenda_structure: string | null;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Expected Artifacts
+     */
+    expected_artifacts: string | null;
+    /**
+     * Expected Outputs
+     */
+    expected_outputs: string | null;
+    /**
+     * Facilitation Flow
+     */
+    facilitation_flow: string | null;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Inputs
+     */
+    inputs: string | null;
+    /**
+     * Meeting Id
+     */
+    meeting_id: string;
+    /**
+     * Participants
+     */
+    participants: string | null;
+    /**
+     * Purpose
+     */
+    purpose: string | null;
+    /**
+     * Revision
+     */
+    revision: number;
+};
+
+/**
+ * CanvasWrite
+ */
+export type CanvasWrite = {
+    /**
+     * Agenda Structure
+     */
+    agenda_structure: string | null;
+    /**
+     * Base Revision
+     */
+    base_revision: number;
+    /**
+     * Expected Artifacts
+     */
+    expected_artifacts: string | null;
+    /**
+     * Expected Outputs
+     */
+    expected_outputs: string | null;
+    /**
+     * Facilitation Flow
+     */
+    facilitation_flow: string | null;
+    /**
+     * Inputs
+     */
+    inputs: string | null;
+    /**
+     * Participants
+     */
+    participants: string | null;
+    /**
+     * Purpose
+     */
+    purpose: string | null;
+};
+
+/**
  * CurrentUser
  */
 export type CurrentUser = {
@@ -633,6 +721,10 @@ export type RecordingFinalize = {
  */
 export type RecordingRead = {
     /**
+     * Canvas Version Id
+     */
+    canvas_version_id: string | null;
+    /**
      * Content Type
      */
     content_type: string;
@@ -798,6 +890,10 @@ export type ReminderRead = {
  * ResultVersionRead
  */
 export type ResultVersionRead = {
+    /**
+     * Canvas Version Id
+     */
+    canvas_version_id: string | null;
     /**
      * Completed Stage
      */
@@ -1587,6 +1683,222 @@ export type UpdateMeetingResponses = {
 };
 
 export type UpdateMeetingResponse = UpdateMeetingResponses[keyof UpdateMeetingResponses];
+
+export type GetMeetingCanvasData = {
+    body?: never;
+    path: {
+        /**
+         * Meeting Id
+         */
+        meeting_id: string;
+    };
+    query?: never;
+    url: '/api/v1/meetings/{meeting_id}/canvas';
+};
+
+export type GetMeetingCanvasErrors = {
+    /**
+     * Bad Request
+     */
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Request Timeout
+     */
+    408: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Content Too Large
+     */
+    413: ErrorResponse;
+    /**
+     * Unsupported Media Type
+     */
+    415: ErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ErrorResponse;
+    /**
+     * Internal Server Error
+     */
+    500: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
+};
+
+export type GetMeetingCanvasError = GetMeetingCanvasErrors[keyof GetMeetingCanvasErrors];
+
+export type GetMeetingCanvasResponses = {
+    /**
+     * Response Getmeetingcanvas
+     *
+     * Successful Response
+     */
+    200: CanvasRead | null;
+};
+
+export type GetMeetingCanvasResponse = GetMeetingCanvasResponses[keyof GetMeetingCanvasResponses];
+
+export type SaveMeetingCanvasData = {
+    body: CanvasWrite;
+    path: {
+        /**
+         * Meeting Id
+         */
+        meeting_id: string;
+    };
+    query?: never;
+    url: '/api/v1/meetings/{meeting_id}/canvas';
+};
+
+export type SaveMeetingCanvasErrors = {
+    /**
+     * Bad Request
+     */
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Request Timeout
+     */
+    408: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Content Too Large
+     */
+    413: ErrorResponse;
+    /**
+     * Unsupported Media Type
+     */
+    415: ErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ErrorResponse;
+    /**
+     * Internal Server Error
+     */
+    500: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
+};
+
+export type SaveMeetingCanvasError = SaveMeetingCanvasErrors[keyof SaveMeetingCanvasErrors];
+
+export type SaveMeetingCanvasResponses = {
+    /**
+     * Successful Response
+     */
+    200: CanvasRead;
+};
+
+export type SaveMeetingCanvasResponse = SaveMeetingCanvasResponses[keyof SaveMeetingCanvasResponses];
+
+export type GetMeetingCanvasVersionData = {
+    body?: never;
+    path: {
+        /**
+         * Meeting Id
+         */
+        meeting_id: string;
+        /**
+         * Canvas Id
+         */
+        canvas_id: string;
+    };
+    query?: never;
+    url: '/api/v1/meetings/{meeting_id}/canvas/{canvas_id}';
+};
+
+export type GetMeetingCanvasVersionErrors = {
+    /**
+     * Bad Request
+     */
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Request Timeout
+     */
+    408: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Content Too Large
+     */
+    413: ErrorResponse;
+    /**
+     * Unsupported Media Type
+     */
+    415: ErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ErrorResponse;
+    /**
+     * Internal Server Error
+     */
+    500: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
+};
+
+export type GetMeetingCanvasVersionError = GetMeetingCanvasVersionErrors[keyof GetMeetingCanvasVersionErrors];
+
+export type GetMeetingCanvasVersionResponses = {
+    /**
+     * Successful Response
+     */
+    200: CanvasRead;
+};
+
+export type GetMeetingCanvasVersionResponse = GetMeetingCanvasVersionResponses[keyof GetMeetingCanvasVersionResponses];
 
 export type ListParticipantsData = {
     body?: never;

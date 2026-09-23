@@ -5,6 +5,7 @@ import json
 from datetime import UTC, datetime, timedelta
 from email.message import Message
 from pathlib import Path
+from typing import cast
 from uuid import UUID
 
 from sqlalchemy import select, update
@@ -14,8 +15,15 @@ from saint_tibo.core.config import Settings
 from saint_tibo.core.errors import APIError
 from saint_tibo.core.pagination import PageParams, paginate
 from saint_tibo.modules.meetings import storage
-from saint_tibo.modules.meetings.models import Meeting, Participant, Recording, RecordingChunk
+from saint_tibo.modules.meetings.models import (
+    Meeting,
+    MeetingCanvas,
+    Participant,
+    Recording,
+    RecordingChunk,
+)
 from saint_tibo.modules.meetings.schemas import (
+    CanvasWrite,
     MeetingCreate,
     MeetingUpdate,
     ParticipantCreate,
@@ -68,6 +76,59 @@ async def update_meeting(
     row = await meeting(session, owner_id, meeting_id, lock=True)
     for key, value in body.changes().items():
         setattr(row, key, value)
+    await session.commit()
+    await session.refresh(row)
+    return row
+
+
+async def latest_canvas(
+    session: AsyncSession, owner_id: str, meeting_id: UUID
+) -> MeetingCanvas | None:
+    await meeting(session, owner_id, meeting_id)
+    return cast(
+        MeetingCanvas | None,
+        await session.scalar(
+            select(MeetingCanvas)
+            .where(MeetingCanvas.meeting_id == meeting_id)
+            .order_by(MeetingCanvas.revision.desc())
+            .limit(1)
+        ),
+    )
+
+
+async def canvas_version(
+    session: AsyncSession, owner_id: str, meeting_id: UUID, canvas_id: UUID
+) -> MeetingCanvas:
+    await meeting(session, owner_id, meeting_id)
+    row = await session.scalar(
+        select(MeetingCanvas).where(
+            MeetingCanvas.id == canvas_id, MeetingCanvas.meeting_id == meeting_id
+        )
+    )
+    if row is None:
+        raise not_found()
+    return row
+
+
+async def save_canvas(
+    session: AsyncSession, owner_id: str, meeting_id: UUID, body: CanvasWrite
+) -> MeetingCanvas:
+    await meeting(session, owner_id, meeting_id, lock=True)
+    current = await session.scalar(
+        select(MeetingCanvas)
+        .where(MeetingCanvas.meeting_id == meeting_id)
+        .order_by(MeetingCanvas.revision.desc())
+        .limit(1)
+    )
+    revision = current.revision if current else 0
+    if body.base_revision != revision:
+        raise APIError(409, "canvas_conflict", "Canvas changed; reload before saving")
+    row = MeetingCanvas(
+        meeting_id=meeting_id,
+        revision=revision + 1,
+        **body.model_dump(exclude={"base_revision"}),
+    )
+    session.add(row)
     await session.commit()
     await session.refresh(row)
     return row
@@ -220,7 +281,13 @@ async def create_recording(
     session: AsyncSession, owner_id: str, meeting_id: UUID, body: RecordingCreate
 ) -> Recording:
     await meeting(session, owner_id, meeting_id, lock=True)
-    row = Recording(meeting_id=meeting_id, **body.model_dump())
+    canvas_id = await session.scalar(
+        select(MeetingCanvas.id)
+        .where(MeetingCanvas.meeting_id == meeting_id)
+        .order_by(MeetingCanvas.revision.desc())
+        .limit(1)
+    )
+    row = Recording(meeting_id=meeting_id, canvas_version_id=canvas_id, **body.model_dump())
     session.add(row)
     await session.commit()
     await session.refresh(row)

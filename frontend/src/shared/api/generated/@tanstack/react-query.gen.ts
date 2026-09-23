@@ -3,8 +3,8 @@
 import { type InfiniteData, infiniteQueryOptions, queryOptions, type UseMutationOptions } from '@tanstack/react-query';
 
 import { client } from '../client.gen';
-import { askOrganizationQuestion, createMeeting, createParticipant, createProcessingJob, createRecording, deleteMeeting, deleteParticipant, deleteRecording, exportReviewedResult, extractResultDraft, finalizeRecording, getAccessPolicy, getCurrentUser, getLiveness, getMeeting, getProcessingJob, getReadiness, getRecording, getRecordingMedia, getResultDiarization, getResultReview, getResultVersion, listMeetings, listParticipants, listProcessingJobs, listRecordings, listReminders, listResultVersions, listTranscriptSegments, type Options, updateMeeting, updateParticipant, updateResultReview, uploadRecordingChunk, uploadRecordingFile } from '../sdk.gen';
-import type { AskOrganizationQuestionData, AskOrganizationQuestionError, AskOrganizationQuestionResponse, CreateMeetingData, CreateMeetingError, CreateMeetingResponse, CreateParticipantData, CreateParticipantError, CreateParticipantResponse, CreateProcessingJobData, CreateProcessingJobError, CreateProcessingJobResponse, CreateRecordingData, CreateRecordingError, CreateRecordingResponse, DeleteMeetingData, DeleteMeetingError, DeleteMeetingResponse, DeleteParticipantData, DeleteParticipantError, DeleteParticipantResponse, DeleteRecordingData, DeleteRecordingError, DeleteRecordingResponse, ExportReviewedResultData, ExportReviewedResultError, ExportReviewedResultResponse, ExtractResultDraftData, ExtractResultDraftError, ExtractResultDraftResponse, FinalizeRecordingData, FinalizeRecordingError, FinalizeRecordingResponse, GetAccessPolicyData, GetAccessPolicyError, GetAccessPolicyResponse, GetCurrentUserData, GetCurrentUserError, GetCurrentUserResponse, GetLivenessData, GetLivenessError, GetLivenessResponse, GetMeetingData, GetMeetingError, GetMeetingResponse, GetProcessingJobData, GetProcessingJobError, GetProcessingJobResponse, GetReadinessData, GetReadinessError, GetReadinessResponse, GetRecordingData, GetRecordingError, GetRecordingMediaData, GetRecordingMediaError, GetRecordingMediaResponse, GetRecordingResponse, GetResultDiarizationData, GetResultDiarizationError, GetResultDiarizationResponse, GetResultReviewData, GetResultReviewError, GetResultReviewResponse, GetResultVersionData, GetResultVersionError, GetResultVersionResponse, ListMeetingsData, ListMeetingsError, ListMeetingsResponse, ListParticipantsData, ListParticipantsError, ListParticipantsResponse, ListProcessingJobsData, ListProcessingJobsError, ListProcessingJobsResponse, ListRecordingsData, ListRecordingsError, ListRecordingsResponse, ListRemindersData, ListRemindersError, ListRemindersResponse, ListResultVersionsData, ListResultVersionsError, ListResultVersionsResponse, ListTranscriptSegmentsData, ListTranscriptSegmentsError, ListTranscriptSegmentsResponse, UpdateMeetingData, UpdateMeetingError, UpdateMeetingResponse, UpdateParticipantData, UpdateParticipantError, UpdateParticipantResponse, UpdateResultReviewData, UpdateResultReviewError, UpdateResultReviewResponse, UploadRecordingChunkData, UploadRecordingChunkError, UploadRecordingChunkResponse, UploadRecordingFileData, UploadRecordingFileError, UploadRecordingFileResponse } from '../types.gen';
+import { askOrganizationQuestion, createMeeting, createParticipant, createProcessingJob, createRecording, deleteMeeting, deleteParticipant, deleteRecording, exportReviewedResult, extractResultDraft, finalizeRecording, getAccessPolicy, getCurrentUser, getLiveness, getMeeting, getMeetingCanvas, getMeetingCanvasVersion, getProcessingJob, getReadiness, getRecording, getRecordingMedia, getResultDiarization, getResultReview, getResultVersion, listMeetings, listParticipants, listProcessingJobs, listRecordings, listReminders, listResultVersions, listTranscriptSegments, type Options, saveMeetingCanvas, updateMeeting, updateParticipant, updateResultReview, uploadRecordingChunk, uploadRecordingFile } from '../sdk.gen';
+import type { AskOrganizationQuestionData, AskOrganizationQuestionError, AskOrganizationQuestionResponse, CreateMeetingData, CreateMeetingError, CreateMeetingResponse, CreateParticipantData, CreateParticipantError, CreateParticipantResponse, CreateProcessingJobData, CreateProcessingJobError, CreateProcessingJobResponse, CreateRecordingData, CreateRecordingError, CreateRecordingResponse, DeleteMeetingData, DeleteMeetingError, DeleteMeetingResponse, DeleteParticipantData, DeleteParticipantError, DeleteParticipantResponse, DeleteRecordingData, DeleteRecordingError, DeleteRecordingResponse, ExportReviewedResultData, ExportReviewedResultError, ExportReviewedResultResponse, ExtractResultDraftData, ExtractResultDraftError, ExtractResultDraftResponse, FinalizeRecordingData, FinalizeRecordingError, FinalizeRecordingResponse, GetAccessPolicyData, GetAccessPolicyError, GetAccessPolicyResponse, GetCurrentUserData, GetCurrentUserError, GetCurrentUserResponse, GetLivenessData, GetLivenessError, GetLivenessResponse, GetMeetingCanvasData, GetMeetingCanvasError, GetMeetingCanvasResponse, GetMeetingCanvasVersionData, GetMeetingCanvasVersionError, GetMeetingCanvasVersionResponse, GetMeetingData, GetMeetingError, GetMeetingResponse, GetProcessingJobData, GetProcessingJobError, GetProcessingJobResponse, GetReadinessData, GetReadinessError, GetReadinessResponse, GetRecordingData, GetRecordingError, GetRecordingMediaData, GetRecordingMediaError, GetRecordingMediaResponse, GetRecordingResponse, GetResultDiarizationData, GetResultDiarizationError, GetResultDiarizationResponse, GetResultReviewData, GetResultReviewError, GetResultReviewResponse, GetResultVersionData, GetResultVersionError, GetResultVersionResponse, ListMeetingsData, ListMeetingsError, ListMeetingsResponse, ListParticipantsData, ListParticipantsError, ListParticipantsResponse, ListProcessingJobsData, ListProcessingJobsError, ListProcessingJobsResponse, ListRecordingsData, ListRecordingsError, ListRecordingsResponse, ListRemindersData, ListRemindersError, ListRemindersResponse, ListResultVersionsData, ListResultVersionsError, ListResultVersionsResponse, ListTranscriptSegmentsData, ListTranscriptSegmentsError, ListTranscriptSegmentsResponse, SaveMeetingCanvasData, SaveMeetingCanvasError, SaveMeetingCanvasResponse, UpdateMeetingData, UpdateMeetingError, UpdateMeetingResponse, UpdateParticipantData, UpdateParticipantError, UpdateParticipantResponse, UpdateResultReviewData, UpdateResultReviewError, UpdateResultReviewResponse, UploadRecordingChunkData, UploadRecordingChunkError, UploadRecordingChunkResponse, UploadRecordingFileData, UploadRecordingFileError, UploadRecordingFileResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -224,6 +224,59 @@ export const updateMeetingMutation = (options?: Partial<Options<UpdateMeetingDat
     };
     return mutationOptions;
 };
+
+export const getMeetingCanvasQueryKey = (options: Options<GetMeetingCanvasData>) => createQueryKey('getMeetingCanvas', options, false, ['meetings']);
+
+/**
+ * Get Meeting Canvas
+ */
+export const getMeetingCanvasOptions = (options: Options<GetMeetingCanvasData>) => queryOptions<GetMeetingCanvasResponse, GetMeetingCanvasError, GetMeetingCanvasResponse, ReturnType<typeof getMeetingCanvasQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getMeetingCanvas({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getMeetingCanvasQueryKey(options)
+});
+
+/**
+ * Save Meeting Canvas
+ */
+export const saveMeetingCanvasMutation = (options?: Partial<Options<SaveMeetingCanvasData>>): UseMutationOptions<SaveMeetingCanvasResponse, SaveMeetingCanvasError, Options<SaveMeetingCanvasData>> => {
+    const mutationOptions: UseMutationOptions<SaveMeetingCanvasResponse, SaveMeetingCanvasError, Options<SaveMeetingCanvasData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await saveMeetingCanvas({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getMeetingCanvasVersionQueryKey = (options: Options<GetMeetingCanvasVersionData>) => createQueryKey('getMeetingCanvasVersion', options, false, ['meetings']);
+
+/**
+ * Get Meeting Canvas Version
+ */
+export const getMeetingCanvasVersionOptions = (options: Options<GetMeetingCanvasVersionData>) => queryOptions<GetMeetingCanvasVersionResponse, GetMeetingCanvasVersionError, GetMeetingCanvasVersionResponse, ReturnType<typeof getMeetingCanvasVersionQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getMeetingCanvasVersion({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getMeetingCanvasVersionQueryKey(options)
+});
 
 export const listParticipantsQueryKey = (options: Options<ListParticipantsData>) => createQueryKey('listParticipants', options, false, ['meetings']);
 
