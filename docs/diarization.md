@@ -1,7 +1,8 @@
 # Local anonymous speaker diarization
 
-Issue #12 now has a standalone CPU CLI in `tools/diarize/`. It does not
-yet run in the processing worker or provide participant confirmation.
+Issue #12 has a local CPU CLI and an opt-in processing stage, with persisted
+anonymous turns and participant confirmation through review revisions.
+The default transcription-only job remains unchanged.
 Speaker labels identify clusters within one recording, never people.
 No embeddings, voiceprints, audio copies or identity database are written.
 
@@ -100,25 +101,92 @@ No model survey, test suite or linter was run. This synthetic functional
 smoke is not real-meeting DER, language-quality acceptance or a live-server
 claim. Audio, private runtime output and downloaded weights stay outside Git.
 
-## Integration handoff
+## Backend contract
 
-The integration owner must install this lock into the processing image,
-copy `diarize.py` and `bundle.py` together, and configure explicit executable,
-script and read-only model directory paths. Use the existing subprocess
-supervision pattern: discard stderr, bound stdout/time, terminate the entire
-process group on cancellation, and reject incomplete/invalid event streams.
-Validate the returned duration against the normalized recording.
+Create a normal processing job with `target_stage: "diarize"` to run STT,
+then diarization. Default `transcribe` remains compatible. A successful
+result has `completed_stage: "diarize"`; its existing model ID/revision still
+identify the actual STT model, independently of diarization provenance.
 
-Persist anonymous turns/model provenance per result version, assign stable
-speaker UUIDs within that version, and retain unknown participant identity.
-Whisper segments can span speaker changes: preserve ambiguous labels as
-unknown until alignment or correction; do not copy a whole sentence onto
-multiple speakers. Extend the existing review revisions for confirmation
-and label merging, retaining owner ACLs, CAS and historical export snapshots.
-An action item's assignee remains independent of the person speaking.
+`GET /api/v1/meetings/{m}/recordings/{r}/results/{v}/diarization` returns:
 
-The current #69 owner controls processing/results/config/Compose/codegen;
-this standalone feature changes none of those files. Backend wiring,
-participant mapping, review UI, real two-voice evaluation and live proof
-remain required before closing #12. Shared stack metadata should record this
-new locked environment when that integration lands.
+```json
+{
+  "result_version_id": "UUID",
+  "recording_id": "UUID",
+  "duration_ms": 23900,
+  "speakers": [{"speaker_id": "UUID", "label": "speaker_00"}],
+  "turns": [{"speaker_id": "UUID", "start_ms": 30, "end_ms": 5803}],
+  "provenance": {
+    "bundle_id": "saint-tibo-diarization-v1",
+    "sherpa_onnx_version": "1.13.8",
+    "model_sha256": {"segmentation.onnx": "SHA256", "embedding.onnx": "SHA256"},
+    "requested_num_speakers": -1,
+    "cluster_threshold": 0.5
+  }
+}
+```
+
+The endpoint uses the existing owner ACL; a result without diarization
+returns 409 `diarization_not_available`. Raw turns, speaker UUIDs and model
+provenance are immutable in `ResultVersion.diarization` JSONB. Migration
+`0007` adds this nullable column after current revision `0005`; the pending
+extraction migration must be ordered by the coordinator before integration.
+
+Transcript `Segment.speaker_id` is assigned only when its interval intersects
+exactly one voice. Cross-voice and unvoiced segments stay null. No sentence
+is copied or falsely split; raw diarization intervals remain available.
+
+Existing GET/PATCH `.../results/{v}/review` gains `speakers`:
+
+```json
+{
+  "revision": 1,
+  "speakers": [
+    {"speaker_id": "UUID-A", "participant_id": "PARTICIPANT-UUID"},
+    {"speaker_id": "UUID-B", "merged_into_speaker_id": "UUID-A"}
+  ]
+}
+```
+
+Read rows additionally include their anonymous `label`; PATCH omits that
+read-only field. The array replaces assignments: omitted speaker IDs become
+unknown, `[]` clears all, and omitting the entire field preserves it. A merge
+source must have null participant and point directly at another canonical
+speaker; self-merges, chains/cycles and foreign IDs are rejected with 422.
+Participants must belong to this meeting. Resolve a source speaker through
+its canonical row to the confirmed participant in the review's participant
+snapshot; names are never inferred. Action-item assignees remain independent.
+
+These changes use existing CAS (stale revision 409), immutable review
+snapshots and approval rules: edits clear approval unless `reviewed=true`
+is explicit. Raw segment/turn speaker IDs remain stable after a human merge.
+
+## Deployment and proof boundary
+
+The processing Dockerfile installs the separate locked diarization runtime
+and copies its two inference scripts. The worker uses the existing read-only
+`/models` mount and internal network. Before enabling diarization jobs,
+prepare `diarization-v1` inside the host `STT_MODELS_PATH` directory.
+`BACKEND_DIARIZATION_MODEL_PATH` defaults to `/models/diarization-v1`.
+Executable/script settings default to `/app/diarize/.venv/bin/python` and
+`/app/diarize/diarize.py`. Nothing downloads during jobs.
+
+The supervisor discards stderr, bounds output to 8 MiB/20,000 turns, checks
+ordered timestamps, duration and completion counts, and kills the process
+group on cancellation. The existing job timeout and lease cover both stages.
+Result publication occurs only after the requested stages finish successfully.
+
+A bounded local integration scenario passed 45 checks with the real offline
+Sherpa supervisor (3.629 s), isolated PostgreSQL upgraded to `0007`, actual
+EdDSA JWT verification, local JWKS and auth/session tables. Requests used the
+ASGI application, not a production server. Two anonymous voices/four turns,
+provenance, stable UUIDs, ambiguous-null attribution, participant confirmation,
+independent assignee, merge/clear/omit semantics, immutable history and ACL/
+CAS/422 rejection were verified. Transcript text was a controlled synthetic
+fixture, explicitly marked `synthetic-fixture-not-asr`, not an STT result.
+The backend wheel/sdist built, and OpenAPI/TypeScript SDK were regenerated.
+
+The review UI consumer, a real uploaded STT-to-diarization job and server
+release remain separate integration steps. This evidence does not close #12
+or establish real-meeting diarization quality. No test suites or linters ran.
