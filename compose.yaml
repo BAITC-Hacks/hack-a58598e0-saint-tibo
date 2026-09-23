@@ -85,13 +85,14 @@ services:
       context: ./frontend
       args:
         VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
-    environment:
+    environment: &frontend-environment
       FRONTEND_PORT: 3000
       BACKEND_INTERNAL_URL: http://backend:8000
       AUTH_DATABASE_URL: postgresql://${POSTGRES_USER:-saint_tibo}:${POSTGRES_PASSWORD:-saint_tibo}@postgres:5432/${POSTGRES_DB:-saint_tibo}
       BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:3000}
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?run `bun run setup` first}
       BETTER_AUTH_JWT_AUDIENCE: ${BETTER_AUTH_JWT_AUDIENCE:-saint_tibo-api}
+      DEV_LOGIN_ENABLED: ${DEV_LOGIN_ENABLED:-false}
     ports:
       - "127.0.0.1:${FRONTEND_PORT:-3000}:3000"
     depends_on:
@@ -104,6 +105,15 @@ services:
       interval: 10s
       timeout: 6s
       retries: 5
+
+  # Explicit deploy-only operation; never included in the production app profile.
+  auth-seed-dev:
+    profiles: [dev-tools]
+    build:
+      context: ./frontend
+      target: deps
+    environment: *frontend-environment
+    command: ["bun", "run", "seed:dev"]
 
   gateway:
     profiles: [edge]
