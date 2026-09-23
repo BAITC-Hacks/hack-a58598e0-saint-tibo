@@ -11,12 +11,17 @@ import type {
   MeetingPlayerHandle,
   PlaybackPosition,
   PlaybackStatus,
+  TimelineMarker,
 } from "./types";
 
 type Props = {
   source: MediaSource;
   ref?: Ref<MeetingPlayerHandle>;
   onPositionChange?: (position: PlaybackPosition) => void;
+  /** Markers must come from real timestamped source material. */
+  markers?: readonly TimelineMarker[];
+  /** Peaks are decoded in the browser from the user's local file. */
+  waveform?: readonly number[] | null;
 };
 
 const rates = [0.5, 0.75, 1, 1.25, 1.5, 2];
@@ -38,7 +43,13 @@ export function MeetingPlayer(props: Props) {
   );
 }
 
-function PlayerSession({ source, ref, onPositionChange }: Props) {
+function PlayerSession({
+  source,
+  ref,
+  onPositionChange,
+  markers = [],
+  waveform,
+}: Props) {
   const locale = useLocale();
   const id = useId();
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -142,7 +153,7 @@ function PlayerSession({ source, ref, onPositionChange }: Props) {
   return (
     <section
       aria-label={m.player_label({}, { locale })}
-      className="space-y-4 rounded-lg border bg-card p-4 sm:p-6"
+      className="space-y-5 rounded-2xl border bg-card p-4 shadow-sm sm:p-6"
     >
       {/* The transcript is supplied alongside this audio-only component by the meeting page. */}
       {/* oxlint-disable-next-line jsx-a11y/media-has-caption -- audio transcript is rendered by the consuming page */}
@@ -198,9 +209,11 @@ function PlayerSession({ source, ref, onPositionChange }: Props) {
           setStatus("error");
         }}
       />
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <h2 className="min-w-0 font-medium break-words">{source.title}</h2>
-        <output className="text-sm text-muted-foreground">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <h2 className="min-w-0 text-lg font-semibold break-words">
+          {source.title}
+        </h2>
+        <output className="rounded-full border px-3 py-1 text-xs text-muted-foreground">
           {statusLabels[status]({}, { locale })}
         </output>
       </div>
@@ -224,7 +237,83 @@ function PlayerSession({ source, ref, onPositionChange }: Props) {
           {m.player_play_blocked({}, { locale })}
         </p>
       )}
-      <div className="space-y-2">
+      <div className="flex flex-wrap items-center gap-3">
+        <Button
+          size="icon"
+          className="size-12 rounded-full"
+          disabled={status === "error"}
+          aria-label={
+            playing
+              ? m.player_pause({}, { locale })
+              : m.player_play({}, { locale })
+          }
+          onClick={toggle}
+        >
+          {playing ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          disabled={status === "error"}
+          aria-label={m.player_back({}, { locale })}
+          onClick={() =>
+            seek(((audioRef.current?.currentTime ?? 0) - 10) * 1000)
+          }
+        >
+          <RotateCcw aria-hidden="true" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          disabled={status === "error"}
+          aria-label={m.player_forward({}, { locale })}
+          onClick={() =>
+            seek(((audioRef.current?.currentTime ?? 0) + 10) * 1000)
+          }
+        >
+          <RotateCw aria-hidden="true" />
+        </Button>
+        <span className="font-mono text-sm font-semibold tabular-nums">
+          {timeLabel(position)}{" "}
+          <span className="text-muted-foreground">
+            / {duration === null ? "—" : timeLabel(duration)}
+          </span>
+        </span>
+        <fieldset
+          className="ms-auto flex flex-wrap gap-1 rounded-full border p-1"
+          aria-label={m.player_rate({}, { locale })}
+        >
+          {rates.map((value) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={rate === value}
+              onClick={() => {
+                setRate(value);
+                if (audioRef.current) audioRef.current.playbackRate = value;
+              }}
+              className="min-h-8 rounded-full px-2.5 text-xs font-medium text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring aria-pressed:bg-primary aria-pressed:text-primary-foreground"
+            >
+              {value}×
+            </button>
+          ))}
+        </fieldset>
+      </div>
+      <div className="space-y-3">
+        {waveform && waveform.length > 0 && (
+          <div
+            className="flex h-16 items-center gap-px overflow-hidden rounded-md bg-muted/50 px-1"
+            aria-hidden="true"
+          >
+            {waveform.map((peak, index) => (
+              <span
+                key={index}
+                className="min-w-0 flex-1 rounded-full bg-primary/55"
+                style={{ height: `${Math.max(7, peak * 100)}%` }}
+              />
+            ))}
+          </div>
+        )}
         <label htmlFor={`${id}-position`} className="sr-only">
           {m.player_position({}, { locale })}
         </label>
@@ -240,77 +329,38 @@ function PlayerSession({ source, ref, onPositionChange }: Props) {
           onChange={(event) => seek(Number(event.target.value) * 1000)}
           className="h-6 w-full accent-primary"
         />
-        <p className="text-sm text-muted-foreground tabular-nums">
-          {timeLabel(position)} /{" "}
-          {duration === null ? "—" : timeLabel(duration)}
-        </p>
-      </div>
-      <div className="flex flex-wrap items-end gap-4">
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="icon"
-            disabled={status === "error"}
-            aria-label={m.player_back({}, { locale })}
-            onClick={() =>
-              seek(((audioRef.current?.currentTime ?? 0) - 10) * 1000)
-            }
+        {markers.length > 0 && duration !== null && (
+          <fieldset
+            className="flex gap-px overflow-hidden rounded-md border"
+            aria-label={m.player_position({}, { locale })}
           >
-            <RotateCcw aria-hidden="true" />
-          </Button>
-          <Button
-            size="icon"
-            disabled={status === "error"}
-            aria-label={
-              playing
-                ? m.player_pause({}, { locale })
-                : m.player_play({}, { locale })
-            }
-            onClick={toggle}
-          >
-            {playing ? (
-              <Pause aria-hidden="true" />
-            ) : (
-              <Play aria-hidden="true" />
-            )}
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            disabled={status === "error"}
-            aria-label={m.player_forward({}, { locale })}
-            onClick={() =>
-              seek(((audioRef.current?.currentTime ?? 0) + 10) * 1000)
-            }
-          >
-            <RotateCw aria-hidden="true" />
-          </Button>
-        </div>
-        <div className="grid gap-1">
-          <label
-            htmlFor={`${id}-rate`}
-            className="text-xs text-muted-foreground"
-          >
-            {m.player_rate({}, { locale })}
-          </label>
-          <select
-            id={`${id}-rate`}
-            value={rate}
-            className="min-h-9 rounded-md border bg-background px-2 text-sm"
-            onChange={(event) => {
-              const next = Number(event.target.value);
-              setRate(next);
-              if (audioRef.current) audioRef.current.playbackRate = next;
-            }}
-          >
-            {rates.map((value) => (
-              <option key={value} value={value}>
-                {value}×
-              </option>
+            {markers.map((marker, index) => (
+              <button
+                key={marker.id}
+                type="button"
+                onClick={() => seek(marker.startMs)}
+                style={{
+                  flex: `${Math.max(
+                    1,
+                    (markers[index + 1]?.startMs ?? duration * 1000) -
+                      marker.startMs
+                  )} 1 0%`,
+                }}
+                className="min-w-0 flex-1 border-e border-border bg-muted/60 px-2 py-2 text-start text-xs last:border-e-0 hover:bg-accent focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-ring"
+                aria-label={`${timeLabel(marker.startMs / 1000)} · ${marker.label}`}
+                title={marker.label}
+              >
+                <span className="block font-mono text-[10px] text-muted-foreground">
+                  {timeLabel(marker.startMs / 1000)}
+                </span>
+                <span className="block truncate">{marker.label}</span>
+              </button>
             ))}
-          </select>
-        </div>
-        <div className="grid min-w-24 flex-1 gap-1 sm:max-w-40">
+          </fieldset>
+        )}
+      </div>
+      <div className="flex justify-end">
+        <div className="grid w-40 gap-1">
           <label
             htmlFor={`${id}-volume`}
             className="text-xs text-muted-foreground"
