@@ -36,7 +36,7 @@ class DiarizationComplete(BaseModel):
     speaker_count: int = Field(ge=1, le=32)
     turn_count: int = Field(ge=1, le=20000)
     requested_num_speakers: Literal[-1]
-    cluster_threshold: Literal[0.5]
+    cluster_threshold: float = Field(ge=0.5, le=0.5)
     sherpa_onnx_version: Literal["1.13.8"]
     model_sha256: dict[str, str]
 
@@ -57,12 +57,19 @@ class DiarizationOutput(BaseModel):
 
 async def diarize(config: Settings, path: Path, duration_ms: int) -> DiarizationOutput:
     if not config.diarization_python_path.is_file() or not config.diarization_script_path.is_file():
-        raise APIError(503, "diarization_unavailable", "The local diarization runtime is unavailable")
+        raise APIError(
+            503, "diarization_unavailable", "The local diarization runtime is unavailable"
+        )
     process = await asyncio.create_subprocess_exec(
-        str(config.diarization_python_path), str(config.diarization_script_path), str(path),
-        "--model-dir", str(config.diarization_model_path),
-        stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL,
-        limit=16 * 1024, start_new_session=True,
+        str(config.diarization_python_path),
+        str(config.diarization_script_path),
+        str(path),
+        "--model-dir",
+        str(config.diarization_model_path),
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.DEVNULL,
+        limit=16 * 1024,
+        start_new_session=True,
     )
     assert process.stdout is not None
     turns: list[AnonymousTurn] = []
@@ -79,23 +86,34 @@ async def diarize(config: Settings, path: Path, duration_ms: int) -> Diarization
             kind = event.pop("event", None)
             if kind == "speaker_turn":
                 turn = AnonymousTurn.model_validate(event)
-                if (len(turns) >= 20000 or turn.end_ms > duration_ms
-                        or turns and turn.start_ms < turns[-1].start_ms):
+                if (
+                    len(turns) >= 20000
+                    or turn.end_ms > duration_ms
+                    or turns
+                    and turn.start_ms < turns[-1].start_ms
+                ):
                     raise ValueError("Invalid diarization timeline")
                 turns.append(turn)
             elif kind == "done":
                 complete = DiarizationComplete.model_validate(event)
-                if (complete.duration_ms != duration_ms or complete.turn_count != len(turns)
-                        or complete.speaker_count != len({turn.speaker_label for turn in turns})):
+                if (
+                    complete.duration_ms != duration_ms
+                    or complete.turn_count != len(turns)
+                    or complete.speaker_count != len({turn.speaker_label for turn in turns})
+                ):
                     raise ValueError("Invalid diarization completion")
             elif kind == "error":
                 code = event.get("code")
                 if not isinstance(code, str) or code not in {
-                    "diarization_model_unavailable", "invalid_diarization_input",
-                    "diarization_failed", "speech_not_detected",
+                    "diarization_model_unavailable",
+                    "invalid_diarization_input",
+                    "diarization_failed",
+                    "speech_not_detected",
                 }:
                     code = "diarization_failed"
-                status = 422 if code in {"invalid_diarization_input", "speech_not_detected"} else 503
+                status = (
+                    422 if code in {"invalid_diarization_input", "speech_not_detected"} else 503
+                )
                 raise APIError(status, code, "Local speaker diarization failed")
             else:
                 raise ValueError("Unknown diarization event")
@@ -103,7 +121,9 @@ async def diarize(config: Settings, path: Path, duration_ms: int) -> Diarization
             raise APIError(503, "diarization_failed", "Local diarization did not finish")
         return DiarizationOutput(turns=turns, provenance=complete)
     except ValueError as exc:
-        raise APIError(503, "invalid_diarization_output", "Local diarization returned invalid output") from exc
+        raise APIError(
+            503, "invalid_diarization_output", "Local diarization returned invalid output"
+        ) from exc
     finally:
         if process.returncode is None:
             try:

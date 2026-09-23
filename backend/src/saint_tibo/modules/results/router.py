@@ -93,7 +93,8 @@ async def get_review(
 
 
 @router.get(
-    "/{result_version_id}/diarization", operation_id="getResultDiarization",
+    "/{result_version_id}/diarization",
+    operation_id="getResultDiarization",
     responses={409: {"model": ErrorResponse}},
 )
 async def get_diarization(
@@ -105,7 +106,11 @@ async def get_diarization(
 ) -> DiarizationRead:
     """Read immutable anonymous turns; confirmed identities live in result review revisions."""
     return await service.get_diarization(
-        session, user.id, meeting_id, recording_id, result_version_id,
+        session,
+        user.id,
+        meeting_id,
+        recording_id,
+        result_version_id,
     )
 
 
