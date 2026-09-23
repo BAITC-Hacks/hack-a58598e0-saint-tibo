@@ -500,6 +500,9 @@ export function ReviewEditor({
               type="button"
               variant="outline"
               disabled={
+                form.formState.isDirty ||
+                save.isPending ||
+                reloading ||
                 download.isPending ||
                 !Number.isInteger(exportRevision) ||
                 exportRevision < 2 ||

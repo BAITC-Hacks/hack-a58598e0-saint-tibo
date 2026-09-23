@@ -6,7 +6,6 @@ import {
   CalendarDays,
   CirclePlay,
   ClipboardList,
-  FileAudio,
   House,
   ListTodo,
   LogOut,
@@ -66,11 +65,6 @@ const navigation = [
     to: "/player",
     icon: CirclePlay,
     label: (locale) => m.nav_player({}, { locale }),
-  },
-  {
-    to: "/workspace",
-    icon: FileAudio,
-    label: (locale) => m.workspace_title({}, { locale }),
   },
   {
     to: "/notifications",
