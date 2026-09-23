@@ -7,9 +7,10 @@ TanStack Start SPA, one origin with auth. Conventions:
 
 - Routes `src/app/routes/`: `__root`, `_app` shell + `_app.index`
   (home/meetings placeholder), `login`, `api/auth/$` (Better Auth
-  catch-all). Media proxy route lands with codex/9-media-proxy.
+  catch-all), `api/media/meetings/$meetingId/recordings/$recordingId`
+  (same-origin media proxy — on main since 62b137d).
 - Server code `src/app/server/`: `auth.server.ts` (Better Auth),
-  `auth-guards.server.ts`, `media.server.ts` (proxy, on codex branch).
+  `auth-guards.server.ts`, `media.server.ts` (cookie→JWT media proxy).
 - Pages `src/pages/<slice>/{index.ts,ui/}` — thin route → page import.
 - `src/shared/api/generated/` — SDK from `contracts/openapi.json` via
   `bun run api:generate`; NEVER hand-edit or hand-write API types.

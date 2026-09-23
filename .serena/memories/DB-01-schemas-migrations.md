@@ -14,10 +14,10 @@ import models in `migrations/env.py`; parallel checkouts need unique
 
 ## Table state
 
-- `main`/`dev`: `0001_app_schema` — app baseline only (no domain tables).
-- `codex/9-meeting-storage`: `0002_meetings` adds `meetings`,
-  `participants`, `recordings`, `recording_chunks`
-  (PK (recording_id, sequence); start_ms/end_ms/sha256 per chunk).
+- `main`/`dev` (since 62b137d/23e1207): `0001_app_schema` +
+  `0002_meetings` → `meetings`, `participants`, `recordings`,
+  `recording_chunks` (PK (recording_id, sequence);
+  start_ms/end_ms/sha256 per chunk).
 - Contract tables ProcessingJob/ResultVersion/Speaker/Segment/ActionItem —
   not yet migrated; come with #10/#12/#13.
 
