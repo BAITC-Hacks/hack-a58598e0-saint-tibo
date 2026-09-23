@@ -10,25 +10,30 @@ import { paraglideConfig } from "./paraglide.config.ts";
 // Ports come from the root .env so a worktree can run its own stack without clashing.
 const port = Number(process.env.FRONTEND_PORT ?? 3000);
 
-const config = defineConfig({
-  resolve: { tsconfigPaths: true },
-  server: { port, strictPort: true },
-  preview: { port, strictPort: true },
-  plugins: [
-    paraglideVitePlugin(paraglideConfig),
-    tailwindcss(),
-    tanstackStart({
-      router: {
-        entry: "app/router.tsx",
-        routesDirectory: "app/routes",
-        generatedRouteTree: "app/routeTree.gen.ts",
-      },
-      start: { entry: "app/start.ts" },
-      spa: { enabled: true },
-    }),
-    viteReact(),
-    babel({ presets: [reactCompilerPreset()] }),
-  ],
+const config = defineConfig(({ command }) => {
+  if (command === "build" && process.env.VITE_API_MODE === "mock") {
+    throw new Error("Mock API mode cannot be built for production.");
+  }
+  return {
+    resolve: { tsconfigPaths: true },
+    server: { port, strictPort: true },
+    preview: { port, strictPort: true },
+    plugins: [
+      paraglideVitePlugin(paraglideConfig),
+      tailwindcss(),
+      tanstackStart({
+        router: {
+          entry: "app/router.tsx",
+          routesDirectory: "app/routes",
+          generatedRouteTree: "app/routeTree.gen.ts",
+        },
+        start: { entry: "app/start.ts" },
+        spa: { enabled: true },
+      }),
+      viteReact(),
+      babel({ presets: [reactCompilerPreset()] }),
+    ],
+  };
 });
 
 export default config;
