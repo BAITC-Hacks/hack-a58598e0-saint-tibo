@@ -9,6 +9,7 @@ x-backend: &backend
     BACKEND_AUTH_JWKS_URL: ${BACKEND_DOCKER_AUTH_JWKS_URL:-http://frontend:3000/api/auth/jwks}
     BACKEND_AUTH_ISSUER: ${BACKEND_AUTH_ISSUER:-http://localhost:3000}
     BACKEND_RECORDING_STORAGE_PATH: /var/lib/saint-tibo/recordings
+    BACKEND_STT_MODEL_PATH: ${BACKEND_STT_MODEL_PATH:-/models/small}
     BACKEND_RECORDING_MAX_BYTES: ${BACKEND_RECORDING_MAX_BYTES:-536870912}
     BACKEND_RECORDING_CHUNK_MAX_BYTES: ${BACKEND_RECORDING_CHUNK_MAX_BYTES:-8388608}
     BACKEND_RECORDING_MAX_DURATION_MS: ${BACKEND_RECORDING_MAX_DURATION_MS:-14400000}
@@ -22,6 +23,26 @@ x-backend: &backend
     - host.docker.internal:host-gateway
 
 services:
+  mock-api:
+    profiles: [mock]
+    image: python:3.13-alpine
+    working_dir: /mock
+    command: ["python", "server.py"]
+    environment:
+      MOCK_API_DEV_ONLY: "1"
+      MOCK_API_HOST: 0.0.0.0
+      MOCK_API_PORT: 8015
+      MOCK_FRONTEND_ORIGIN: http://localhost:${FRONTEND_PORT:-3000}
+    volumes:
+      - ./tools/mock-api:/mock:ro
+    ports:
+      - "127.0.0.1:${MOCK_API_PORT:-8015}:8015"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8015/health/ready', timeout=2)"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   postgres:
     image: postgres:17-bookworm
     restart: unless-stopped

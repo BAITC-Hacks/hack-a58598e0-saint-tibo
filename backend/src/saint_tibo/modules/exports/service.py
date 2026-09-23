@@ -15,9 +15,7 @@ async def export_payload(
     version_id: UUID,
     revision: int,
 ) -> ProtocolExport:
-    review = await get_review(
-        session, owner_id, meeting_id, recording_id, version_id, revision
-    )
+    review = await get_review(session, owner_id, meeting_id, recording_id, version_id, revision)
     if not review.reviewed or review.saved_at is None:
         raise APIError(409, "result_not_reviewed", "Save a reviewed revision before exporting")
     # Never hydrate names/dates from current metadata: later edits must not change

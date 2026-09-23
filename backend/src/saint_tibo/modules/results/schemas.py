@@ -50,7 +50,8 @@ class SegmentRead(ReadModel):
 
 def document_text(value: str) -> str:
     if not value.strip() or any(
-        ord(char) < 32 and char not in "\t\n\r"
+        ord(char) < 32
+        and char not in "\t\n\r"
         or 0xD800 <= ord(char) <= 0xDFFF
         or ord(char) in (0xFFFE, 0xFFFF)
         for char in value

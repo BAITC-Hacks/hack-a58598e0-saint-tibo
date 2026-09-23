@@ -8,8 +8,9 @@ Production: `bun run build`, затем `bun run start` — `server.ts` отда
 
 - `/` — защищённое рабочее пространство, `/login` — вход и регистрация.
 - `src/app/routes` — тонкие маршруты; `src/pages` — страницы; `src/shared/api` — клиент API.
-- `bun run ui:add <component>` — компоненты shadcn Base UI (вендор, не редактируются).
+- `bun run ui:add <component>` — компоненты shadcn Base UI; проектные варианты и поверхности меняются только централизованно, см. `../docs/ui-kit.md`.
 - `bun run i18n:add <key> "<ru>" "<kk>" "<en>"` — строка во все локали.
 - `bun run generate` — маршруты и локализация (`ru`, `kk`, `en`).
+- `bun run storybook` — каталог общих компонентов на http://localhost:6006 без backend; `bun run storybook:build` — статическая сборка. Новую историю добавляйте как `src/shared/ui/<name>.stories.tsx`, импортируя реальный компонент. Стили, шрифты и темы уже подключены.
 
 Frontend-команды запускать из этой директории. Соглашения — в [`../docs/conventions.md`](../docs/conventions.md).
