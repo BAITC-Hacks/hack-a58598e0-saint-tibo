@@ -56,7 +56,8 @@ def main():
         )
         stage = "transcription_failed"
         with wave.open(str(args.audio), "rb") as audio:
-            duration_ms = round(audio.getnframes() * 1000 / audio.getframerate())
+            frames, sample_rate = audio.getnframes(), audio.getframerate()
+            duration_ms = (frames * 1000 + sample_rate - 1) // sample_rate
         segments, info = model.transcribe(
             str(args.audio),
             language=args.language if args.language in ("ru", "kk") else None,

@@ -46,10 +46,34 @@ export const PlayerPage = () => {
   const input = useRef<HTMLInputElement>(null);
   const transcriptInput = useRef<HTMLInputElement>(null);
   const generation = useRef(0);
+  const sampleLines = [
+    m.player_sample_line_1,
+    m.player_sample_line_2,
+    m.player_sample_line_3,
+    m.player_sample_line_4,
+    m.player_sample_line_5,
+    m.player_sample_line_6,
+    m.player_sample_line_7,
+    m.player_sample_line_8,
+  ];
+  const displayedTranscript =
+    isSample && transcript
+      ? {
+          name: m.player_sample_transcript({}, { locale }),
+          segments: transcript.segments.map((segment, index) => ({
+            ...segment,
+            text: `${
+              index % 2 === 0
+                ? m.player_sample_speaker_a({}, { locale })
+                : m.player_sample_speaker_b({}, { locale })
+            }: ${sampleLines[index]?.({}, { locale }) ?? ""}`,
+          })),
+        }
+      : transcript;
   const sync = useTranscriptSync({
     recordingId: source?.id ?? "",
     resultVersionId: "local-stt",
-    segments: transcript?.segments ?? [],
+    segments: displayedTranscript?.segments ?? [],
     seek: (positionMs) => player.current?.seek(positionMs),
   });
   const meetingsQuery = useQuery({
@@ -104,11 +128,16 @@ export const PlayerPage = () => {
         title: `${selectedServerSource.meetingTitle} — ${selectedServerSource.original_filename}`,
       }
     : null;
-  const markers: TimelineMarker[] = transcript
-    ? transcript.segments
+  const markers: TimelineMarker[] = displayedTranscript
+    ? displayedTranscript.segments
         .filter(
           (_, index) =>
-            index % Math.max(1, Math.ceil(transcript.segments.length / 8)) === 0
+            index %
+              Math.max(
+                1,
+                Math.ceil(displayedTranscript.segments.length / 8)
+              ) ===
+            0
         )
         .slice(0, 8)
         .map((segment) => ({
@@ -150,16 +179,6 @@ export const PlayerPage = () => {
   };
 
   const loadSample = () => {
-    const lines = [
-      m.player_sample_line_1,
-      m.player_sample_line_2,
-      m.player_sample_line_3,
-      m.player_sample_line_4,
-      m.player_sample_line_5,
-      m.player_sample_line_6,
-      m.player_sample_line_7,
-      m.player_sample_line_8,
-    ];
     const file = new File(
       [createSyntheticRecording()],
       "synthetic-meeting.wav",
@@ -173,17 +192,13 @@ export const PlayerPage = () => {
     if (input.current) input.current.value = "";
     setTranscript({
       name: m.player_sample_transcript({}, { locale }),
-      segments: syntheticIntervals.map((segment, index) => ({
+      segments: syntheticIntervals.map((segment) => ({
         id: segment.id,
         recording_id: url,
         result_version_id: "local-stt",
         start_ms: segment.start_ms,
         end_ms: segment.end_ms,
-        text: `${
-          index % 2 === 0
-            ? m.player_sample_speaker_a({}, { locale })
-            : m.player_sample_speaker_b({}, { locale })
-        }: ${lines[index]?.({}, { locale }) ?? ""}`,
+        text: "",
       })),
     });
   };
@@ -195,8 +210,10 @@ export const PlayerPage = () => {
     setTranscriptError(null);
     try {
       const segments = await readLocalTranscript(file, sourceFile, source.id);
-      if (currentGeneration === generation.current)
+      if (currentGeneration === generation.current) {
+        setIsSample(false);
         setTranscript({ name: file.name, segments });
+      }
     } catch (error) {
       if (currentGeneration === generation.current) {
         setTranscript(null);
@@ -384,7 +401,10 @@ export const PlayerPage = () => {
             {transcript && (
               <output className="block text-sm">
                 {m.player_transcript_loaded(
-                  { name: transcript.name, count: transcript.segments.length },
+                  {
+                    name: displayedTranscript?.name ?? "",
+                    count: transcript.segments.length,
+                  },
                   { locale }
                 )}
               </output>

@@ -200,7 +200,8 @@ async def normalize(
             max_seconds=max_seconds,
         )
         with wave.open(str(output), "rb") as audio:
-            duration_ms = math.ceil(audio.getnframes() * 1000 / audio.getframerate())
+            frames, sample_rate = audio.getnframes(), audio.getframerate()
+            duration_ms = (frames * 1000 + sample_rate - 1) // sample_rate
         if duration_ms <= 0:
             raise APIError(422, "empty_recording", "Recording contains no audio samples")
         if duration_ms > max_duration_ms:

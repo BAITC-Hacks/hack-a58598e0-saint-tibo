@@ -6,6 +6,11 @@ Ivan owns the player and meeting-platform integrations.
 
 ## Current wave
 
+Completed: branch/session audit, reviewed-version persistence, protected export,
+independent HTTPS verification and the first full knowledge synchronization.
+#14 is closed. The current release does not wait for optional integrations or
+claim automatic extraction, diarization or multilingual quality complete.
+
 1. Audit every local worktree and remote tip before changing shared refs.
    Preserve uncommitted, untracked and ignored material; no cleanup is needed
    to start a clean task. Distinguish ancestry from feature acceptance.
@@ -37,9 +42,9 @@ until the candidate and its remaining limitations have been evaluated.
 
 | Order | Work | Exit evidence |
 | --- | --- | --- |
-| 1 | Continue preserved #69 work; connect accepted local extraction to #13 | Real case evaluation of owners, deadlines, corrected decisions and source IDs; no cloud requests or invented unknowns |
+| 1 | Active: continue preserved #69 work; connect accepted local extraction to #13 | Real case evaluation of owners, deadlines, corrected decisions and source IDs; no cloud requests or invented unknowns |
 | 2 | #12 diarization and participant confirmation | Stable speaker labels and human-confirmed identities; speaker and action assignee remain distinct |
-| 3 | #11/#70 RU, KK and mixed-language quality | Suitable recordings with separate human references; measured results, not locale labels |
+| 3 | Active measured blocker: #11/#70 RU, KK and mixed-language quality | Suitable recordings with separate human references; measured results, not locale labels |
 | 4 | #26 complete case walkthrough and reproducible README | A new operator runs recording → transcript → reviewed actions/summary → downloadable minutes |
 | 5 | #15 curator reminders | Upcoming/overdue reminder from a confirmed action item without unwanted external disclosure |
 
