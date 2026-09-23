@@ -328,3 +328,23 @@ Backend wheel/sdist build, OpenAPI export and TypeScript SDK generation passed.
 No suites, linters, model inference, shared merge, deployment or browser/HTTPS
 full-job verification ran for this integration. The semantic failures documented
 above remain open; replay validates wiring and persistence, not model quality.
+
+## Confirmed unknown-deadline normalization — 2026-09-23
+
+The local structured-output validator now converts only the exact absence
+markers `не указан` and `срок не указан` (case/whitespace normalized) in
+`due_text` to null. It preserves every other deadline phrase, task, assignee,
+source reference and summary field. This does not infer dates or merge similar
+tasks. The prompt and model remain unchanged; #115's separate extraction API
+is untouched.
+
+A bounded replay of the original successful R2 payload changed only action
+index 14's unknown-deadline marker to null. All 16 actions and every other
+field remained identical, and the original private artifact stayed byte-for-byte
+unchanged. Receipt: `continuation-69-integration/unknown-deadline-receipt.json`.
+No new inference, suite or linter ran. The supplier correction remains split
+between indices 2 and 12, its combined evidence is missing, and the event-based
+deadline remains absent. Owner-name checks against STT/reference text do not
+establish identity or replace listening to the original audio. A new own-QA
+case2 job through the ordinary API awaits coordinator DEV-GO after the shared
+build; no live acceptance is claimed by this normalization replay.
