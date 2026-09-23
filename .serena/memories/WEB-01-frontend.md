@@ -20,15 +20,19 @@
   app operation must not require an external font/image CDN.
 - Baseline UI/branding contract: `docs/product-baseline.md`,
   `docs/conventions.md`. Static examples must not masquerade as real results.
+- Dev34062c4 adds an explicitly synthetic `/player` sample (#98); all three
+  locales distinguish generated tones/fictional dialogue from recorded speech.
 
 ## Known Gaps
 
 - Artem owns #83/#84/#85 and wider UI/design/landing work; those branches
   are not integrated into audited dev. Home is still a placeholder.
-- Mock meeting-level review/export routes (#85) differ from version-scoped
-  backend work (#13/#14); reconcile through an adapter/generated contract.
+- Mock meeting-level review/export routes (#85) differ from integrated
+  version-scoped review/export (#13/#14); adapt to the generated contract.
+  Review GET omits speakers/segments; load segments from the paginated API.
+  Export is JWT-authenticated SDK fetch with `parseAs: "blob"`, not a bare link.
 - Ivan's protected recording selector and rich player are integrated in dev
   `a2cfe28`; reported Ivan deploy passed HTTP probes, interactive QA is pending.
   Server transcript fetching and the full review/export flow remain separate.
 
-Last commit: `a2cfe28c10b214a8189b8c140d9d6b31167bf27a` (audited tree, 2026-09-23; not a live assertion).
+Last commit: `34062c4726f8ca5647b3159ac3b26e92023aee57` (audited origin/dev, 2026-09-23; not a live assertion).

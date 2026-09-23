@@ -30,9 +30,9 @@
   Follow WEB-19, WEB-21 and current #19/#21 comments.
 - Trusted service capture sessions and authenticated adapter sink (#81)
   are not implemented by this owner JWT upload API.
-- Speaker/ActionItem sketches in #8 are not database tables in this tree.
-  Processing and transcript read-back are documented in API-10.
+- Speaker remains unimplemented; action items now persist in bounded JSONB
+  review snapshots (API-13), not a separate table. Jobs/transcripts: API-10.
 - Latest shared functional proof is the [#94 LIVE-OK report](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/94#issuecomment-5793355510)
   on `58ee537`; it does not make all current branch tips live.
 
-Last commit: `a2cfe28c10b214a8189b8c140d9d6b31167bf27a` (audited tree, 2026-09-23; not a live assertion).
+Last commit: `97e804ed7c941408ecf22145d72497214b5002c4` (audited tree, 2026-09-23; not a live assertion).

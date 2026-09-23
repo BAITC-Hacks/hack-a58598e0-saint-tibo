@@ -30,12 +30,18 @@
 
 - Manual reference-based RU/KK/mixed quality/error assessment (#11/#70/#89)
   remains open; upstream model-card claims are not team measurements.
+- Preliminary local MLX small synthetic KK/mixed checks raised concerns;
+  server CT2 comparison is pending. Keep runtimes and synthetic/reference
+  evidence distinct; no multilingual quality pass is established.
 - #12 diarization and participant confirmation are absent; speaker UUID is
   not identity and not an action-item executor.
-- #69 local LLM selection/extraction is separate preserved WIP, not integrated
-  into dev. Do not touch its checkout/models or claim automatic summary.
+- #69 continues in `feat/69-extraction-continuation`; original Devin WIP
+  remains preserved. The new worker owns extractor/benchmark and coordinated
+  processing/results integration and codegen. No automatic summary is yet
+  integrated or accepted; the [claim](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/69#issuecomment-5793619040)
+  is an implementation plan, not CPU quality or live evidence.
 - Intended downstream order is transcription → diarization/alignment →
   extraction → human review. Retain original deadline wording; normalize
   relatives only with meeting date/timezone, never invent missing facts.
 
-Last commit: `a2cfe28c10b214a8189b8c140d9d6b31167bf27a` (audited tree, 2026-09-23; not a live assertion).
+Last commit: `97e804ed7c941408ecf22145d72497214b5002c4` (audited tree, 2026-09-23; not a live assertion).

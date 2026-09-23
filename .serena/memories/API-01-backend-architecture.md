@@ -7,8 +7,8 @@
 - `infra/Caddyfile` sends same-origin `/api/v1/*`, health and OpenAPI/docs
   directly to FastAPI. Other routes reach TanStack Start, including Better
   Auth and the cookie-authenticated media proxy (AUTH-01, API-02).
-- `api/router.py` mounts meetings, processing and read-only results.
-  Exports currently provides render functions; it has no mounted HTTP router.
+- `api/router.py` mounts meetings, processing, results and exports.
+  Results include owner-scoped manual review; exports serves saved revisions.
 - Pattern: module `models/schemas/service/router.py`, module service functions,
   permissions in `auth/policy.py`, model registration in `migrations/env.py`.
   See `docs/conventions.md` before adding a domain; no repository layer.
@@ -30,4 +30,4 @@
 - Auth is database-backed on each request; no copied app user table or
   independent five-minute logout window exists (AUTH-01, DB-01).
 
-Last commit: `a2cfe28c10b214a8189b8c140d9d6b31167bf27a` (audited tree, 2026-09-23; not a live assertion).
+Last commit: `97e804ed7c941408ecf22145d72497214b5002c4` (audited tree, 2026-09-23; not a live assertion).

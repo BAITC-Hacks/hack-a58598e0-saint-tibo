@@ -20,6 +20,10 @@
   idempotently, but its completion was not proven after QA logger failure.
 - Renderer produced PDF/DOCX and preserved tested DOCX characters; layout
   and HTTP/UI downloads were outside that proof.
+- Later [#13/#14 local evidence](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/14#issuecomment-5793605774)
+  reports builds, PostgreSQL+HTTP review/conflict/ACL/export scenarios and
+  visual RU/KK/long-table PDF/DOCX checks. Identity was substituted locally;
+  independent live JWT review/export acceptance at 97e804e is still pending.
 - Browser proof covered logout/manual login/root dev-login; it is not a
   claim that the complete meeting UI or real player integration is finished.
 - Later [Ivan #95 report](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/95#issuecomment-5793559235) deploys `a2cfe28`, readiness/player HTTP 200;
@@ -37,4 +41,4 @@
 - Evidence must include exact SHA, scenario, observed result and limitations.
   Never publish tokens, meeting text/audio or raw private logs as proof.
 
-Last commit: `a2cfe28c10b214a8189b8c140d9d6b31167bf27a` (audited tree, 2026-09-23; not a live assertion).
+Last commit: `97e804ed7c941408ecf22145d72497214b5002c4` (audited tree, 2026-09-23; not a live assertion).

@@ -17,7 +17,11 @@
 - ResultVersion stores one job link, revision/status/completed stage,
   language/duration/model provenance/segment count. Segment stores recording
   and result IDs, nullable speaker UUID, text and constrained interval.
-- Meeting deletion cascades recordings and their jobs/results/segments.
+- `0005_reviewed_results.py` adds `app.result_reviews` with composite PK
+  `(result_version_id, revision)`, revision >=2 and bounded JSONB payload.
+  It freezes manual action items, summary, meeting/participant metadata and
+  approval state; API saves append snapshots, never edits an old revision.
+- Meeting deletion cascades recordings, jobs/results/segments and reviews.
   Recording file cleanup is coordinated by the meetings service.
 - `backend/migrations/env.py` imports meetings/processing/results models,
   filters autogeneration to `app` and keeps the version table in `public`.
@@ -28,11 +32,11 @@
 
 ## Known Gaps
 
-- No Speaker or ActionItem table is migrated in the audited tree.
-- `0005_reviewed_results.py` is claimed by the #13/#14 worker as future
-  additive work. Recheck migration graph and models after integration;
-  an announced filename is not an applied server migration.
+- No Speaker or normalized ActionItem table exists. Manual action items are
+  in review JSONB; #15 cross-meeting reminders may need a later projection.
+- Initial review revision=1 is synthesized while current and not archived;
+  saved history begins at revision=2. Reprocessing creates another version.
 - Never infer server migration version from a Git branch tip. Read the
   coordinator's deployment and runtime evidence separately (NEXT-SESSION).
 
-Last commit: `a2cfe28c10b214a8189b8c140d9d6b31167bf27a` (audited tree, 2026-09-23; not a live assertion).
+Last commit: `97e804ed7c941408ecf22145d72497214b5002c4` (audited tree, 2026-09-23; not a live assertion).
