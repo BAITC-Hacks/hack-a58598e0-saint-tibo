@@ -63,8 +63,8 @@ the former renderer-only limitation.
 
 The earlier foundation and integration tasks delivered the baseline.
 The integration task is archived with its receipts preserved. Its attempted
-fresh-task handoff was left queued; this synchronization wave now has three
-confirmed running tasks: integration audit, Serena synchronization,
+fresh-task handoff was left queued; this synchronization wave has dedicated
+tasks for integration audit, Serena synchronization,
 review/export implementation and local extraction continuation. One coordinator owns shared merges and the
 Danil deployment slot. Current task IDs and local inventories stay in the
 coordinator's ignored evidence directory rather than product documentation.
@@ -92,9 +92,12 @@ evaluated separately; it is not deployed or accepted yet. #11/#70 remain open.
 - Do not merge every surviving branch. `ivan/20-transcript-sync` contains
   an unmerged demo importing the original case MP3 into a public frontend
   bundle and an old next-session plan; it needs its owner's explicit review.
-- Honcho #96 is outside the minimum. Its branch includes an external OpenAI
-  development overlay and lacks application access-control/runtime proof.
-  Keep it outside integration until its owner resolves the recorded gaps.
+- Honcho #96 is outside the minimum. Its hardened isolated stack was integrated
+  at `3005fd3`: local endpoints, internal network and no cloud development
+  overlay. It is not started by the application deployment. App authorization
+  and derived memory remain incomplete (#103); no product capability is claimed.
+- Release fixes #104/#105 address inconsistent duration rounding and private
+  exception logging. Capture start-time correction belongs to Ivan in #106.
 - #69 is experimental: duplicate tasks, responsibility mistakes, missed
   event/corrected deadlines and invented dates were reported. No model is
   accepted merely because it returned JSON or ran without external access.
