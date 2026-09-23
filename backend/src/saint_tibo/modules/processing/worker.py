@@ -130,9 +130,15 @@ async def process(factory: SessionFactory, config: Settings, job: ProcessingJob)
     async def progress(value: float) -> None:
         await save(factory, job, progress=value)
 
-    segments, detected_language = await transcribe(config, path, job.language, duration, progress)
+    segments, detected_language, model_id, model_revision = await transcribe(
+        config, path, job.language, duration, progress
+    )
     async with factory() as session:
-        await publish_transcript(session, job, segments, detected_language, duration)
+        await publish_transcript(
+            session, job, segments, detected_language, duration,
+            model_id=model_id,
+            model_revision=model_revision,
+        )
 
 
 async def run_job(factory: SessionFactory, config: Settings, job: ProcessingJob) -> None:

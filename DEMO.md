@@ -10,8 +10,12 @@
 
 | Окружение | Обычный вход | Рабочая страница |
 | --- | --- | --- |
-| Dev Данила | https://dev-danil.saint-tibo.win/login | https://dev-danil.saint-tibo.win/workspace?auth=manual |
-| Production | https://saint-tibo.win/login | https://saint-tibo.win/workspace |
+| Dev Данила | https://dev-danil.saint-tibo.win/login | https://dev-danil.saint-tibo.win/meetings?auth=manual |
+| Production | https://saint-tibo.win/login | https://saint-tibo.win/meetings |
+
+Резервная реализация `/workspace` сохранена в ветке
+`feat/107-real-meeting-workspace` (#107) и пока не включена в выпуск.
+Для демонстрации используйте основной интерфейс `/meetings`.
 
 Для обоих окружений:
 
@@ -31,8 +35,9 @@
 
 ## Что показывать
 
-Маршрут `/workspace` поставляется задачей [#107](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/107).
-Точный статус его деплоя и готовой версии — в
+Основной интерфейс `/meetings` поставляется задачей
+[#83](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/83).
+Точный статус деплоя и готовой версии — в
 [#94](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/94).
 Ссылка выше не является утверждением, что незавершённая ветка уже развёрнута.
 

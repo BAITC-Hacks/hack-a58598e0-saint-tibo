@@ -19,7 +19,7 @@ async def transcribe(
     language: str,
     duration_ms: int,
     report_progress: Callable[[float], Awaitable[None]],
-) -> tuple[list[TranscriptSegment], str]:
+) -> tuple[list[TranscriptSegment], str, str, str]:
     if not config.stt_python_path.is_file() or not config.stt_script_path.is_file():
         raise APIError(503, "transcription_unavailable", "The local STT runtime is unavailable")
     process = await asyncio.create_subprocess_exec(
@@ -38,6 +38,8 @@ async def transcribe(
     assert process.stdout is not None
     segments: list[TranscriptSegment] = []
     detected_language: str | None = None
+    model_id = ""
+    model_revision = ""
     received_bytes = 0
     last_report = 0.0
     progress = 0.0
@@ -71,6 +73,17 @@ async def transcribe(
                     raise ValueError("Invalid detected language")
                 if event.get("duration_ms") != duration_ms:
                     raise ValueError("STT duration mismatch")
+                model = event.get("model_id")
+                revision = event.get("model_revision")
+                if not isinstance(model, str) or not 1 <= len(model) <= 120:
+                    raise ValueError("Invalid model identity")
+                if (
+                    not isinstance(revision, str)
+                    or len(revision) != 40
+                    or any(char not in "0123456789abcdef" for char in revision)
+                ):
+                    raise ValueError("Invalid model revision")
+                model_id, model_revision = model, revision
                 detected_language = value
             elif kind == "error":
                 code = event.get("code")
@@ -87,7 +100,7 @@ async def transcribe(
             raise APIError(503, "transcription_failed", "Local speech recognition did not finish")
         if not segments:
             raise APIError(422, "speech_not_detected", "No speech segments were recognized")
-        return segments, detected_language
+        return segments, detected_language, model_id, model_revision
     except ValueError as exc:
         raise APIError(
             503, "invalid_transcription_output", "Local STT returned invalid output"
