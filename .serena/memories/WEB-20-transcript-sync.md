@@ -20,6 +20,8 @@
 - `/transcript-demo` is explicitly public and synthetic: generated
   32-second WAV/eight markers, no meeting API or private uploaded data.
   The local player can also provide validated STT JSON (WEB-19).
+- Integrated #98 adds a separate `/player` synthetic walkthrough with
+  generated tones and explicitly fictional dialogue; this is not STT output.
 - Integration details: `docs/transcript-sync.md`; implementation `16cd152`.
   Historical browser evidence is recorded in the doc and
   [#20](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/20#issuecomment-5793184614).
@@ -33,4 +35,4 @@
 - #12 speaker identity and #13 reviewed source data remain backend
   dependencies; don't treat local demo fields as persisted product data.
 
-Last commit: `a2cfe28c10b214a8189b8c140d9d6b31167bf27a` (audited tree, 2026-09-23; not a live assertion).
+Last commit: `ab3d3312c3bafb3892bde93539383cea9e48b6de` (audited tree, 2026-09-23; live evidence is separate).
