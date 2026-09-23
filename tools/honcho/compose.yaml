@@ -1,8 +1,23 @@
 name: saint-honcho
 services:
-  api:
-    image: ${HONCHO_IMAGE:-ghcr.io/plastic-labs/honcho:v3.2.0}
+  migrate:
+    image: ${HONCHO_IMAGE:-ghcr.io/plastic-labs/honcho@sha256:6369a1a8387f560fd71296866a5e109420e3442ce2ea9ffdcf9f38529de416c1}
+    command: ["/app/.venv/bin/alembic", "upgrade", "head"]
     depends_on:
+      database:
+        condition: service_healthy
+    env_file:
+      - path: .env
+        required: true
+    environment:
+      DB_CONNECTION_URI: postgresql+psycopg://honcho:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@database:5432/honcho
+    restart: "no"
+    networks: [honcho]
+  api:
+    image: ${HONCHO_IMAGE:-ghcr.io/plastic-labs/honcho@sha256:6369a1a8387f560fd71296866a5e109420e3442ce2ea9ffdcf9f38529de416c1}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
       database:
         condition: service_healthy
       redis:
@@ -12,12 +27,21 @@ services:
     env_file:
       - path: .env
         required: true
+    volumes:
+      - ./tiktoken-cache:/var/cache/tiktoken:ro
+    healthcheck:
+      test: ["CMD", "/app/.venv/bin/python", "-c", "import urllib.request; urllib.request.urlopen(\"http://127.0.0.1:8000/health\", timeout=3).read()"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
     environment:
       DB_CONNECTION_URI: postgresql+psycopg://honcho:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@database:5432/honcho
       CACHE_URL: redis://redis:6379/0?suppress=true
       CACHE_ENABLED: "true"
       AUTH_USE_AUTH: "true"
       AUTH_JWT_SECRET: ${HONCHO_JWT_SECRET:?set HONCHO_JWT_SECRET}
+      TIKTOKEN_CACHE_DIR: /var/cache/tiktoken
       TELEMETRY_ENABLED: "false"
       TELEMETRY_TRACE_PAYLOADS_ENABLED: "false"
       DERIVER_MODEL_CONFIG__MODEL: ${DERIVER_MODEL_CONFIG__MODEL:-local-chat-model}
@@ -56,8 +80,10 @@ services:
     restart: unless-stopped
     networks: [honcho]
   deriver:
-    image: ${HONCHO_IMAGE:-ghcr.io/plastic-labs/honcho:v3.2.0}
+    image: ${HONCHO_IMAGE:-ghcr.io/plastic-labs/honcho@sha256:6369a1a8387f560fd71296866a5e109420e3442ce2ea9ffdcf9f38529de416c1}
     command: ["/app/.venv/bin/python", "-m", "src.deriver"]
+    volumes:
+      - ./tiktoken-cache:/var/cache/tiktoken:ro
     depends_on:
       api:
         condition: service_healthy
@@ -68,6 +94,7 @@ services:
       DB_CONNECTION_URI: postgresql+psycopg://honcho:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@database:5432/honcho
       CACHE_URL: redis://redis:6379/0?suppress=true
       CACHE_ENABLED: "true"
+      TIKTOKEN_CACHE_DIR: /var/cache/tiktoken
       TELEMETRY_ENABLED: "false"
       TELEMETRY_TRACE_PAYLOADS_ENABLED: "false"
       DERIVER_MODEL_CONFIG__MODEL: ${DERIVER_MODEL_CONFIG__MODEL:-local-chat-model}
