@@ -399,12 +399,14 @@ export function BriefingPage() {
                     (review?.action_items ?? [])
                       .filter(
                         (item) =>
-                          (!!item.assignee_participant_id &&
+                          (item.status === "open" ||
+                            item.status === "in_progress") &&
+                          ((!!item.assignee_participant_id &&
                             person.participantIds.has(
                               item.assignee_participant_id
                             )) ||
-                          (!!item.assignee_text &&
-                            personKey(item.assignee_text) === person.key)
+                            (!!item.assignee_text &&
+                              personKey(item.assignee_text) === person.key))
                       )
                       .map((item) => ({ meeting, item }))
                   );
