@@ -1,4 +1,9 @@
-import { apiErrorCode, backendClient, createRecording, uploadRecordingFile } from "#/shared/api";
+import {
+  apiErrorCode,
+  backendClient,
+  createRecording,
+  uploadRecordingFile,
+} from "#/shared/api";
 import { m } from "#/shared/lib/i18n/messages";
 import { useLocale } from "#/shared/lib/locales";
 
@@ -17,17 +22,25 @@ export function errorKey(error: unknown): CopyKey {
   if (code === "transcription_unavailable") return "workspace_unavailable";
   if (code === "not_found") return "workspace_no_access";
   if (
-    ["validation_error", "invalid_assignee", "invalid_source_segment", "review_too_large"].includes(
-      code ?? "",
-    )
+    [
+      "validation_error",
+      "invalid_assignee",
+      "invalid_source_segment",
+      "review_too_large",
+    ].includes(code ?? "")
   )
     return "workspace_invalid";
   return "workspace_request_failed";
 }
 
-export const selectClass = "w-full rounded-md border bg-background px-3 py-2 text-sm";
+export const selectClass =
+  "w-full rounded-md border bg-background px-3 py-2 text-sm";
 export const sectionClass = "space-y-4 rounded-2xl border bg-card p-4 sm:p-6";
-export const zones = [{ name: "Asia/Almaty" }, { name: "Europe/Moscow" }, { name: "UTC" }];
+export const zones = [
+  { name: "Asia/Almaty" },
+  { name: "Europe/Moscow" },
+  { name: "UTC" },
+];
 
 export function localDateInput(zone: string) {
   const parts = new Intl.DateTimeFormat("sv-SE", {
@@ -57,14 +70,14 @@ export function meetingInstant(value: string, timeZone: string) {
   });
   for (let step = 0; step < 3; step++) {
     const parts = Object.fromEntries(
-      formatter.formatToParts(instant).map((part) => [part.type, part.value]),
+      formatter.formatToParts(instant).map((part) => [part.type, part.value])
     );
     const represented = Date.UTC(
       Number(parts.year),
       Number(parts.month) - 1,
       Number(parts.day),
       Number(parts.hour),
-      Number(parts.minute),
+      Number(parts.minute)
     );
     instant += wallClock - represented;
   }

@@ -15,12 +15,19 @@ import {
   listResultVersionsOptions,
   listTranscriptSegmentsInfiniteOptions,
 } from "#/shared/api";
-import type { MeetingRead, ProcessingJobCreate, RecordingRead } from "#/shared/api";
+import type {
+  MeetingRead,
+  ProcessingJobCreate,
+  RecordingRead,
+} from "#/shared/api";
 import { MeetingPlayer } from "#/shared/ui/meeting-player";
 import type { MeetingPlayerHandle } from "#/shared/ui/meeting-player";
 import { Button } from "#/shared/ui/shadcn/button";
 import { Input } from "#/shared/ui/shadcn/input";
-import { TranscriptPanel, useTranscriptSync } from "#/shared/ui/transcript-sync";
+import {
+  TranscriptPanel,
+  useTranscriptSync,
+} from "#/shared/ui/transcript-sync";
 
 import {
   errorKey,
@@ -48,10 +55,14 @@ export function WorkspacePage() {
   const [selected, setSelected] = useState("");
   const [offset, setOffset] = useState(0);
   const meetings = useQuery(
-    listMeetingsOptions({ client: backendClient, query: { limit: 20, offset } }),
+    listMeetingsOptions({ client: backendClient, query: { limit: 20, offset } })
   );
   const form = useForm({
-    defaultValues: { title: "", started: localDateInput("Asia/Almaty"), timezone: "Asia/Almaty" },
+    defaultValues: {
+      title: "",
+      started: localDateInput("Asia/Almaty"),
+      timezone: "Asia/Almaty",
+    },
   });
   const create = useMutation({
     ...createMeetingMutation({ client: backendClient }),
@@ -59,16 +70,23 @@ export function WorkspacePage() {
     onSuccess: async (meeting) => {
       setOffset(0);
       setSelected(meeting.id);
-      form.reset({ title: "", started: localDateInput("Asia/Almaty"), timezone: "Asia/Almaty" });
+      form.reset({
+        title: "",
+        started: localDateInput("Asia/Almaty"),
+        timezone: "Asia/Almaty",
+      });
       await meetings.refetch();
     },
   });
   const current =
-    meetings.data?.items.find((item) => item.id === selected) ?? meetings.data?.items[0];
+    meetings.data?.items.find((item) => item.id === selected) ??
+    meetings.data?.items[0];
   return (
     <main className="mx-auto max-w-6xl space-y-6">
       <header className="space-y-2">
-        <h1 className="text-3xl font-semibold tracking-tight">{t("workspace_title")}</h1>
+        <h1 className="text-3xl font-semibold tracking-tight">
+          {t("workspace_title")}
+        </h1>
         <p className="text-sm text-muted-foreground">{t("workspace_intro")}</p>
       </header>
       <section className={sectionClass}>
@@ -84,7 +102,9 @@ export function WorkspacePage() {
         </div>
         <RequestError error={meetings.error} />
         {meetings.isPending && <p role="status">{t("workspace_loading")}</p>}
-        {meetings.data?.items.length === 0 && <p>{t("workspace_empty_meetings")}</p>}
+        {meetings.data?.items.length === 0 && (
+          <p>{t("workspace_empty_meetings")}</p>
+        )}
         {!!meetings.data?.items.length && (
           <label className="block space-y-2 text-sm">
             <span>{t("workspace_meetings")}</span>
@@ -119,24 +139,35 @@ export function WorkspacePage() {
             </Button>
           </div>
         )}
-        <details open={!meetings.data?.items.length} className="rounded-lg border p-3">
-          <summary className="cursor-pointer font-medium">{t("workspace_new_meeting")}</summary>
+        <details
+          open={!meetings.data?.items.length}
+          className="rounded-lg border p-3"
+        >
+          <summary className="cursor-pointer font-medium">
+            {t("workspace_new_meeting")}
+          </summary>
           <form
             className="mt-4 grid gap-3 sm:grid-cols-2"
-            onSubmit={form.handleSubmit((data) => {
-              const zone = zones.find((item) => item.name === data.timezone)!;
-              create.mutate({
-                body: {
-                  title: data.title.trim(),
-                  started_at: meetingInstant(data.started, zone.name),
-                  timezone: zone.name,
-                },
-              });
-            })}
+            onSubmit={(event) =>
+              void form.handleSubmit((data) => {
+                const zone = zones.find((item) => item.name === data.timezone)!;
+                create.mutate({
+                  body: {
+                    title: data.title.trim(),
+                    started_at: meetingInstant(data.started, zone.name),
+                    timezone: zone.name,
+                  },
+                });
+              })(event)
+            }
           >
             <label className="space-y-1 text-sm sm:col-span-2">
               <span>{t("workspace_meeting_title")}</span>
-              <Input required maxLength={200} {...form.register("title", { required: true })} />
+              <Input
+                required
+                maxLength={200}
+                {...form.register("title", { required: true })}
+              />
             </label>
             <label className="space-y-1 text-sm">
               <span>{t("workspace_date")}</span>
@@ -173,10 +204,18 @@ function MeetingWorkspace({ meeting }: { meeting: MeetingRead }) {
   const input = useRef<HTMLInputElement>(null);
   const path = { meeting_id: meeting.id };
   const participants = useQuery(
-    listParticipantsOptions({ client: backendClient, path, query: { limit: 100 } }),
+    listParticipantsOptions({
+      client: backendClient,
+      path,
+      query: { limit: 100 },
+    })
   );
   const recordings = useQuery(
-    listRecordingsOptions({ client: backendClient, path, query: { limit: 100 } }),
+    listRecordingsOptions({
+      client: backendClient,
+      path,
+      query: { limit: 100 },
+    })
   );
   const form = useForm({ defaultValues: { name: "", role: "" } });
   const add = useMutation({
@@ -200,7 +239,8 @@ function MeetingWorkspace({ meeting }: { meeting: MeetingRead }) {
     },
   });
   const current =
-    recordings.data?.items.find((item) => item.id === recordingId) ?? recordings.data?.items[0];
+    recordings.data?.items.find((item) => item.id === recordingId) ??
+    recordings.data?.items[0];
   const fileValid = !!file && file.size > 0 && file.size <= 512 * 1024 * 1024;
   return (
     <>
@@ -218,27 +258,41 @@ function MeetingWorkspace({ meeting }: { meeting: MeetingRead }) {
         <RequestError error={participants.error} />
         <ul className="flex flex-wrap gap-2">
           {participants.data?.items.map((participant) => (
-            <li className="rounded-full bg-muted px-3 py-1 text-sm" key={participant.id}>
+            <li
+              className="rounded-full bg-muted px-3 py-1 text-sm"
+              key={participant.id}
+            >
               {participant.display_name}
               {participant.role && ` · ${participant.role}`}
             </li>
           ))}
         </ul>
         {participants.data?.items.length === 0 && (
-          <p className="text-sm text-muted-foreground">{t("workspace_empty_participants")}</p>
+          <p className="text-sm text-muted-foreground">
+            {t("workspace_empty_participants")}
+          </p>
         )}
         <form
           className="grid items-end gap-3 sm:grid-cols-[1fr_1fr_auto]"
-          onSubmit={form.handleSubmit((data) =>
-            add.mutate({
-              path,
-              body: { display_name: data.name.trim(), role: data.role.trim() || null },
-            }),
-          )}
+          onSubmit={(event) =>
+            void form.handleSubmit((data) =>
+              add.mutate({
+                path,
+                body: {
+                  display_name: data.name.trim(),
+                  role: data.role.trim() || null,
+                },
+              })
+            )(event)
+          }
         >
           <label className="space-y-1 text-sm">
             <span>{t("workspace_participant_name")}</span>
-            <Input required maxLength={200} {...form.register("name", { required: true })} />
+            <Input
+              required
+              maxLength={200}
+              {...form.register("name", { required: true })}
+            />
           </label>
           <label className="space-y-1 text-sm">
             <span>{t("workspace_participant_role")}</span>
@@ -262,7 +316,9 @@ function MeetingWorkspace({ meeting }: { meeting: MeetingRead }) {
             onChange={(event) => setFile(event.target.files?.[0] ?? null)}
           />
         </label>
-        <p className="text-sm text-muted-foreground">{t("workspace_upload_help")}</p>
+        <p className="text-sm text-muted-foreground">
+          {t("workspace_upload_help")}
+        </p>
         {file && !fileValid && (
           <p role="alert" className="text-destructive">
             {t("workspace_file_limit")}
@@ -278,7 +334,9 @@ function MeetingWorkspace({ meeting }: { meeting: MeetingRead }) {
         </Button>
         <RequestError error={upload.error || recordings.error} />
         {recordings.isPending && <p role="status">{t("workspace_loading")}</p>}
-        {recordings.data?.items.length === 0 && <p>{t("workspace_empty_recordings")}</p>}
+        {recordings.data?.items.length === 0 && (
+          <p>{t("workspace_empty_recordings")}</p>
+        )}
         {!!recordings.data?.items.length && (
           <label className="block space-y-2 text-sm">
             <span>{t("workspace_recordings")}</span>
@@ -298,11 +356,22 @@ function MeetingWorkspace({ meeting }: { meeting: MeetingRead }) {
         )}
       </section>
       {current && (
-        <RecordingWorkspace key={current.id} meetingId={meeting.id} recording={current} />
+        <RecordingWorkspace
+          key={current.id}
+          meetingId={meeting.id}
+          recording={current}
+        />
       )}
     </>
   );
 }
+
+const LANGUAGES: readonly NonNullable<ProcessingJobCreate["language"]>[] = [
+  "auto",
+  "ru",
+  "kk",
+  "mixed",
+];
 
 function RecordingWorkspace({
   meetingId,
@@ -313,24 +382,37 @@ function RecordingWorkspace({
 }) {
   const t = useWorkspaceText();
   const path = { meeting_id: meetingId, recording_id: recording.id };
-  const [language, setLanguage] = useState<NonNullable<ProcessingJobCreate["language"]>>("auto");
+  const [language, setLanguage] =
+    useState<NonNullable<ProcessingJobCreate["language"]>>("auto");
   const [allowIncomplete, setAllowIncomplete] = useState(false);
   const [resultId, setResultId] = useState("");
   const requestKey = useRef<string | null>(null);
   const jobs = useQuery({
-    ...listProcessingJobsOptions({ client: backendClient, path, query: { limit: 20 } }),
+    ...listProcessingJobsOptions({
+      client: backendClient,
+      path,
+      query: { limit: 20 },
+    }),
     refetchInterval: (query) =>
-      query.state.data?.items.some((job) => ["queued", "running"].includes(job.status))
+      query.state.data?.items.some((job) =>
+        ["queued", "running"].includes(job.status)
+      )
         ? 2000
         : false,
     refetchOnWindowFocus: true,
   });
   const results = useQuery(
-    listResultVersionsOptions({ client: backendClient, path, query: { limit: 100 } }),
+    listResultVersionsOptions({
+      client: backendClient,
+      path,
+      query: { limit: 100 },
+    })
   );
   const latest = jobs.data?.items[0];
   const active =
-    jobs.data?.items.some((job) => ["queued", "running"].includes(job.status)) ?? false;
+    jobs.data?.items.some((job) =>
+      ["queued", "running"].includes(job.status)
+    ) ?? false;
   const start = useMutation({
     ...createProcessingJobMutation({ client: backendClient }),
     onError: () => {},
@@ -339,7 +421,9 @@ function RecordingWorkspace({
       await jobs.refetch();
     },
   });
-  const result = results.data?.items.find((item) => item.id === resultId) ?? results.data?.items[0];
+  const result =
+    results.data?.items.find((item) => item.id === resultId) ??
+    results.data?.items[0];
   useEffect(() => {
     if (latest?.status === "succeeded" && latest.result_version_id) {
       setResultId(latest.result_version_id);
@@ -348,7 +432,8 @@ function RecordingWorkspace({
   }, [latest?.id, latest?.status, latest?.result_version_id]);
   const canProcess =
     !!recording.media_url &&
-    (recording.status === "ready" || (recording.status === "incomplete" && allowIncomplete));
+    (recording.status === "ready" ||
+      (recording.status === "incomplete" && allowIncomplete));
   const statusKey =
     latest?.error_code === "transcription_unavailable"
       ? "workspace_unavailable"
@@ -364,7 +449,9 @@ function RecordingWorkspace({
           </p>
         )}
         {recording.status === "receiving" && <p>{t("workspace_receiving")}</p>}
-        {recording.status === "failed" && <p role="alert">{t("workspace_failed")}</p>}
+        {recording.status === "failed" && (
+          <p role="alert">{t("workspace_failed")}</p>
+        )}
         {recording.status === "ready" && <p>{t("workspace_ready")}</p>}
         <div className="flex flex-wrap items-end gap-3">
           <label className="space-y-1 text-sm">
@@ -374,7 +461,10 @@ function RecordingWorkspace({
               value={language}
               disabled={active || start.isPending}
               onChange={(event) => {
-                setLanguage(event.target.value as NonNullable<ProcessingJobCreate["language"]>);
+                const next = LANGUAGES.find(
+                  (value) => value === event.target.value
+                );
+                if (next) setLanguage(next);
                 requestKey.current = null;
               }}
             >
@@ -385,7 +475,9 @@ function RecordingWorkspace({
             </select>
           </label>
           <Button
-            disabled={!canProcess || active || start.isPending || jobs.isPending}
+            disabled={
+              !canProcess || active || start.isPending || jobs.isPending
+            }
             onClick={() => {
               requestKey.current ??= crypto.randomUUID();
               start.mutate({
@@ -396,12 +488,18 @@ function RecordingWorkspace({
                   allow_incomplete: allowIncomplete,
                   target_stage: "transcribe",
                   retry_of_job_id:
-                    latest && ["failed", "interrupted"].includes(latest.status) ? latest.id : null,
+                    latest && ["failed", "interrupted"].includes(latest.status)
+                      ? latest.id
+                      : null,
                 },
               });
             }}
           >
-            {t(start.isPending || active ? "workspace_running" : "workspace_process")}
+            {t(
+              start.isPending || active
+                ? "workspace_running"
+                : "workspace_process"
+            )}
           </Button>
         </div>
         {recording.status === "incomplete" && (
@@ -422,10 +520,14 @@ function RecordingWorkspace({
         {statusKey && (
           <p role="status">
             {t(statusKey)}
-            {latest?.progress != null && active ? ` · ${Math.round(latest.progress * 100)}%` : ""}
+            {latest?.progress != null && active
+              ? ` · ${Math.round(latest.progress * 100)}%`
+              : ""}
           </p>
         )}
-        <p className="text-sm text-muted-foreground">{t("workspace_manual_notice")}</p>
+        <p className="text-sm text-muted-foreground">
+          {t("workspace_manual_notice")}
+        </p>
         {!result && !results.isPending && <p>{t("workspace_no_results")}</p>}
         {!!results.data?.items.length && (
           <label className="block space-y-2 text-sm">
@@ -438,7 +540,11 @@ function RecordingWorkspace({
               {results.data.items.map((row) => (
                 <option key={row.id} value={row.id}>
                   {new Date(row.created_at).toLocaleString()} ·{" "}
-                  {t(row.status === "reviewed" ? "workspace_reviewed" : "workspace_draft")}
+                  {t(
+                    row.status === "reviewed"
+                      ? "workspace_reviewed"
+                      : "workspace_draft"
+                  )}
                 </option>
               ))}
             </select>
@@ -484,7 +590,11 @@ function ResultWorkspace({
   const t = useWorkspaceText();
   const player = useRef<MeetingPlayerHandle>(null);
   const [reloadKey, setReloadKey] = useState(0);
-  const path = { meeting_id: meetingId, recording_id: recording.id, result_version_id: resultId };
+  const path = {
+    meeting_id: meetingId,
+    recording_id: recording.id,
+    result_version_id: resultId,
+  };
   const segments = useInfiniteQuery({
     ...listTranscriptSegmentsInfiniteOptions({
       client: backendClient,
@@ -523,7 +633,9 @@ function ResultWorkspace({
       )}
       <RequestError error={segments.error || review.error} />
       {segments.isPending && <p role="status">{t("workspace_loading")}</p>}
-      {segments.isSuccess && rows.length === 0 && <p>{t("workspace_empty_transcript")}</p>}
+      {segments.isSuccess && rows.length === 0 && (
+        <p>{t("workspace_empty_transcript")}</p>
+      )}
       {!!rows.length && <TranscriptPanel sync={sync} />}
       {segments.hasNextPage && (
         <Button

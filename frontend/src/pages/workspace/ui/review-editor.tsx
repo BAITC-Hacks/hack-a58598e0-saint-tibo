@@ -8,15 +8,30 @@ import {
   listParticipantsOptions,
   updateResultReview,
 } from "#/shared/api";
-import type { ActionItemStatus, ReviewRead, ReviewUpdate, SegmentRead } from "#/shared/api";
+import type {
+  ActionItemStatus,
+  ReviewRead,
+  ReviewUpdate,
+  SegmentRead,
+} from "#/shared/api";
 import { Button } from "#/shared/ui/shadcn/button";
 import { Input } from "#/shared/ui/shadcn/input";
 import { Textarea } from "#/shared/ui/shadcn/textarea";
 import { transcriptTime } from "#/shared/ui/transcript-sync";
 
-import { errorKey, lines, sectionClass, selectClass, useWorkspaceText } from "../lib/workspace";
+import {
+  errorKey,
+  lines,
+  sectionClass,
+  selectClass,
+  useWorkspaceText,
+} from "../lib/workspace";
 
-type Path = { meeting_id: string; recording_id: string; result_version_id: string };
+type Path = {
+  meeting_id: string;
+  recording_id: string;
+  result_version_id: string;
+};
 type ActionForm = {
   id: string;
   text: string;
@@ -34,7 +49,12 @@ type ReviewForm = {
   sourceIds: string[];
   actions: ActionForm[];
 };
-const statuses: ActionItemStatus[] = ["open", "in_progress", "done", "cancelled"];
+const statuses: ActionItemStatus[] = [
+  "open",
+  "in_progress",
+  "done",
+  "cancelled",
+];
 const emptyAction = (): ActionForm => ({
   id: crypto.randomUUID(),
   text: "",
@@ -64,7 +84,9 @@ function SourcePicker({
       <summary className="cursor-pointer font-medium">
         {t("workspace_sources")} · {value.length}
       </summary>
-      <p className="my-2 text-muted-foreground">{t("workspace_sources_help")}</p>
+      <p className="my-2 text-muted-foreground">
+        {t("workspace_sources_help")}
+      </p>
       <div className="max-h-40 space-y-2 overflow-y-auto">
         {segments.map((segment) => (
           <div className="flex items-start gap-2" key={segment.id}>
@@ -77,22 +99,30 @@ function SourcePicker({
                   onChange(
                     event.target.checked
                       ? [...value, segment.id]
-                      : value.filter((id) => id !== segment.id),
+                      : value.filter((id) => id !== segment.id)
                   )
                 }
               />
               <span className="line-clamp-2">{segment.text}</span>
             </label>
-            <Button type="button" variant="ghost" size="sm" onClick={() => onSeek(segment.id)}>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => onSeek(segment.id)}
+            >
               {transcriptTime(segment.start_ms)}
             </Button>
           </div>
         ))}
       </div>
-      <p className="mt-2 text-xs text-muted-foreground">{t("workspace_source_list_limit")}</p>
+      <p className="mt-2 text-xs text-muted-foreground">
+        {t("workspace_source_list_limit")}
+      </p>
       {value.some((id) => !visibleIds.has(id)) && (
         <p className="text-xs text-muted-foreground">
-          {t("workspace_sources")} · {value.filter((id) => !visibleIds.has(id)).length} —{" "}
+          {t("workspace_sources")} ·{" "}
+          {value.filter((id) => !visibleIds.has(id)).length} —{" "}
           {t("workspace_source_list_limit")}
         </p>
       )}
@@ -125,7 +155,7 @@ export function ReviewEditor({
       client: backendClient,
       path: { meeting_id: path.meeting_id },
       query: { limit: 100 },
-    }),
+    })
   );
   const form = useForm<ReviewForm>({
     defaultValues: {
@@ -145,10 +175,21 @@ export function ReviewEditor({
       })),
     },
   });
-  const fields = useFieldArray({ control: form.control, name: "actions", keyName: "formId" });
+  const fields = useFieldArray({
+    control: form.control,
+    name: "actions",
+    keyName: "formId",
+  });
   const save = useMutation({
     mutationFn: async (body: ReviewUpdate) =>
-      (await updateResultReview({ client: backendClient, path, body, throwOnError: true })).data,
+      (
+        await updateResultReview({
+          client: backendClient,
+          path,
+          body,
+          throwOnError: true,
+        })
+      ).data,
     onError: () => {},
     onSuccess: async () => {
       await onSaved();
@@ -185,7 +226,7 @@ export function ReviewEditor({
     };
     if (
       [summary.topics, summary.decisions, summary.open_questions].some(
-        (part) => part.length > 100 || part.some((line) => line.length > 2000),
+        (part) => part.length > 100 || part.some((line) => line.length > 2000)
       )
     ) {
       form.setError("root", { message: t("workspace_invalid") });
@@ -208,7 +249,8 @@ export function ReviewEditor({
     });
   });
   const knownParticipants = participants.data?.items ?? [];
-  const error = save.error || download.error || reloadError || participants.error;
+  const error =
+    save.error || download.error || reloadError || participants.error;
   return (
     <section className={sectionClass}>
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -223,14 +265,16 @@ export function ReviewEditor({
           {t("workspace_saved")} · {new Date(initial.saved_at).toLocaleString()}
         </p>
       )}
-      {initial.is_incomplete && <p className="text-sm font-medium">{t("workspace_incomplete")}</p>}
+      {initial.is_incomplete && (
+        <p className="text-sm font-medium">{t("workspace_incomplete")}</p>
+      )}
       {error && (
         <p role="alert" className="text-sm text-destructive">
           {t(errorKey(error))}
         </p>
       )}
       <form
-        onSubmit={submit}
+        onSubmit={(event) => void submit(event)}
         onChange={() => {
           if (approve) setApprove(false);
         }}
@@ -252,7 +296,9 @@ export function ReviewEditor({
             </label>
           </div>
           <div className="space-y-2">
-            <h3 className="text-sm font-medium">{t("workspace_summary_sources")}</h3>
+            <h3 className="text-sm font-medium">
+              {t("workspace_summary_sources")}
+            </h3>
             <SourcePicker
               value={form.watch("sourceIds")}
               onChange={(ids) => {
@@ -277,7 +323,9 @@ export function ReviewEditor({
               {t("workspace_add_action")}
             </Button>
           </div>
-          <p className="text-sm text-muted-foreground">{t("workspace_due_help")}</p>
+          <p className="text-sm text-muted-foreground">
+            {t("workspace_due_help")}
+          </p>
           {fields.fields.map((field, index) => (
             <fieldset
               key={field.formId}
@@ -299,7 +347,10 @@ export function ReviewEditor({
               </label>
               <label className="space-y-1 text-sm">
                 <span>{t("workspace_assignee")}</span>
-                <select className={selectClass} {...form.register(`actions.${index}.assignee`)}>
+                <select
+                  className={selectClass}
+                  {...form.register(`actions.${index}.assignee`)}
+                >
                   <option value="">{t("workspace_unknown")}</option>
                   {knownParticipants.map((participant) => (
                     <option key={participant.id} value={participant.id}>
@@ -308,7 +359,7 @@ export function ReviewEditor({
                   ))}
                   {!!form.watch(`actions.${index}.assignee`) &&
                     !knownParticipants.some(
-                      (p) => p.id === form.watch(`actions.${index}.assignee`),
+                      (p) => p.id === form.watch(`actions.${index}.assignee`)
                     ) && (
                       <option value={form.watch(`actions.${index}.assignee`)}>
                         {t("workspace_no_access")}
@@ -318,19 +369,31 @@ export function ReviewEditor({
               </label>
               <label className="space-y-1 text-sm">
                 <span>{t("workspace_assignee_text")}</span>
-                <Input maxLength={500} {...form.register(`actions.${index}.assigneeText`)} />
+                <Input
+                  maxLength={500}
+                  {...form.register(`actions.${index}.assigneeText`)}
+                />
               </label>
               <label className="space-y-1 text-sm">
                 <span>{t("workspace_due_text")}</span>
-                <Input maxLength={500} {...form.register(`actions.${index}.dueText`)} />
+                <Input
+                  maxLength={500}
+                  {...form.register(`actions.${index}.dueText`)}
+                />
               </label>
               <label className="space-y-1 text-sm">
                 <span>{t("workspace_due_date")}</span>
-                <Input type="date" {...form.register(`actions.${index}.dueDate`)} />
+                <Input
+                  type="date"
+                  {...form.register(`actions.${index}.dueDate`)}
+                />
               </label>
               <label className="space-y-1 text-sm">
                 <span>{t("workspace_status")}</span>
-                <select className={selectClass} {...form.register(`actions.${index}.status`)}>
+                <select
+                  className={selectClass}
+                  {...form.register(`actions.${index}.status`)}
+                >
                   {statuses.map((status) => (
                     <option key={status} value={status}>
                       {t(`workspace_${status}`)}
@@ -354,7 +417,9 @@ export function ReviewEditor({
                 <SourcePicker
                   value={form.watch(`actions.${index}.sourceIds`)}
                   onChange={(ids) => {
-                    form.setValue(`actions.${index}.sourceIds`, ids, { shouldDirty: true });
+                    form.setValue(`actions.${index}.sourceIds`, ids, {
+                      shouldDirty: true,
+                    });
                     setApprove(false);
                   }}
                   segments={segments}
@@ -388,33 +453,33 @@ export function ReviewEditor({
                 ? "workspace_saving"
                 : approve
                   ? "workspace_save_approved"
-                  : "workspace_save",
+                  : "workspace_save"
             )}
           </Button>
           <Button
             type="button"
             variant="outline"
             disabled={save.isPending || reloading}
-            onClick={async () => {
+            onClick={() => {
               setReloading(true);
               setReloadError(null);
-              try {
-                await onReload();
-              } catch (cause) {
-                setReloadError(cause);
-              } finally {
-                setReloading(false);
-              }
+              onReload()
+                .catch((cause: unknown) => setReloadError(cause))
+                .finally(() => setReloading(false));
             }}
           >
             {t("workspace_reload")}
           </Button>
         </div>
-        <p className="text-xs text-muted-foreground">{t("workspace_reload_help")}</p>
+        <p className="text-xs text-muted-foreground">
+          {t("workspace_reload_help")}
+        </p>
       </form>
       <div className="space-y-3 border-t pt-5">
         <h3 className="font-semibold">{t("workspace_export")}</h3>
-        <p className="text-sm text-muted-foreground">{t("workspace_export_help")}</p>
+        <p className="text-sm text-muted-foreground">
+          {t("workspace_export_help")}
+        </p>
         <div className="flex flex-wrap items-end gap-2">
           <label className="max-w-40 space-y-1 text-sm">
             <span>{t("workspace_revision")}</span>
@@ -423,7 +488,9 @@ export function ReviewEditor({
               min={2}
               max={initial.revision}
               value={exportRevision}
-              onChange={(event) => setExportRevision(event.target.valueAsNumber)}
+              onChange={(event) =>
+                setExportRevision(event.target.valueAsNumber)
+              }
             />
           </label>
           {(["pdf", "docx"] as const).map((format) => (
