@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { HomePage } from "#/pages/home";
+import { SurfacesPage } from "#/pages/meeting-workspace";
 
-export const Route = createFileRoute("/_app/")({ component: HomePage });
+export const Route = createFileRoute("/_app/")({
+  component: () => <SurfacesPage kind="today" />,
+});

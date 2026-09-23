@@ -17,6 +17,11 @@ export type AccessPolicy = {
 };
 
 /**
+ * ActionItemStatus
+ */
+export type ActionItemStatus = 'open' | 'in_progress' | 'done' | 'cancelled';
+
+/**
  * CurrentUser
  */
 export type CurrentUser = {
@@ -191,6 +196,28 @@ export type PageParticipantRead = {
 };
 
 /**
+ * PageProcessingJobRead
+ */
+export type PageProcessingJobRead = {
+    /**
+     * Items
+     */
+    items: Array<ProcessingJobRead>;
+    /**
+     * Limit
+     */
+    limit: number;
+    /**
+     * Offset
+     */
+    offset: number;
+    /**
+     * Total
+     */
+    total: number;
+};
+
+/**
  * PageRecordingRead
  */
 export type PageRecordingRead = {
@@ -198,6 +225,50 @@ export type PageRecordingRead = {
      * Items
      */
     items: Array<RecordingRead>;
+    /**
+     * Limit
+     */
+    limit: number;
+    /**
+     * Offset
+     */
+    offset: number;
+    /**
+     * Total
+     */
+    total: number;
+};
+
+/**
+ * PageResultVersionRead
+ */
+export type PageResultVersionRead = {
+    /**
+     * Items
+     */
+    items: Array<ResultVersionRead>;
+    /**
+     * Limit
+     */
+    limit: number;
+    /**
+     * Offset
+     */
+    offset: number;
+    /**
+     * Total
+     */
+    total: number;
+};
+
+/**
+ * PageSegmentRead
+ */
+export type PageSegmentRead = {
+    /**
+     * Items
+     */
+    items: Array<SegmentRead>;
     /**
      * Limit
      */
@@ -274,6 +345,114 @@ export type ParticipantUpdate = {
  * Permission
  */
 export type Permission = 'profile:read' | 'meeting:read' | 'meeting:write' | 'access:read' | 'users:read' | 'users:manage' | 'sessions:revoke';
+
+/**
+ * ProcessingJobCreate
+ */
+export type ProcessingJobCreate = {
+    /**
+     * Allow Incomplete
+     */
+    allow_incomplete?: boolean;
+    /**
+     * Language
+     */
+    language?: 'auto' | 'ru' | 'kk' | 'mixed';
+    /**
+     * Request Key
+     *
+     * Generate once per user action; reuse on HTTP retries.
+     */
+    request_key: string;
+    /**
+     * Retry Of Job Id
+     *
+     * Retry a failed/interrupted job of this recording as a new job.
+     */
+    retry_of_job_id?: string | null;
+    /**
+     * Target Stage
+     *
+     * Success means transcript ready; extraction is separate.
+     */
+    target_stage?: 'transcribe';
+};
+
+/**
+ * ProcessingJobRead
+ */
+export type ProcessingJobRead = {
+    /**
+     * Allow Incomplete
+     */
+    allow_incomplete: boolean;
+    /**
+     * Attempt
+     */
+    attempt: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Error Code
+     */
+    error_code: string | null;
+    /**
+     * Finished At
+     */
+    finished_at: string | null;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Language
+     */
+    language: 'auto' | 'ru' | 'kk' | 'mixed';
+    /**
+     * Progress
+     *
+     * Measured progress within this stage.
+     */
+    progress: number | null;
+    /**
+     * Recording Id
+     */
+    recording_id: string;
+    /**
+     * Request Key
+     */
+    request_key: string;
+    /**
+     * Result Version Id
+     */
+    result_version_id: string | null;
+    /**
+     * Retry Of Job Id
+     */
+    retry_of_job_id: string | null;
+    /**
+     * Stage
+     */
+    stage: 'decode' | 'transcribe' | 'diarize' | 'extract' | 'complete';
+    /**
+     * Started At
+     */
+    started_at: string | null;
+    /**
+     * Status
+     */
+    status: 'queued' | 'running' | 'succeeded' | 'failed' | 'interrupted';
+    /**
+     * Target Stage
+     */
+    target_stage: 'transcribe';
+    /**
+     * Updated At
+     */
+    updated_at: string;
+};
 
 /**
  * RecordingCreate
@@ -371,9 +550,300 @@ export type RecordingSource = 'file' | 'live' | 'teams' | 'google_meet' | 'zoom'
 export type RecordingStatus = 'receiving' | 'ready' | 'incomplete' | 'failed';
 
 /**
+ * ResultVersionRead
+ */
+export type ResultVersionRead = {
+    /**
+     * Completed Stage
+     */
+    completed_stage: 'transcribe';
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Duration Ms
+     */
+    duration_ms: number;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Is Incomplete
+     */
+    is_incomplete: boolean;
+    /**
+     * Job Id
+     */
+    job_id: string;
+    /**
+     * Language
+     */
+    language: string;
+    /**
+     * Model Id
+     */
+    model_id: string;
+    /**
+     * Model Revision
+     */
+    model_revision: string;
+    /**
+     * Recording Id
+     */
+    recording_id: string;
+    /**
+     * Revision
+     */
+    revision: number;
+    /**
+     * Segment Count
+     */
+    segment_count: number;
+    /**
+     * Status
+     */
+    status: 'draft' | 'reviewed';
+    /**
+     * Updated At
+     */
+    updated_at: string;
+};
+
+/**
+ * ReviewActionItem
+ */
+export type ReviewActionItem = {
+    /**
+     * Assignee Participant Id
+     */
+    assignee_participant_id?: string | null;
+    /**
+     * Assignee Text
+     */
+    assignee_text?: string | null;
+    /**
+     * Due Date
+     */
+    due_date?: string | null;
+    /**
+     * Due Text
+     */
+    due_text?: string | null;
+    /**
+     * Id
+     */
+    id?: string;
+    /**
+     * Source Segment Ids
+     */
+    source_segment_ids?: Array<string>;
+    status?: ActionItemStatus;
+    /**
+     * Text
+     */
+    text: string;
+};
+
+/**
+ * ReviewActionItemRead
+ */
+export type ReviewActionItemRead = {
+    /**
+     * Assignee Participant Id
+     */
+    assignee_participant_id?: string | null;
+    /**
+     * Assignee Text
+     */
+    assignee_text?: string | null;
+    /**
+     * Due Date
+     */
+    due_date?: string | null;
+    /**
+     * Due Text
+     */
+    due_text?: string | null;
+    /**
+     * Id
+     */
+    id?: string;
+    /**
+     * Result Version Id
+     */
+    result_version_id: string;
+    /**
+     * Source Segment Ids
+     */
+    source_segment_ids?: Array<string>;
+    status?: ActionItemStatus;
+    /**
+     * Text
+     */
+    text: string;
+};
+
+/**
+ * ReviewMeeting
+ */
+export type ReviewMeeting = {
+    /**
+     * Started At
+     */
+    started_at: string;
+    /**
+     * Timezone
+     */
+    timezone: string;
+    /**
+     * Title
+     */
+    title: string;
+};
+
+/**
+ * ReviewParticipant
+ */
+export type ReviewParticipant = {
+    /**
+     * Display Name
+     */
+    display_name: string;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Role
+     */
+    role: string | null;
+};
+
+/**
+ * ReviewRead
+ */
+export type ReviewRead = {
+    /**
+     * Action Items
+     */
+    action_items: Array<ReviewActionItemRead>;
+    /**
+     * Is Incomplete
+     */
+    is_incomplete: boolean;
+    meeting: ReviewMeeting;
+    /**
+     * Participants
+     */
+    participants: Array<ReviewParticipant>;
+    /**
+     * Recording Id
+     */
+    recording_id: string;
+    /**
+     * Result Version Id
+     */
+    result_version_id: string;
+    /**
+     * Reviewed
+     */
+    reviewed: boolean;
+    /**
+     * Revision
+     */
+    revision: number;
+    /**
+     * Saved At
+     */
+    saved_at: string | null;
+    /**
+     * Source
+     */
+    source?: 'persisted';
+    summary: ReviewSummary;
+};
+
+/**
+ * ReviewSummary
+ */
+export type ReviewSummary = {
+    /**
+     * Decisions
+     */
+    decisions?: Array<string>;
+    /**
+     * Open Questions
+     */
+    open_questions?: Array<string>;
+    /**
+     * Source Segment Ids
+     */
+    source_segment_ids?: Array<string>;
+    /**
+     * Topics
+     */
+    topics?: Array<string>;
+};
+
+/**
+ * ReviewUpdate
+ */
+export type ReviewUpdate = {
+    /**
+     * Action Items
+     */
+    action_items?: Array<ReviewActionItem> | null;
+    /**
+     * Reviewed
+     */
+    reviewed?: boolean | null;
+    /**
+     * Revision
+     */
+    revision: number;
+    summary?: ReviewSummary | null;
+};
+
+/**
  * Role
  */
 export type Role = 'user' | 'admin';
+
+/**
+ * SegmentRead
+ */
+export type SegmentRead = {
+    /**
+     * End Ms
+     */
+    end_ms: number;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Recording Id
+     */
+    recording_id: string;
+    /**
+     * Result Version Id
+     */
+    result_version_id: string;
+    /**
+     * Speaker Id
+     */
+    speaker_id: string | null;
+    /**
+     * Start Ms
+     */
+    start_ms: number;
+    /**
+     * Text
+     */
+    text: string;
+};
 
 /**
  * ValidationIssue
@@ -1665,6 +2135,193 @@ export type FinalizeRecordingResponses = {
 
 export type FinalizeRecordingResponse = FinalizeRecordingResponses[keyof FinalizeRecordingResponses];
 
+export type ListProcessingJobsData = {
+    body?: never;
+    path: {
+        /**
+         * Meeting Id
+         */
+        meeting_id: string;
+        /**
+         * Recording Id
+         */
+        recording_id: string;
+    };
+    query?: {
+        /**
+         * Limit
+         */
+        limit?: number;
+        /**
+         * Offset
+         */
+        offset?: number;
+    };
+    url: '/api/v1/meetings/{meeting_id}/recordings/{recording_id}/jobs';
+};
+
+export type ListProcessingJobsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ErrorResponse;
+    /**
+     * Internal Server Error
+     */
+    500: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
+};
+
+export type ListProcessingJobsError = ListProcessingJobsErrors[keyof ListProcessingJobsErrors];
+
+export type ListProcessingJobsResponses = {
+    /**
+     * Successful Response
+     */
+    200: PageProcessingJobRead;
+};
+
+export type ListProcessingJobsResponse = ListProcessingJobsResponses[keyof ListProcessingJobsResponses];
+
+export type CreateProcessingJobData = {
+    body: ProcessingJobCreate;
+    path: {
+        /**
+         * Meeting Id
+         */
+        meeting_id: string;
+        /**
+         * Recording Id
+         */
+        recording_id: string;
+    };
+    query?: never;
+    url: '/api/v1/meetings/{meeting_id}/recordings/{recording_id}/jobs';
+};
+
+export type CreateProcessingJobErrors = {
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ErrorResponse;
+    /**
+     * Internal Server Error
+     */
+    500: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
+};
+
+export type CreateProcessingJobError = CreateProcessingJobErrors[keyof CreateProcessingJobErrors];
+
+export type CreateProcessingJobResponses = {
+    /**
+     * Successful Response
+     */
+    202: ProcessingJobRead;
+};
+
+export type CreateProcessingJobResponse = CreateProcessingJobResponses[keyof CreateProcessingJobResponses];
+
+export type GetProcessingJobData = {
+    body?: never;
+    path: {
+        /**
+         * Meeting Id
+         */
+        meeting_id: string;
+        /**
+         * Recording Id
+         */
+        recording_id: string;
+        /**
+         * Job Id
+         */
+        job_id: string;
+    };
+    query?: never;
+    url: '/api/v1/meetings/{meeting_id}/recordings/{recording_id}/jobs/{job_id}';
+};
+
+export type GetProcessingJobErrors = {
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ErrorResponse;
+    /**
+     * Internal Server Error
+     */
+    500: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
+};
+
+export type GetProcessingJobError = GetProcessingJobErrors[keyof GetProcessingJobErrors];
+
+export type GetProcessingJobResponses = {
+    /**
+     * Successful Response
+     */
+    200: ProcessingJobRead;
+};
+
+export type GetProcessingJobResponse = GetProcessingJobResponses[keyof GetProcessingJobResponses];
+
 export type GetRecordingMediaData = {
     body?: never;
     headers?: {
@@ -1848,6 +2505,390 @@ export type HeadRecordingMediaResponses = {
 };
 
 export type HeadRecordingMediaResponse = HeadRecordingMediaResponses[keyof HeadRecordingMediaResponses];
+
+export type ListResultVersionsData = {
+    body?: never;
+    path: {
+        /**
+         * Meeting Id
+         */
+        meeting_id: string;
+        /**
+         * Recording Id
+         */
+        recording_id: string;
+    };
+    query?: {
+        /**
+         * Limit
+         */
+        limit?: number;
+        /**
+         * Offset
+         */
+        offset?: number;
+    };
+    url: '/api/v1/meetings/{meeting_id}/recordings/{recording_id}/results';
+};
+
+export type ListResultVersionsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ErrorResponse;
+    /**
+     * Internal Server Error
+     */
+    500: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
+};
+
+export type ListResultVersionsError = ListResultVersionsErrors[keyof ListResultVersionsErrors];
+
+export type ListResultVersionsResponses = {
+    /**
+     * Successful Response
+     */
+    200: PageResultVersionRead;
+};
+
+export type ListResultVersionsResponse = ListResultVersionsResponses[keyof ListResultVersionsResponses];
+
+export type GetResultVersionData = {
+    body?: never;
+    path: {
+        /**
+         * Meeting Id
+         */
+        meeting_id: string;
+        /**
+         * Recording Id
+         */
+        recording_id: string;
+        /**
+         * Result Version Id
+         */
+        result_version_id: string;
+    };
+    query?: never;
+    url: '/api/v1/meetings/{meeting_id}/recordings/{recording_id}/results/{result_version_id}';
+};
+
+export type GetResultVersionErrors = {
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ErrorResponse;
+    /**
+     * Internal Server Error
+     */
+    500: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
+};
+
+export type GetResultVersionError = GetResultVersionErrors[keyof GetResultVersionErrors];
+
+export type GetResultVersionResponses = {
+    /**
+     * Successful Response
+     */
+    200: ResultVersionRead;
+};
+
+export type GetResultVersionResponse = GetResultVersionResponses[keyof GetResultVersionResponses];
+
+export type ExportReviewedResultData = {
+    body?: never;
+    path: {
+        /**
+         * Meeting Id
+         */
+        meeting_id: string;
+        /**
+         * Recording Id
+         */
+        recording_id: string;
+        /**
+         * Result Version Id
+         */
+        result_version_id: string;
+    };
+    query: {
+        /**
+         * Format
+         */
+        format: 'pdf' | 'docx';
+        /**
+         * Revision
+         */
+        revision: number;
+    };
+    url: '/api/v1/meetings/{meeting_id}/recordings/{recording_id}/results/{result_version_id}/export';
+};
+
+export type ExportReviewedResultErrors = {
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ErrorResponse;
+    /**
+     * Internal Server Error
+     */
+    500: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
+};
+
+export type ExportReviewedResultError = ExportReviewedResultErrors[keyof ExportReviewedResultErrors];
+
+export type ExportReviewedResultResponses = {
+    /**
+     * Successful Response
+     */
+    200: Blob | File;
+};
+
+export type ExportReviewedResultResponse = ExportReviewedResultResponses[keyof ExportReviewedResultResponses];
+
+export type GetResultReviewData = {
+    body?: never;
+    path: {
+        /**
+         * Meeting Id
+         */
+        meeting_id: string;
+        /**
+         * Recording Id
+         */
+        recording_id: string;
+        /**
+         * Result Version Id
+         */
+        result_version_id: string;
+    };
+    query?: {
+        /**
+         * Revision
+         */
+        revision?: number | null;
+    };
+    url: '/api/v1/meetings/{meeting_id}/recordings/{recording_id}/results/{result_version_id}/review';
+};
+
+export type GetResultReviewErrors = {
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ErrorResponse;
+    /**
+     * Internal Server Error
+     */
+    500: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
+};
+
+export type GetResultReviewError = GetResultReviewErrors[keyof GetResultReviewErrors];
+
+export type GetResultReviewResponses = {
+    /**
+     * Successful Response
+     */
+    200: ReviewRead;
+};
+
+export type GetResultReviewResponse = GetResultReviewResponses[keyof GetResultReviewResponses];
+
+export type UpdateResultReviewData = {
+    body: ReviewUpdate;
+    path: {
+        /**
+         * Meeting Id
+         */
+        meeting_id: string;
+        /**
+         * Recording Id
+         */
+        recording_id: string;
+        /**
+         * Result Version Id
+         */
+        result_version_id: string;
+    };
+    query?: never;
+    url: '/api/v1/meetings/{meeting_id}/recordings/{recording_id}/results/{result_version_id}/review';
+};
+
+export type UpdateResultReviewErrors = {
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ErrorResponse;
+    /**
+     * Internal Server Error
+     */
+    500: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
+};
+
+export type UpdateResultReviewError = UpdateResultReviewErrors[keyof UpdateResultReviewErrors];
+
+export type UpdateResultReviewResponses = {
+    /**
+     * Successful Response
+     */
+    200: ReviewRead;
+};
+
+export type UpdateResultReviewResponse = UpdateResultReviewResponses[keyof UpdateResultReviewResponses];
+
+export type ListTranscriptSegmentsData = {
+    body?: never;
+    path: {
+        /**
+         * Meeting Id
+         */
+        meeting_id: string;
+        /**
+         * Recording Id
+         */
+        recording_id: string;
+        /**
+         * Result Version Id
+         */
+        result_version_id: string;
+    };
+    query?: {
+        /**
+         * Limit
+         */
+        limit?: number;
+        /**
+         * Offset
+         */
+        offset?: number;
+    };
+    url: '/api/v1/meetings/{meeting_id}/recordings/{recording_id}/results/{result_version_id}/segments';
+};
+
+export type ListTranscriptSegmentsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ErrorResponse;
+    /**
+     * Internal Server Error
+     */
+    500: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
+};
+
+export type ListTranscriptSegmentsError = ListTranscriptSegmentsErrors[keyof ListTranscriptSegmentsErrors];
+
+export type ListTranscriptSegmentsResponses = {
+    /**
+     * Successful Response
+     */
+    200: PageSegmentRead;
+};
+
+export type ListTranscriptSegmentsResponse = ListTranscriptSegmentsResponses[keyof ListTranscriptSegmentsResponses];
 
 export type GetLivenessData = {
     body?: never;

@@ -28,3 +28,9 @@ class Settings(BaseSettings):
     recording_upload_timeout_seconds: float = Field(default=600, gt=0)
     recording_media_timeout_seconds: float = Field(default=600, gt=0)
     recording_stale_seconds: int = Field(default=15 * 60, ge=1)
+
+    processing_lease_seconds: int = Field(default=60, ge=15, le=600)
+    processing_timeout_seconds: int = Field(default=2 * 60 * 60, ge=10)
+    stt_python_path: Path = Path("/app/stt/.venv/bin/python")
+    stt_script_path: Path = Path("/app/stt/transcribe.py")
+    stt_model_path: Path = Path("/models/small")

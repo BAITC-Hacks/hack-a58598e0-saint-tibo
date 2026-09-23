@@ -9,6 +9,8 @@
     "setup": "bun run frontend/scripts/setup.ts && bun run infra && bun run migrate",
     "install:all": "bun install --cwd frontend --frozen-lockfile && uv sync --locked --directory backend && bun install --cwd tools/api-client --frozen-lockfile --ignore-scripts",
     "dev": "bun run infra && bun run migrate && bun --env-file=../.env run --cwd frontend dev:stack",
+    "mock:server": "docker compose --profile mock up -d --wait mock-api",
+    "mock:dev": "bun run tools/mock-api/run-dev.ts",
     "infra": "docker compose up -d --wait postgres",
     "infra:stop": "docker compose stop postgres",
     "demo": "docker compose --profile app up -d --build --wait",

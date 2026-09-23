@@ -1,0 +1,6 @@
+{
+  "name": "@saint-tibo/teams-capture",
+  "private": true,
+  "type": "module",
+  "peerDependencies": { "playwright": "1.62.1" }
+}
