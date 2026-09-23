@@ -1,5 +1,7 @@
 # WEB-102 Media cancellation
 
+## Current Behavior
+
 - `frontend/src/app/server/media.server.ts` forwards the request signal and
   cancels the upstream body when playback closes (`a39e8d0`).
 - TanStack Start 1.168.56 uses `@tanstack/start-server-core` 1.169.37 and
@@ -13,5 +15,10 @@
   error and an unrelated error on an aborted request both gave 500 and logged.
   Synthetic RIFF/WAV proxy check gave Range 206/exact bytes, HEAD 200/no body,
   and cookie-free 401. Local typecheck/check/build and Docker build passed.
+
+## Known Gaps
+
 - Live dev-ivan at `cc131fd` still lacks this patch. #102 stays open until
   coordinated dev merge/deploy and live cancellation/seek/log proof.
+
+Last implementation commit: `fa1baf2` (2026-09-23).
