@@ -31,6 +31,9 @@ export const serverEnv = {
   get jwtAudience() {
     return required("BETTER_AUTH_JWT_AUDIENCE");
   },
+  get devLoginEnabled() {
+    return process.env.DEV_LOGIN_ENABLED === "true";
+  },
   get backendInternalUrl() {
     const url = new URL(required("BACKEND_INTERNAL_URL"));
     if (
