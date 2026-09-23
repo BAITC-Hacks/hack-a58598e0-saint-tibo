@@ -24,8 +24,8 @@ import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
 import type { ReactNode } from "react";
 
-import { isMockApi } from "#/shared/api/backend-client";
 import { remindersQuery, REMINDERS_REFRESH_MS } from "#/pages/reminders";
+import { isMockApi } from "#/shared/api/backend-client";
 import { authClient, useAccess } from "#/shared/auth";
 import { m } from "#/shared/lib/i18n/messages";
 import type { Locale } from "#/shared/lib/i18n/runtime";
@@ -50,7 +50,7 @@ type NavigationItem = {
   permission?: "users:read" | "access:read";
 };
 
-const navigation: NavigationItem[] = [
+const navigation = [
   { to: "/", icon: House, label: (locale) => m.nav_today({}, { locale }) },
   {
     to: "/meetings",
@@ -141,7 +141,7 @@ const navigation: NavigationItem[] = [
     label: (locale) => m.nav_admin_access({}, { locale }),
     permission: "access:read",
   },
-];
+] as const satisfies readonly NavigationItem[];
 
 const Navigation = ({
   onNavigate,
@@ -162,7 +162,7 @@ const Navigation = ({
       className="flex flex-col py-4"
     >
       {navigation
-        .filter(({ permission }) => !permission || can(permission))
+        .filter((item) => !("permission" in item) || can(item.permission))
         .map(({ to, icon: Icon, label }) => {
           const active =
             pathname === to || (to !== "/" && pathname.startsWith(`${to}/`));

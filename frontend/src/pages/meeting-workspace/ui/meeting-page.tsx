@@ -37,11 +37,13 @@ export function MeetingPage({ meetingId }: { meetingId: string }) {
   const [participantError, setParticipantError] = useState("");
   const [uploadError, setUploadError] = useState("");
   const [processingError, setProcessingError] = useState("");
-  const [targetStage, setTargetStage] = useState<ProcessingTarget>("transcribe");
+  const [targetStage, setTargetStage] =
+    useState<ProcessingTarget>("transcribe");
   const [reviewDirty, setReviewDirty] = useState(false);
   const loadedJob = useRef<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadStep, setUploadStep] = useState(0);
+  const [failedFile, setFailedFile] = useState<File | null>(null);
   const add = useMutation({
     mutationFn: (body: { display_name: string; role: string | null }) =>
       addParticipant(meetingId, body),
@@ -104,13 +106,15 @@ export function MeetingPage({ meetingId }: { meetingId: string }) {
   async function submitUpload(file: File | null) {
     if (!file) return;
     setUploadError("");
+    setFailedFile(null);
     setUploading(true);
     setUploadStep(0);
     try {
       await uploadFile(meetingId, file, setUploadStep);
       await client.invalidateQueries({ queryKey: ["recordings", meetingId] });
-    } catch (reason) {
-      setUploadError(reason instanceof Error ? reason.message : t.error);
+    } catch {
+      setFailedFile(file);
+      setUploadError(t.uploadFailed);
     } finally {
       setUploading(false);
     }
@@ -126,8 +130,8 @@ export function MeetingPage({ meetingId }: { meetingId: string }) {
       await client.invalidateQueries({
         queryKey: ["jobs", meetingId, recording.id],
       });
-    } catch (reason) {
-      setProcessingError(reason instanceof Error ? reason.message : t.error);
+    } catch {
+      setProcessingError(t.processingFailed);
     }
   }
 
@@ -146,7 +150,7 @@ export function MeetingPage({ meetingId }: { meetingId: string }) {
         <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
           <time dateTime={meeting.data.started_at}>
             {new Intl.DateTimeFormat(locale, {
-              dateStyle: "medium",
+              dateStyle: locale === "kk" ? "short" : "medium",
               timeStyle: "short",
               timeZone: meeting.data.timezone,
             }).format(new Date(meeting.data.started_at))}
@@ -177,6 +181,7 @@ export function MeetingPage({ meetingId }: { meetingId: string }) {
               </span>
               <input
                 className="sr-only"
+                data-testid="recording-file"
                 type="file"
                 accept="audio/*,video/mp4,.flac,.ogg,.webm,.m4a"
                 disabled={uploading}
@@ -193,9 +198,20 @@ export function MeetingPage({ meetingId }: { meetingId: string }) {
               </output>
             )}
             {uploadError && (
-              <p role="alert" className="mt-2 text-sm text-destructive">
-                {uploadError} · {t.retryUpload}
-              </p>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <p role="alert" className="text-sm text-destructive">
+                  {uploadError}
+                </p>
+                {failedFile && (
+                  <Button
+                    variant="outline"
+                    disabled={uploading}
+                    onClick={() => void submitUpload(failedFile)}
+                  >
+                    {t.retryUpload}
+                  </Button>
+                )}
+              </div>
             )}
             {recordings.isPending ? (
               <output className="mt-4 block text-sm text-muted-foreground">
@@ -216,6 +232,7 @@ export function MeetingPage({ meetingId }: { meetingId: string }) {
                 {recordings.data.items.map((recording) => (
                   <li
                     key={recording.id}
+                    data-testid={`recording-${recording.id}`}
                     className="flex flex-wrap items-center justify-between gap-2 p-3 text-sm"
                   >
                     <span className="min-w-0 truncate">
@@ -232,7 +249,9 @@ export function MeetingPage({ meetingId }: { meetingId: string }) {
                         ? t.recordingReady
                         : recording.status === "failed"
                           ? t.failed
-                          : recording.status}
+                          : recording.status === "incomplete"
+                            ? t.incomplete
+                            : t.receiving}
                     </span>
                   </li>
                 ))}
@@ -249,8 +268,12 @@ export function MeetingPage({ meetingId }: { meetingId: string }) {
               <h2 className="font-semibold">{t.processing}</h2>
               {latestRecording?.status === "ready" && (
                 <Button
+                  data-testid="processing-start"
                   disabled={
-                    process.isPending || processingActive || jobs.isPending || reviewDirty
+                    process.isPending ||
+                    processingActive ||
+                    jobs.isPending ||
+                    reviewDirty
                   }
                   onClick={() =>
                     void submitProcessing(latestRecording, retryJob?.id)
@@ -291,7 +314,9 @@ export function MeetingPage({ meetingId }: { meetingId: string }) {
               </p>
             )}
             {targetStage === "extract" && (
-              <p className="mt-2 text-sm text-muted-foreground">{t.extractionHelp}</p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {t.extractionHelp}
+              </p>
             )}
             {reviewDirty && (
               <p className="mt-2 text-sm text-muted-foreground">
@@ -446,8 +471,8 @@ export function MeetingPage({ meetingId }: { meetingId: string }) {
             participants={participants.data?.items ?? []}
             recording={
               recordings.data?.items.find(
-                (recording) => recording.id === result.segments[0]?.recording_id
-              ) ?? latestRecording
+                (recording) => recording.id === result.recording_id
+              ) ?? null
             }
           />
         ) : (
@@ -481,7 +506,7 @@ function JobStatus({ job }: { job: ProcessingJobRead }) {
     <div className="mt-4 space-y-2">
       <div className="flex flex-wrap justify-between gap-2 text-sm">
         <span>
-          {label} · {job.stage === "extract" ? t.extracting : job.stage === "diarize" ? t.diarizing : job.stage}
+          {label} · {t[`stage_${job.stage}`]}
         </span>
         {job.progress !== null && (
           <span>{Math.round(job.progress * 100)}%</span>
@@ -499,17 +524,18 @@ function JobStatus({ job }: { job: ProcessingJobRead }) {
         {job.target_stage === "extract"
           ? t.fullPipeline
           : job.target_stage === "diarize"
-          ? t.transcriptionSpeakers
-          : t.transcriptionOnly}
+            ? t.transcriptionSpeakers
+            : t.transcriptionOnly}
       </p>
-      {job.target_stage === "extract" && ["queued", "running"].includes(job.status) && (
-        <p className="text-sm text-muted-foreground">{t.extractionHelp}</p>
-      )}
+      {job.target_stage === "extract" &&
+        ["queued", "running"].includes(job.status) && (
+          <p className="text-sm text-muted-foreground">{t.extractionHelp}</p>
+        )}
       {job.error_code && (
         <p role="alert" className="text-sm text-destructive">
           {job.error_code === "diarization_model_unavailable"
             ? t.diarizationUnavailable
-            : job.error_code}
+            : t.processingFailed}
         </p>
       )}
     </div>

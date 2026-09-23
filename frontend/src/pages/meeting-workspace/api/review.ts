@@ -179,7 +179,10 @@ async function realTranscript(
   if (!review.data)
     throw new Error(apiErrorMessage(review.error, "Could not load review"));
   let diarization: DiarizationRead | undefined;
-  if (latest.completed_stage === "diarize" || latest.completed_stage === "extract") {
+  if (
+    latest.completed_stage === "diarize" ||
+    latest.completed_stage === "extract"
+  ) {
     const result = await getResultDiarization({
       client: backendClient,
       path: {

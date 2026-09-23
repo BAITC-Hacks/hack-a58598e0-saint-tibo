@@ -358,7 +358,11 @@ export function SurfacesPage({
                     <div className="flex flex-wrap justify-between gap-2">
                       <strong className="font-medium">{item.text}</strong>
                       <span className="text-sm text-muted-foreground">
-                        {item.due_date ?? item.due_text ?? t.unknown}
+                        {item.due_date
+                          ? new Intl.DateTimeFormat(locale, {
+                              dateStyle: locale === "kk" ? "short" : "medium",
+                            }).format(new Date(`${item.due_date}T00:00:00`))
+                          : (item.due_text ?? t.unknown)}
                       </span>
                     </div>
                     <div className="mt-1 text-sm text-muted-foreground">
@@ -407,7 +411,7 @@ export function SurfacesPage({
                   </Button>
                   <h2 className="font-medium">
                     {new Intl.DateTimeFormat(locale, {
-                      month: "long",
+                      month: locale === "kk" ? "2-digit" : "long",
                       year: "numeric",
                     }).format(month)}
                   </h2>
@@ -469,7 +473,11 @@ export function SurfacesPage({
                 </div>
               </div>
               <aside className="rounded-xl border bg-card p-4">
-                <h2 className="font-medium">{selectedDay}</h2>
+                <h2 className="font-medium">
+                  {new Intl.DateTimeFormat(locale, {
+                    dateStyle: locale === "kk" ? "short" : "medium",
+                  }).format(new Date(`${selectedDay}T00:00:00`))}
+                </h2>
                 {meetings.data?.items
                   .filter(
                     (meeting) => meeting.started_at.slice(0, 10) === selectedDay
