@@ -1,30 +1,35 @@
-# INFRA-23 Meeting connectors and organizational memory
+# INFRA-23 Connectors and isolated Honcho stack
 
 ## Current Behavior
 
-- `docs/meeting-connectors.md` records Teams/Meet/Zoom integration options
-  and prerequisites; `tools/meeting-capture/` contains local prototypes.
-  See INFRA-22 for actual kernel behavior, not provider marketing.
-- Existing provider research distinguishes Teams policy/guest constraints,
-  Meet Preview/OAuth/enrollment and Zoom RTMS entitlement/host requirements.
-  RTMS is not automatically a visible separate participant.
-- Hosted services that send meeting audio/text outside the self-hosted
-  boundary do not satisfy the case. A documented self-host option alone
-  does not establish vendor access, licensing or our deployment proof.
+- `docs/meeting-connectors.md` maps Teams/Meet/Zoom prerequisites;
+  `tools/meeting-capture/` contains browser prototypes (INFRA-22).
+  Provider policy/enrollment/entitlement and visible participant behavior need
+  explicit confirmation; RTMS alone is not a separate meeting participant.
+- Honcho #96 hardened tools-only stack is integrated at 3005fd3:
+  `tools/honcho/compose.yaml` pins upstream image digest, uses an internal
+  network/loopback API, local LLM/embedding endpoints and disabled telemetry.
+  Cloud development overlay was removed; the old branch hold is superseded.
+- Stack has separate PostgreSQL/Redis/storage/auth and does not run from
+  Saint Tibo's shared Compose or application deployment.
+- `docs/honcho.md` records synthetic ingestion/idempotency/workspace-token
+  scoping and denied outbound probe. This is bounded access smoke, not
+  successful derived cards or question answering.
+- [#96 status](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/96#issuecomment-5793743674)
+  delegates the application authorization bridge to Danil's #103.
 
 ## Known Gaps
 
-- No recorded live bot join/audio proof for #22–25, organizer credentials,
-  complete local queue/storage deployment or approved vendor image/chart
-  availability. Revalidate provider requirements before implementation.
-- Meeting BaaS self-hosted Kubernetes is a research candidate; do not call
-  Compose supported or claim cloud processing is authorized.
-- #96 Honcho organizational memory/Q&A is Ivan-owned branch work, absent
-  from audited dev. It must not be listed as a shipped product capability.
-  The [pre-integration review](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/96#issuecomment-5793481184)
-  requires removing ready-made external OpenAI processing configuration;
-  parent decides integration after current branch review.
-- Keep private meeting URLs, transcripts, credentials and recordings out of
-  research queries, issues and memories. Preserve upstream attribution/licenses.
+- No real external bot join→audio→trusted sink proof for #22–25/#81.
+  Vendor/self-host claims do not prove our supported deployment.
+- Honcho lacks accepted local model derivation and application owner ACL/
+  ingestion bridge; no user-facing Q&A/person-card capability is claimed.
+  #96/#103 remain separate from the first release's required path.
+- Local providers must remain inside the approved processing boundary;
+  preserve upstream attribution and keep private meeting data out of research.
+- Coordinator describes Secretary as an ideas reference using Teams heuristics
+  and cloud services; it is not evidence of local acoustic diarization.
+- `research/` is an archived reference collection, not implemented scope
+  or authority to revive held branches/cloud processing.
 
-Last commit: `a2cfe28c10b214a8189b8c140d9d6b31167bf27a` (audited tree, 2026-09-23; not a live assertion).
+Last commit: `6ed682e734620ec6cc710ad59192350e3f46ed39` (audited core release tree, 2026-09-23; production 7d5b481 LIVE-OK; TEST-01).

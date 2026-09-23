@@ -6,7 +6,8 @@
   Runtime: Bun 1.4.2, Python >=3.13,<3.14, uv 0.12.13.
 - `frontend/`: React 19.3, TanStack Start SPA/Router/Query, TypeScript 7.0.2,
   Vite 8.3, Tailwind, vendored shadcn/Base UI, react-hook-form and Zod 4.
-  RU/KK/EN text belongs in `frontend/messages/{ru,kk,en}.json`.
+  RU/KK/EN dictionaries: `frontend/messages/{ru,kk,en}.json` and canonical
+  meeting-workspace `lib/{ru,kk,en}.ts`; preserve existing localization ownership.
 - `backend/src/saint_tibo/`: FastAPI, SQLAlchemy/Alembic, shared API/auth/
   core/db modules and domain modules. Backend Python packages use uv only.
 - PostgreSQL schemas: Better Auth/Drizzle owns auth, Alembic owns app (DB-01).
@@ -14,6 +15,9 @@
   generator environment `tools/api-client/` intentionally uses TS6.
 - `tools/transcribe/`: separate offline STT environment (MODELS-01).
   `tools/meeting-capture/`: kernel/platform prototypes (INFRA-22).
+- `tools/mock-api/`: explicit Vite DEV synthetic backend (API-03).
+  `tools/honcho/`: isolated hardened stack, not app-active (INFRA-23).
+  `research/`: archived sources/findings, not implementation authority.
 - `scripts/`: manual deployment and offline STT benchmark.
   `input-audio/`: explicitly owner-approved case fixtures, not user uploads.
 - Root commands: `bun run setup` installs/configures local environment;
@@ -31,4 +35,4 @@
 - Unmerged worker features and their dependencies are not this stack.
   Check GitHub refs/claims and NEXT-SESSION before selecting a work area.
 
-Last commit: `a2cfe28c10b214a8189b8c140d9d6b31167bf27a` (audited tree, 2026-09-23; not a live assertion).
+Last commit: `6ed682e734620ec6cc710ad59192350e3f46ed39` (audited core release tree, 2026-09-23; production 7d5b481 LIVE-OK; TEST-01).

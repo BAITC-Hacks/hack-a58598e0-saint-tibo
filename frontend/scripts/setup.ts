@@ -38,7 +38,8 @@ if (!(await environment.exists())) {
   }
 }
 
-let configured = await environment.text();
+// Bun.file created before the write can keep the old empty snapshot.
+let configured = await Bun.file(`${root}.env`).text();
 const additions: string[] = [];
 if (!/^BACKEND_INTERNAL_URL=/m.test(configured)) {
   additions.push("BACKEND_INTERNAL_URL=http://localhost:${BACKEND_PORT}");

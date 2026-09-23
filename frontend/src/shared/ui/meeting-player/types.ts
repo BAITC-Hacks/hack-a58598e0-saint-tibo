@@ -11,6 +11,14 @@ export type TimelineMarker = {
   label: string;
 };
 
+export type SpeakerInterval = {
+  startMs: number;
+  endMs: number;
+  speakerId: string;
+  label: string;
+  color: string;
+};
+
 export type PlaybackStatus =
   | "loading"
   | "ready"
@@ -30,4 +38,5 @@ export type MeetingPlayerHandle = {
   /** Seek without changing whether playback is paused. Safe before metadata arrives. */
   seek: (timeMs: number) => void;
   pause: () => void;
+  play: () => void;
 };

@@ -1,112 +1,44 @@
 # Saint Tibo: verified project state
 
-Snapshot: 2026-09-23. This document separates integrated code, running code,
-and unverified work. Refresh refs and read the linked issues before acting.
-Coordination record: [#94](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/94).
+Snapshot: 2026-09-23. The latest integrated follow-up is [PR #127](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/pull/127): the requested workspace PR #124, its draft/export guards and synchronized handoff. The complete GPU/API/browser proof baseline is main `1adbcb5` from [PR #119](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/pull/119), with equivalent dev tree `420aac5`. The follow-up preserves that processing runtime. Read the release PR and [latest #94 receipt](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/94) for the exact deployed SHA; a push alone never deploys. Production: [saint-tibo.win](https://saint-tibo.win).
 
-## Product and acceptance
+## Delivered
 
-Saint Tibo builds a local meeting secretary: recording → transcript →
-evidence-backed action items and summary → human review → exported minutes.
-The [organizer's case](https://docs.google.com/document/d/1PUDYCg2OC_wfBk4rq5673yc1qsmo8O5_pwxjm483omU/edit)
-requires Russian, Kazakh and mixed speech, diarization, responsibility and
-deadline extraction, and PDF/DOCX export. Audio and meeting text must stay
-within local/self-hosted processing. See [case.md](case.md) for source links
-and the distinctions between written examples and recordings.
+The canonical flow is recording → private GPU transcription → anonymous speaker intervals → private GPU draft actions/summary → explicit review → PDF/DOCX → curator reminders. Ready published teammate work through the release is integrated, including persistent playback, speaker filtering/solo playback, person briefings and the saved meeting overview. [DEMO.md](../DEMO.md) contains the dedicated ordinary demo accounts and walkthrough. PR #124 now retains the separate /workspace journey for result-version selection, evidence editing and historical export. Its button explicitly requests transcription; /meetings offers the full GPU pipeline. Reconnect refresh cannot discard its unsaved review, and export is disabled while dirty/saving/reloading. The obsolete public-MP3 player branch remains deliberately unmerged.
 
-## Verified release scope
+Production deployment completed with healthy services and an ordinary demo login/read-only test1 walkthrough. The user's test1 recording and permanent demo accounts are preserved. The earlier production release `7d5b481` independently passed actual STT, manual reviewed revision and PDF/DOCX downloads; it is retained in history.
 
-Review/save/reload and owner-only PDF/DOCX downloads passed independent real
-HTTPS verification at `97e804e`; #14 is complete. Historical revisions stay
-unchanged, stale edits return 409, invalid evidence returns 422 and foreign
-users cannot download. Russian/Kazakh glyphs and multi-page layout were checked.
-This is a human-reviewed protocol path; automatic extraction is still #69/#13.
+[Final browser receipt](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/94#issuecomment-5794894930): diarized transcripts appear in /player; changing recordings clears stale speaker filters; solo playback follows the selected speaker's intervals; route changes and reload preserve position; participant briefing links to the correct stored meeting. The saved overview and honest empty state were checked on existing data. Console errors/warnings: zero in the bounded walkthrough.
 
-## Baseline observed during this synchronization
+[Reminder receipt](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/15#issuecomment-5794676238): explicit reviewed deadlines in Asia/Almaty produced yesterday/today/tomorrow items; done, reschedule, unreview and reconfirm changed the UI/sidebar automatically 3→2→1→0→1 without reload. #15 and #120 are completed. Speaker mapping edits preserved action ownership and immutable raw diarization; edits clear approval, stale revisions return 409, and unreviewed export is rejected.
 
-| Surface | Observed state | Meaning |
+## Actual processing and speed
+
+The same 206.032-second case-two recording completed the full GPU pipeline in **152.047543 seconds**, compared with **663.806196 seconds** using GPU STT plus CPU Qwen extraction. Observed stages with two-second polling: STT 16.805 seconds, Sherpa 60.888 seconds, GPU extraction 75.548 seconds. The older CPU-only STT job took 149.41095 seconds; comparison with GPU STT is operational, not a kernel benchmark.
+
+The latest full job persisted 45 transcript segments, 7 anonymous clusters, 33 speaker turns and 18 draft actions. The two full-pipeline runs had identical STT text/timestamps, but prompt/output counts differed; the roughly 4.37× overall improvement is not a quality-equivalent benchmark. Seven clusters do not prove seven real people.
+
+Pinned Whisper turbo revision: `0a363e9161cbc7ed1431c9597a8ceaf0c4f78fcf`. Qwen3-8B GGUF revision: `7c41481f57cb95916b40956ab2f0b139b296d974`; CUDA runtime: `llama.cpp-b11120-cuda12.8`; actual prompt SHA: `f1eef875a52fe4291efcf3798e42a8850cc060f3f0046f7502fd90d6af5c329f`.
+
+Both models run on one private L4 through separate forced-command SSH keys. App ownership checks, queue, database and publication remain on the app host. GPU containers have no network/public inference endpoint, read-only filesystems, non-root users and no transcript logs. Actual Qwen telemetry reached 5,872 MiB VRAM and 97% GPU; completion left zero containers/private job directories. Actual STT cancellation/heartbeat expiry and extraction EOF cleanup were exercised. [GPU STT receipt](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/113#issuecomment-5794753625). The single VM is subject to Danil's authorized $25 cap.
+
+## Remaining acceptance
+
+| Area | Verified | Still open |
 | --- | --- | --- |
-| `main` and production | `62b137d` | Released foundation and private meeting recordings |
-| Danil dev runtime | `58ee537` | Independently verified local STT and persisted transcript |
-| Initial `dev` | `f8cf4da` | Documentation/memory changes after the verified runtime |
-| Rich player integration | `a2cfe28` | Ivan integrated protected selection and waveform |
-| Reviewed export runtime | `97e804e` | Independent HTTPS review/export proof passed |
-| Subsequent `dev` | `34062c4` | Browser-generated synthetic walkthrough; explicitly not speech/STT |
+| Automatic protocol #69/#13 | Full HTTPS job, pinned provenance, valid evidence, immutable history, manual revision/CAS | Late corrected ten-day deadline and event-based deadline still missed; output remains unreviewed |
+| RU/KK/mixed #11/#70 | Turbo retained clauses lost by small; short synthetic CER RU 6.28%, KK 5.91%, mixed 12.24% | Long TTS checks: KK 100.86s → 27 segments/7 actions with name/negation/deadline misses; mixed 81.93s → 11 segments/0 actions, missing expected tasks and two synthetic voices merged into one. Quality failed; references are not human validated |
+| Speakers #12 | Actual two-voice flow, stable intervals, corrected participant mapping, separate action owners | Broader multilingual/overlap quality; clusters never identify people automatically |
+| Jobs/capture #10/#102/#106 | Core jobs, cancellation and capture fixes are integrated | Remaining issue-specific recovery/capture acceptance; deployment alone does not close it |
+| Optional provider/Honcho #103/#115/#117 | Published teammate code retained | Provider settings remain empty; unavailable generation button is opt-in, no meeting data sent to external inference |
 
-The deploy system is manual. A Git push does not update any environment.
-Exact final SHAs and verification receipts for the current wave belong in #94.
-Do not infer deployment from this document's presence in a branch.
+A small generic prompt correction did **not** resolve the case-two deadline misses. No example text leaked into output. Latest GPU draft stayed unreviewed, with PDF/DOCX 409; the earlier manual revision was preserved. Do not describe technical pipeline success as semantic acceptance.
 
-## Capability map
+## Coordination
 
-| Capability | Evidence and limit | Owner / issue |
-| --- | --- | --- |
-| Auth, private meetings, uploads, canonical WAV and Range playback | Released; owner isolation and logout verified | Danil, #9 / #82 |
-| Persisted jobs, leases, idempotency and interrupted state | Integrated and exercised live; broader job acceptance remains open | Danil, #10 |
-| Local transcription and stable timed segments | Real RU recording: 274.25 s audio, 71.03 s processing, 76 segments in independent #94 run | Danil, #11 |
-| Kazakh/mixed quality | Synthetic offline CPU smoke found material errors; mixed small INT8 omitted Kazakh clauses | #11 / #70 |
-| Diarization / confirmed people | STT currently publishes `speaker_id=null`; not delivered | Danil, #12 |
-| Automatic action items and summary | Local LLM experiment exists, not integrated or accepted | Danil, #69 / #13 |
-| Human review and versioned export API | Integrated and independently verified at `97e804e`; immutable snapshots and access checks passed | Danil, #13 / #14 |
-| PDF/DOCX renderer | Real downloads, RU/KK and multi-page layout passed; #14 closed | Danil, #14 |
-| Product UI and review adapters | Separate active delivery, mock data must remain explicit | Artem, #83–#85 / #17–#18 |
-| Rich player and protected recording selector | Integrated at `a2cfe28`; backend STT proof does not prove this UI | Ivan, #19 / #95 |
-| Meeting platform capture | Prototypes have separate live acceptance and transport gaps | Ivan, #21–#25; Danil, #81 |
-| Curator reminders | Required second scenario still pending | Danil, #15 |
-
-The successful fresh STT run and the interrupted job were distinct runs.
-Completion of the interrupted retry was not proven by the old #94 receipt.
-The later #14 receipt adds actual downloads and visual checks; it supersedes
-the former renderer-only limitation.
-
-## Agent and branch synchronization
-
-The earlier foundation and integration tasks delivered the baseline.
-The integration task is archived with its receipts preserved. Its attempted
-fresh-task handoff was left queued; this synchronization wave has dedicated
-tasks for integration audit, Serena synchronization,
-review/export implementation and local extraction continuation. One coordinator owns shared merges and the
-Danil deployment slot. Current task IDs and local inventories stay in the
-coordinator's ignored evidence directory rather than product documentation.
-
-The prior memory audit ended without reported pending edits. The separate
-#69 experiment was stopped by the owner; seven untracked source files and
-private server benchmark artifacts are preserved. A dedicated continuation
-worker now owns local extraction. The earlier monitor has confirmed read-only
-operation, no open claims and no unpublished product work.
-One newly assigned worker exclusively owns `.serena/memories` and the
-next-session index. No worker may overwrite another task's changes.
-
-## Language quality evidence
-
-Three locally synthesized short recordings were processed without egress by the
-exact CPU small INT8 pipeline. RU: CER 7.11%, 6.19 s; KK: CER 12.60%, 9.50 s;
-mixed: CER 53.16%, 7.17 s. The mixed output omitted Kazakh instructions. These
-are synthetic smoke measurements, not human-speech accuracy claims; typography
-and number spelling also affect CER. Valid timestamps and successful jobs do
-not establish semantic accuracy. A stronger pinned local CT2 model is being
-evaluated separately; it is not deployed or accepted yet. #11/#70 remain open.
-
-## Holds and limitations
-
-- Do not merge every surviving branch. `ivan/20-transcript-sync` contains
-  an unmerged demo importing the original case MP3 into a public frontend
-  bundle and an old next-session plan; it needs its owner's explicit review.
-- Honcho #96 is outside the minimum. Its hardened isolated stack was integrated
-  at `3005fd3`: local endpoints, internal network and no cloud development
-  overlay. It is not started by the application deployment. App authorization
-  and derived memory remain incomplete (#103); no product capability is claimed.
-- Release fixes #104/#105 address inconsistent duration rounding and private
-  exception logging. Capture start-time correction belongs to Ivan in #106.
-- #69 is experimental: duplicate tasks, responsibility mistakes, missed
-  event/corrected deadlines and invented dates were reported. No model is
-  accepted merely because it returned JSON or ran without external access.
-- GitHub currently permits squash and rebase despite the team's merge-only
-  policy. This account has push/triage, not admin/maintain; the attempted
-  settings update was rejected. An administrator must enforce the settings.
-- Old failed Actions runs are historical. Current delivery intentionally uses
-  build plus targeted live scenarios; no new CI or test suite is introduced.
-- Accessible local sessions and GitHub were audited. Private remote chats on
-  teammates' machines are not visible and are not claimed as audited.
-
-Next actions and ownership are in [integration-plan.md](integration-plan.md).
+- Additive migrations have one head: 0008 → 0007 → 0005. A fresh private production backup preceded the release.
+- Accessible Codex/Devin/Claude sessions and published GitHub refs were reconciled. Private teammate-machine chats are not claimed inspected.
+- One coordinator owns shared merges/deploys; one dedicated task owns Serena. Preserve all teammate history and unmerged experiments.
+- Verification follows Danil's builds plus bounded actual scenarios, without test suites/linters. No new broad audit cycle is required.
+- Clean only each verifier's own temporary accounts/meetings/media; preserve demo and user data.
+- Next work is narrowed in [integration-plan.md](integration-plan.md); latest knowledge is indexed in [.serena/plans/NEXT-SESSION.md](../.serena/plans/NEXT-SESSION.md).

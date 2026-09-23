@@ -1,50 +1,49 @@
-# TEST-01 Verification and evidence
+# TEST-01 Verification and bounded receipts
+
+Latest release: [GPU/speakers/extraction/inbox delta](RELEASE-94-runtime-wave.md).
+The core snapshot below retains its original audit boundary.
 
 ## Current Behavior
 
-- Current wave explicitly forbids repository test/linter suites.
-  Use appropriate builds and short actual runtime/browser scenarios for code;
-  memory-only changes use source/contract/link/scope review.
-- Root `bun run build` builds frontend+backend.
-  `verify` includes tests/checks; `check`, `test` and `test:integration`
-  exist but are not the commands for this wave.
-- No repository CI workflow is present. Deployment is manual and requires
-  a clean commit, ancestry-safe server update and coordinator scheduling.
-- Always distinguish code audit, local build, synthetic behavior, deployed
-  commit and independently verified live behavior.
-- [#94 independent LIVE-OK](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/94#issuecomment-5793355510)
-  covers runtime `58ee537`: 30 HTTPS checks, auth/revocation, meeting/upload/
-  normalized WAV, media Range, job idempotency, result linkage, owner ACL,
-  deletion, fresh RU STT (274250ms → 71.03s → 76 segments).
-- Controlled restart produced interrupted/no result; retry was accepted
-  idempotently, but its completion was not proven after QA logger failure.
-- Renderer produced PDF/DOCX and preserved tested DOCX characters; layout
-  and HTTP/UI downloads were outside that proof.
-- Later [#13/#14 local evidence](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/14#issuecomment-5793605774)
-  reports builds, PostgreSQL+HTTP review/conflict/ACL/export scenarios and
-  visual RU/KK/long-table PDF/DOCX checks. Identity was substituted locally.
-- Independent [review/export LIVE-OK 97e804e](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/14#issuecomment-5793710152):
-  real JWT, anonymous401, foreign-admin404, stale409, invalid/cross-version
-  source/assignee422, r2 save/reload and immutable JSON/decoded PDF/DOCX through
-  metadata/content edits, r3 draft export409, r4 approved current content.
-  First run: 54 passes stopped on QA-only PDF whitespace assertion; targeted
-  normalized continuation: 57/57 passed. Own app/auth cleanup counts 0; no product bug.
-  #14 closed; UI buttons and #13 automatic extraction are separate acceptance.
-- Browser proof covered logout/manual login/root dev-login; it is not a
-  claim that the complete meeting UI or real player integration is finished.
-- Ivan's earlier #95 report gives a2cfe28 deploy/HTTP200 only. Later synthetic
-  player 34062c4/overflow fix ab3d331 still require dev/browser proof.
-- QA removed its own temporary data; historic cleanup is not authorization
-  to delete other users' meetings/jobs/accounts.
+- Current wave uses builds and focused runtime/browser scenarios; no repository
+  test/linter suites. `verify` includes tests/checks and is not build-only.
+  Memory-only changes use source/contract/link/scope review.
+- Distinguish code, build, synthetic behavior, deployed commit and verified
+  live behavior. Manual deployment/shared scheduling belong to the coordinator.
+- [#94 at58ee537](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/94#issuecomment-5793355510):
+  auth/logout/owner ACL, raw upload/WAV/Range, jobs/results, fresh RU STT 76
+  segments; controlled restart interrupted safely. That retry's completion
+  was not proven after a QA logger error; the fresh successful job was separate.
+- [#14 LIVE 97e804e](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/14#issuecomment-5793710152):
+  real JWT,401/404/409/422, immutable historical JSON/decoded PDF/DOCX,
+  draft export rejection and current approved export. First 54 checks hit a
+  verifier whitespace issue; targeted continuation 57/57 passed, own cleanup 0.
+  RU/KK/multipage layout was visually checked; backend #14 is closed.
+- [#104/#105 LIVE b1e33cb](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/104#issuecomment-5793915724):
+  actual 305478-frame WAV →19093ms →local STT 7 segments →review r2→PDF/DOCX;
+  no seeded result. SQL parameter hiding/safe formatter deployed;422 private
+  marker absent from response/scoped logs. Isolated Uvicorn 500 proof is
+  separate; no shared unhandled failure injection. Owned app/auth/media cleanup 0.
+- [Browser PASS 6ed682e](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/94#issuecomment-5794265640):
+  actual case2→54 segments, manual review/approval/edit reset, two-tab 409 retains
+  draft until explicit reload; full reload persists. PDF 50243B/DOCX 37890B,
+  seek 44.9→play 52.1/pause, empty console capture. #107 closed; demo retained.
+- [Production LIVE-OK 7d5b481](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/94#issuecomment-5794357831):
+  one ordinary signup→logout→login→JWT; dev-login404/no cookie, anonymous me401.
+  Real synthetic RU 305478 frames→19093ms→turbo 7 segments, 20.76s with queue/poll.
+  Manual r2→PDF48903B/DOCX37361B; own app/auth rows 0, media absent.
+  Permanent demo untouched; coordinator separately reports production login/UI PASS.
+- WEB-102 preserves local abort499/no-log vs genuine500/log proof;
+  WEB-21 preserves capture metadata and still-pending OS/browser acceptance.
 
 ## Known Gaps
 
-- RU functional success is not manual accuracy measurement for RU/KK/mixed.
-  #11/#70/#89, diarization, extraction and product-level end-to-end acceptance
-  remain separate work. CT2 small synthetic mixed smoke exposed omissions (MODELS-01).
-- Real protected player, browser capture upload and external participant
-  acceptance remain under their own issue owners.
-- Evidence must include exact SHA, scenario, observed result and limitations.
-  Never publish tokens, meeting text/audio or raw private logs as proof.
+- #11/#70/#89 real-language acceptance stays open despite improved turbo
+  synthetic CER. See MODELS-01 for model/runtime and #69/#12 evidence limits.
+- Mobile/locale/capture gates are not inferred from the
+  bounded core browser proof. Refer to exact #94 release receipts.
+- QA deletes only its own disposable data; persistent demo identities/meetings
+  are intentional; user-started test1/Совещание №1 must not be deleted/interrupted.
+- Never publish private logs, tokens or meeting text/audio as evidence.
 
-Last commit: `ab3d3312c3bafb3892bde93539383cea9e48b6de` (audited tree, 2026-09-23; live evidence is separate).
+Last commit: `6ed682e734620ec6cc710ad59192350e3f46ed39` (audited core release tree, 2026-09-23; production 7d5b481 LIVE-OK; TEST-01).

@@ -24,10 +24,11 @@ class TranscriptSegment(BaseModel):
 class ResultVersionRead(ReadModel):
     id: UUID
     recording_id: UUID
+    canvas_version_id: UUID | None
     job_id: UUID
     revision: int
     status: Literal["draft", "reviewed"]
-    completed_stage: Literal["transcribe"]
+    completed_stage: Literal["transcribe", "diarize", "extract"]
     is_incomplete: bool
     language: str
     duration_ms: int
@@ -46,6 +47,73 @@ class SegmentRead(ReadModel):
     start_ms: int
     end_ms: int
     text: str
+
+
+class DiarizationSpeaker(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    speaker_id: UUID
+    label: str = Field(pattern=r"^speaker_[0-9]{2}$")
+
+
+class DiarizationTurn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    speaker_id: UUID
+    start_ms: int = Field(ge=0)
+    end_ms: int = Field(gt=0)
+
+
+class DiarizationProvenance(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    bundle_id: str
+    sherpa_onnx_version: str
+    model_sha256: dict[str, str]
+    requested_num_speakers: int
+    cluster_threshold: float
+
+
+class DiarizationData(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    duration_ms: int = Field(gt=0)
+    speakers: list[DiarizationSpeaker] = Field(min_length=1, max_length=32)
+    turns: list[DiarizationTurn] = Field(min_length=1, max_length=20000)
+    provenance: DiarizationProvenance
+
+    @model_validator(mode="after")
+    def valid_timeline(self) -> "DiarizationData":
+        ids = {speaker.speaker_id for speaker in self.speakers}
+        if len(ids) != len(self.speakers):
+            raise ValueError("Duplicate speaker identifiers")
+        previous_start = -1
+        for turn in self.turns:
+            if (
+                turn.speaker_id not in ids
+                or turn.start_ms < previous_start
+                or not turn.start_ms < turn.end_ms <= self.duration_ms
+            ):
+                raise ValueError("Invalid speaker timeline")
+            previous_start = turn.start_ms
+        return self
+
+
+class DiarizationRead(DiarizationData):
+    result_version_id: UUID
+    recording_id: UUID
+
+
+class ReviewSpeakerAssignment(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    speaker_id: UUID
+    participant_id: UUID | None = None
+    merged_into_speaker_id: UUID | None = None
+
+
+class ReviewSpeakerRead(ReviewSpeakerAssignment):
+    label: str
 
 
 def document_text(value: str) -> str:
@@ -97,14 +165,33 @@ class ReviewSummary(BaseModel):
     source_segment_ids: list[UUID] = Field(default_factory=list, max_length=100)
 
 
+class ExtractionProvenance(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    model_id: str = Field(min_length=1, max_length=120)
+    model_revision: str = Field(pattern=r"^[0-9a-f]{40}$")
+    model_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    runtime_id: str = Field(min_length=1, max_length=120)
+    prompt_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+
+class ExtractionDraft(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    provenance: ExtractionProvenance
+    action_items: list[ReviewActionItem] = Field(max_length=64)
+    summary: ReviewSummary
+
+
 class ReviewUpdate(PartialUpdate):
     model_config = ConfigDict(extra="forbid")
-    NON_NULLABLE = ("reviewed", "action_items", "summary")
+    NON_NULLABLE = ("reviewed", "action_items", "summary", "speakers")
 
     revision: int = Field(ge=1)
     reviewed: bool | None = None
     action_items: list[ReviewActionItem] | None = Field(default=None, max_length=200)
     summary: ReviewSummary | None = None
+    speakers: list[ReviewSpeakerAssignment] | None = Field(default=None, max_length=32)
 
     @model_validator(mode="after")
     def distinct_items(self) -> "ReviewUpdate":
@@ -114,6 +201,10 @@ class ReviewUpdate(PartialUpdate):
             ids = [item.id for item in self.action_items]
             if len(ids) != len(set(ids)):
                 raise ValueError("Action item IDs must be unique within the revision")
+        if self.speakers is not None:
+            ids = [speaker.speaker_id for speaker in self.speakers]
+            if len(ids) != len(set(ids)):
+                raise ValueError("Speaker IDs must be unique within the revision")
         return self
 
 
@@ -131,6 +222,7 @@ class ReviewParticipant(ReadModel):
 
 class ReviewRead(BaseModel):
     source: Literal["persisted"] = "persisted"
+    extraction_provenance: ExtractionProvenance | None = None
     result_version_id: UUID
     recording_id: UUID
     revision: int
@@ -141,3 +233,4 @@ class ReviewRead(BaseModel):
     participants: list[ReviewParticipant]
     action_items: list[ReviewActionItemRead]
     summary: ReviewSummary
+    speakers: list[ReviewSpeakerRead] = Field(default_factory=list)

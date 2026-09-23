@@ -8,8 +8,10 @@
 		-Server
 		X-Content-Type-Options nosniff
 		Referrer-Policy same-origin
+		# TanStack Start streams inline hydration scripts; event-handler attributes stay blocked.
+		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'; connect-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; font-src 'self' data:"
 	}
-	@api path /api/v1/* /health/* /openapi.json /docs /docs/* /redoc
+	@api path /api/v1/* /api/media/* /health/* /openapi.json /docs /docs/* /redoc
 	handle @api {
 		reverse_proxy backend:8000
 	}

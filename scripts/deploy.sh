@@ -52,7 +52,7 @@ if [ -n "$deployed_revision" ]; then
 fi
 # Only tracked source is transferred. No GitHub credentials or workstation .env.
 git archive "$revision" | ssh "$host" "umask 077; mkdir -p '$release'; tar -xf - -C '$release'"
-ssh "$host" sh -s -- "$release" "$revision" "$domain" "$dev_login" "$deployed_revision" <<'REMOTE'
+MSYS_NO_PATHCONV=1 ssh "$host" sh -s -- "$release" "$revision" "$domain" "$dev_login" "$deployed_revision" <<'REMOTE'
 set -eu
 release=$1
 revision=$2
@@ -66,6 +66,7 @@ if [ "${actual_release##*/}" != "$expected_revision" ]; then
 fi
 # Process environment overrides dotenv interpolation, including on production.
 export DEV_LOGIN_ENABLED="$dev_login"
+export MOCK_API_ENABLED="$dev_login"
 cd "$release"
 python3 - "$domain" "$dev_login" <<'PY'
 import os
@@ -87,7 +88,7 @@ if not environment.exists():
         output.write(content)
 content = environment.read_text()
 values = dict(line.split('=', 1) for line in content.splitlines() if '=' in line and not line.startswith('#'))
-updates = {'DEV_LOGIN_ENABLED': dev_login}
+updates = {'DEV_LOGIN_ENABLED': dev_login, 'MOCK_API_ENABLED': dev_login}
 if values.get('APP_DOMAIN', 'localhost') == 'localhost':
     origin = 'https://' + domain
     updates.update({
@@ -111,9 +112,29 @@ local = Path('.env')
 if not local.exists():
     local.symlink_to(environment)
 PY
-docker compose --profile app --profile edge config --quiet
-docker compose --profile app --profile edge run --rm --no-deps gateway caddy validate --config /etc/caddy/Caddyfile
-docker compose --profile app --profile edge up -d --build --wait --wait-timeout 180
+# Persist the explicit GPU opt-in across normal deployments without sourcing
+# secret-bearing dotenv values as shell code.
+remote_stt=$(python3 - <<'PY'
+from pathlib import Path
+values = dict(
+    line.split('=', 1)
+    for line in Path('/opt/saint-tibo/.env').read_text().splitlines()
+    if '=' in line and not line.startswith('#')
+)
+enabled = values.get('STT_REMOTE_ENABLED', 'false').strip().lower()
+if enabled not in {'true', 'false'}:
+    raise SystemExit('STT_REMOTE_ENABLED must be true or false.')
+print(enabled)
+PY
+)
+if [ "$remote_stt" = true ]; then
+  export COMPOSE_FILE=compose.yaml:tools/transcribe/compose.remote.yaml
+fi
+profiles="--profile app --profile edge"
+if [ "$dev_login" = true ]; then profiles="$profiles --profile mock"; fi
+docker compose $profiles config --quiet
+docker compose $profiles run --rm --no-deps gateway caddy validate --config /etc/caddy/Caddyfile
+docker compose $profiles up -d --build --wait --wait-timeout 180
 if [ "$dev_login" = true ]; then
   docker compose --profile app --profile edge --profile dev-tools run --rm --build --no-deps auth-seed-dev
 fi

@@ -25,6 +25,12 @@ Backend повторно проверяет активную сессию и в�
 редиректы backend запрещены. `Set-Cookie`, CORS и hop-by-hop заголовки backend
 не копируются.
 
+При закрытии соединения TanStack Start может выбросить `request.signal.reason`
+ещё до входа в маршрут. Patch закреплённого `h3-v2` в `frontend/patches/`
+возвращает внутренний статус `499` без лога только для этого точного
+`AbortError`; другие ошибки по-прежнему дают и логируют `500`. При обновлении
+TanStack Start/h3 patch следует удалить после повторной проверки отмены.
+
 Каждый ответ имеет `Cache-Control: private, no-store`,
 `X-Content-Type-Options: nosniff` и `Cross-Origin-Resource-Policy: same-origin`.
 Если присутствует `Origin`, он должен совпадать с origin `BETTER_AUTH_URL`;

@@ -15,6 +15,9 @@ class ResultVersion(UUIDPrimaryKey, Timestamps, Base):
     recording_id: Mapped[UUID] = mapped_column(
         ForeignKey("app.recordings.id", ondelete="CASCADE"), index=True
     )
+    canvas_version_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("app.meeting_canvases.id", ondelete="SET NULL")
+    )
     job_id: Mapped[UUID] = mapped_column(
         ForeignKey("app.processing_jobs.id", ondelete="CASCADE"), unique=True
     )
@@ -27,6 +30,8 @@ class ResultVersion(UUIDPrimaryKey, Timestamps, Base):
     model_id: Mapped[str] = mapped_column(String(120))
     model_revision: Mapped[str] = mapped_column(String(40))
     segment_count: Mapped[int]
+    extraction_draft: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    diarization: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
 
 
 class Segment(UUIDPrimaryKey, Base):

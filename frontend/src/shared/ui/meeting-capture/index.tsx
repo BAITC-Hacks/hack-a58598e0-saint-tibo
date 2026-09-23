@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 
 import { createCaptureTarget, saveCapture } from "#/shared/api/capture-upload";
@@ -21,6 +22,7 @@ export const MeetingCapture = () => {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [saved, setSaved] = useState<RecordingRead>();
+  const [savedMeetingId, setSavedMeetingId] = useState<string>();
   const [targetCreated, setTargetCreated] = useState(false);
   const objectUrl = useRef<string | undefined>(undefined);
   const capture = useRef<AudioCapture | null>(null);
@@ -61,10 +63,17 @@ export const MeetingCapture = () => {
     incomplete: m.capture_incomplete({}, t),
     error: m.capture_error({}, t),
   };
+  const savedStatuses = {
+    receiving: m.capture_status_receiving({}, t),
+    ready: m.capture_status_ready({}, t),
+    incomplete: m.capture_status_incomplete({}, t),
+    failed: m.capture_status_failed({}, t),
+  };
   const start = () => {
     target.current = null;
     setTargetCreated(false);
     setSaved(undefined);
+    setSavedMeetingId(undefined);
     setSaveError("");
     capture.current?.dispose();
     capture.current = new AudioCapture((next) => {
@@ -85,7 +94,9 @@ export const MeetingCapture = () => {
     setTargetCreated(false);
     setSaving(false);
     setSaveError("");
+    setTitle("");
     setSaved(undefined);
+    setSavedMeetingId(undefined);
     capture.current?.dispose();
     capture.current = null;
     if (objectUrl.current) URL.revokeObjectURL(objectUrl.current);
@@ -112,14 +123,24 @@ export const MeetingCapture = () => {
         target.current,
         controller.signal
       );
-      if (!controller.signal.aborted) setSaved(recording);
+      if (!controller.signal.aborted) {
+        setSaved(recording);
+        setSavedMeetingId(target.current.meetingId);
+      }
     } catch (error) {
-      if (!controller.signal.aborted)
+      if (!controller.signal.aborted) {
+        const status =
+          typeof error === "object" && error !== null && "status" in error
+            ? Number(error.status)
+            : 0;
         setSaveError(
-          error instanceof Error && error.message
-            ? error.message
-            : m.capture_save_error({}, t)
+          status === 401 || status === 403
+            ? m.capture_save_auth_error({}, t)
+            : [409, 413, 415, 422].includes(status)
+              ? m.capture_save_rejected_error({}, t)
+              : m.capture_save_error({}, t)
         );
+      }
     } finally {
       if (saveAbort.current === controller) {
         saveAbort.current = null;
@@ -139,6 +160,21 @@ export const MeetingCapture = () => {
       <p className="text-sm text-muted-foreground">
         {m.capture_description({}, t)}
       </p>
+      <div className="space-y-3 rounded-lg border bg-card p-4 text-sm">
+        <h2 className="font-semibold">{m.capture_guide_title({}, t)}</h2>
+        <p>{m.capture_guide_intro({}, t)}</p>
+        <ul className="list-disc space-y-1 pl-5">
+          <li>{m.capture_guide_meet({}, t)}</li>
+          <li>{m.capture_guide_teams({}, t)}</li>
+          <li>{m.capture_guide_zoom({}, t)}</li>
+        </ul>
+        <ol className="list-decimal space-y-1 pl-5">
+          <li>{m.capture_guide_step_one({}, t)}</li>
+          <li>{m.capture_guide_step_two({}, t)}</li>
+          <li>{m.capture_guide_step_three({}, t)}</li>
+        </ol>
+        <p className="text-muted-foreground">{m.capture_guide_limit({}, t)}</p>
+      </div>
       <p className="rounded-lg border p-3 text-sm">
         {m.capture_transport_disconnected({}, t)}
       </p>
@@ -280,7 +316,7 @@ export const MeetingCapture = () => {
             <Button disabled={saving} onClick={() => void save()}>
               {saving
                 ? m.capture_saving({}, t)
-                : targetCreated
+                : targetCreated || saveError
                   ? m.capture_save_retry({}, t)
                   : m.capture_save({}, t)}
             </Button>
@@ -290,10 +326,26 @@ export const MeetingCapture = () => {
               {saveError}
             </p>
           )}
+          {saveError && targetCreated && (
+            <p className="text-sm text-muted-foreground">
+              {m.capture_save_resume({}, t)}
+            </p>
+          )}
           {saved && (
-            <output className="block text-sm">
-              {m.capture_saved({ status: saved.status }, t)}
-            </output>
+            <div className="space-y-2 text-sm">
+              <output className="block">
+                {m.capture_saved({ status: savedStatuses[saved.status] }, t)}
+              </output>
+              {savedMeetingId && (
+                <Link
+                  className="inline-block underline"
+                  to="/meetings/$meetingId"
+                  params={{ meetingId: savedMeetingId }}
+                >
+                  {m.capture_guide_open_meeting({}, t)}
+                </Link>
+              )}
+            </div>
           )}
           {saved?.media_url && (
             <MeetingPlayer

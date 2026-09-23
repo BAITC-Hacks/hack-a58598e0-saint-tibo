@@ -4,12 +4,13 @@ name: ${COMPOSE_PROJECT_NAME:-saint_tibo}
 x-backend: &backend
   image: saint-tibo-backend:local
   build: ./backend
-  environment:
+  environment: &backend_environment
     BACKEND_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-saint_tibo}:${POSTGRES_PASSWORD:-saint_tibo}@postgres:5432/${POSTGRES_DB:-saint_tibo}
     BACKEND_AUTH_JWKS_URL: ${BACKEND_DOCKER_AUTH_JWKS_URL:-http://frontend:3000/api/auth/jwks}
     BACKEND_AUTH_ISSUER: ${BACKEND_AUTH_ISSUER:-http://localhost:3000}
     BACKEND_RECORDING_STORAGE_PATH: /var/lib/saint-tibo/recordings
     BACKEND_STT_MODEL_PATH: ${BACKEND_STT_MODEL_PATH:-/models/small}
+    BACKEND_DIARIZATION_MODEL_PATH: ${BACKEND_DIARIZATION_MODEL_PATH:-/models/diarization-v1}
     BACKEND_RECORDING_MAX_BYTES: ${BACKEND_RECORDING_MAX_BYTES:-536870912}
     BACKEND_RECORDING_CHUNK_MAX_BYTES: ${BACKEND_RECORDING_CHUNK_MAX_BYTES:-8388608}
     BACKEND_RECORDING_MAX_DURATION_MS: ${BACKEND_RECORDING_MAX_DURATION_MS:-14400000}
@@ -19,13 +20,16 @@ x-backend: &backend
     BACKEND_RECORDING_STALE_SECONDS: ${BACKEND_RECORDING_STALE_SECONDS:-900}
     BACKEND_AUTH_AUDIENCE: ${BACKEND_AUTH_AUDIENCE:-saint_tibo-api}
     BACKEND_CORS_ORIGINS: '${BACKEND_CORS_ORIGINS:-["http://localhost:3000"]}'
+    BACKEND_HONCHO_URL: ${BACKEND_HONCHO_URL:-}
+    BACKEND_HONCHO_JWT_SECRET: ${BACKEND_HONCHO_JWT_SECRET:-}
   extra_hosts:
     - host.docker.internal:host-gateway
 
 services:
   mock-api:
     profiles: [mock]
-    image: python:3.13-alpine
+    image: saint-tibo-backend:local
+    build: ./backend
     working_dir: /mock
     command: ["python", "server.py"]
     environment:
@@ -35,8 +39,6 @@ services:
       MOCK_FRONTEND_ORIGIN: http://localhost:${FRONTEND_PORT:-3000}
     volumes:
       - ./tools/mock-api:/mock:ro
-    ports:
-      - "127.0.0.1:${MOCK_API_PORT:-8015}:8015"
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8015/health/ready', timeout=2)"]
       interval: 5s
@@ -72,6 +74,11 @@ services:
   backend:
     profiles: [app]
     <<: *backend
+    environment:
+      <<: *backend_environment
+      BACKEND_EXTRACTION_API_BASE_URL: ${BACKEND_EXTRACTION_API_BASE_URL:-}
+      BACKEND_EXTRACTION_API_MODEL: ${BACKEND_EXTRACTION_API_MODEL:-}
+      BACKEND_EXTRACTION_API_KEY: ${BACKEND_EXTRACTION_API_KEY:-}
     volumes:
       - recordings_data:/var/lib/saint-tibo/recordings
     restart: unless-stopped
@@ -99,9 +106,12 @@ services:
     volumes:
       - recordings_data:/var/lib/saint-tibo/recordings:ro
       - ${STT_MODELS_PATH:-./models}:/models:ro
+      - ${EXTRACT_RUNTIME_PATH:-./models/llama-b11120}:/llama:ro
+      - ${EXTRACT_MODELS_PATH:-./models/qwen3-8b}:/extract-model:ro
     networks: [processing]
     cpus: 4
-    mem_limit: 6g
+    # Measured Qwen3-8B RSS is about 5.93 GiB; leave room for the worker and CLI.
+    mem_limit: 8g
     extra_hosts: []
     depends_on:
       migrate:
@@ -136,6 +146,8 @@ services:
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?run `bun run setup` first}
       BETTER_AUTH_JWT_AUDIENCE: ${BETTER_AUTH_JWT_AUDIENCE:-saint_tibo-api}
       DEV_LOGIN_ENABLED: ${DEV_LOGIN_ENABLED:-false}
+      MOCK_API_ENABLED: ${MOCK_API_ENABLED:-false}
+      MOCK_API_INTERNAL_URL: http://mock-api:8015
     ports:
       - "127.0.0.1:${FRONTEND_PORT:-3000}:3000"
     depends_on:

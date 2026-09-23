@@ -11,13 +11,15 @@
   are excluded. Repeated reveal requests carry a sequence number.
 - Follow toggle respects wheel/touch/keyboard/native scrolling; automatic
   scrolling preserves keyboard focus.
-- Parent keys hook owner by `recordingId:resultVersionId`; load the full
-  selected version's segment list before using this client hook.
-- `/transcript-demo` is explicitly public and synthetic: generated
-  32-second WAV/eight markers, no meeting API or private uploaded data.
-  The local player can also provide validated STT JSON (WEB-19).
-- Integrated #98 adds a separate `/player` synthetic walkthrough with
-  generated tones and explicitly fictional dialogue; this is not STT output.
+- `/player` now requests the latest completed result version for the selected
+  protected recording via generated `listResultVersions`, then fetches every
+  `SegmentRead` page via `listTranscriptSegments` before rendering the panel.
+  Query keys include meeting/recording/version; source switching clears stale
+  text. Server markers and the transcript use those same segments. No result,
+  empty result, loading and errors are distinct states.
+- #110 removes synthetic tones, local import and the public demo route. `/player` uses protected server recordings only.
+- Canonical meeting-workspace ReviewPanel now also uses this hook; action-source
+  clicks seek the same recording and reveal the source transcript segment.
 - Integration details: `docs/transcript-sync.md`; implementation `16cd152`.
   Historical browser evidence is recorded in the doc and
   [#20](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/20#issuecomment-5793184614).
@@ -25,11 +27,16 @@
 
 ## Known Gaps
 
-- No automatic paginated result fetch is implemented inside the hook.
-- The player now selects protected server media, but server result fetching
-  and editor/action-source integration remain #19/#20 and Artem's UI work.
-  Local markers and the synthetic demo do not prove those scenarios.
-- #12 speaker identity and #13 reviewed source data remain backend
-  dependencies; don't treat local demo fields as persisted product data.
+- The sync hook remains a UI primitive; pagination lives in the player page.
+- No action items/speakers are inferred from text. Manual reviewed source data
+  is persisted. #12 backend is in newer dev, but absent deployed/pinned core 6ed682e.
+- Branch `ivan/20-real-transcript` was built and deployed on `dev-ivan` as
+  `cc131fd`. Browser `/player` showed the protected selector and preserved #98
+  sample. The dev user had no playable server recordings, and the worker's
+  `/models` directory was empty, so a completed server result and its seek/follow
+  behavior were not verified there. This is historical Ivan proof scope.
+- [Canonical browser receipt 6ed682e](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/94#issuecomment-5794265640)
+  confirms real case2/54 segments, seek 44.9→play 52.1 and persisted review.
+  This supersedes the earlier no-recordings limitation for that bounded flow.
 
-Last commit: `ab3d3312c3bafb3892bde93539383cea9e48b6de` (audited tree, 2026-09-23; live evidence is separate).
+Last commit: `6ed682e734620ec6cc710ad59192350e3f46ed39` (audited core release tree, 2026-09-23; production 7d5b481 LIVE-OK; TEST-01).

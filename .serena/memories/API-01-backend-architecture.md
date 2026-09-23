@@ -21,6 +21,10 @@
 - PATCH conventions use `PartialUpdate` with nonnullable-field guards.
   Resource ownership stays server-side; foreign resources return 404,
   including when the caller is an admin.
+- #105 configures SQLAlchemy hide_parameters and safe exception formatting:
+  class/frame locations/request correlation stay; messages, SQL, locals and
+  source text are omitted. Uvicorn propagates through the same formatter.
+  Generic 500 and filtered validation details remain the HTTP contract.
 
 ## Known Gaps
 
@@ -30,4 +34,4 @@
 - Auth is database-backed on each request; no copied app user table or
   independent five-minute logout window exists (AUTH-01, DB-01).
 
-Last commit: `ab3d3312c3bafb3892bde93539383cea9e48b6de` (audited tree, 2026-09-23; live evidence is separate).
+Last commit: `6ed682e734620ec6cc710ad59192350e3f46ed39` (audited core release tree, 2026-09-23; production 7d5b481 LIVE-OK; TEST-01).

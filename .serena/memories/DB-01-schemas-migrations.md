@@ -13,7 +13,7 @@
   participants, recordings and recording_chunks (recording+sequence key).
 - `0003_processing_jobs` adds durable jobs with idempotency/lease fields.
   `0004_transcript_versions` adds result_versions and segments, plus
-  `target_stage` on jobs. Those two revisions are in dev, not main `62b137d`.
+  `target_stage` on jobs. Pinned core release 6ed682e ends at 0005.
 - ResultVersion stores one job link, revision/status/completed stage,
   language/duration/model provenance/segment count. Segment stores recording
   and result IDs, nullable speaker UUID, text and constrained interval.
@@ -33,10 +33,13 @@
 ## Known Gaps
 
 - No Speaker or normalized ActionItem table exists. Manual action items are
-  in review JSONB; #15 cross-meeting reminders may need a later projection.
+  in review JSONB; #15 backend 0972e69 is ready, stateless/no migration; UI pending.
 - Initial review revision=1 is synthesized while current and not archived;
   saved history begins at revision=2. Reprocessing creates another version.
+- Newer dev 269fcbb includes #12 migration 0007 and #69 extraction 0008→0007
+  via 63a34f8; neither is deployed or part of core 6ed682e. Do not import old
+  #69 feature 0006 or treat the newer dev migrations as live schema.
 - Never infer server migration version from a Git branch tip. Read the
   coordinator's deployment and runtime evidence separately (NEXT-SESSION).
 
-Last commit: `ab3d3312c3bafb3892bde93539383cea9e48b6de` (audited tree, 2026-09-23; live evidence is separate).
+Last commit: `6ed682e734620ec6cc710ad59192350e3f46ed39` (audited core release tree, 2026-09-23; production 7d5b481 LIVE-OK; TEST-01).

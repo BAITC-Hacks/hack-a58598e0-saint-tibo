@@ -37,6 +37,14 @@ export const en: Record<keyof typeof ru, string> = {
   notice:
     "Inform participants about recording and AI processing. This system does not collect consent confirmations.",
   summary: "Summary",
+  overviewTitle: "Meeting overview",
+  copyOverview: "Copy overview",
+  overviewCopied: "Overview copied",
+  overviewCopyFailed: "Could not copy overview",
+  overviewDraft: "Draft — needs review",
+  overviewConfirmed: "Confirmed minutes",
+  overviewEmpty:
+    "No summary yet. Generate a draft from the transcript or fill in the result manually.",
   transcript: "Transcript",
   actions: "Action items",
   speakers: "Speakers",
@@ -44,10 +52,18 @@ export const en: Record<keyof typeof ru, string> = {
   deadline: "Deadline",
   status: "Status",
   source: "Source",
+  chooseSource: "Link transcript segment",
   unknown: "Not specified",
   unsaved: "Unsaved changes",
   saved: "Saved",
   saveError: "Could not save. Your changes remain in the form.",
+  extractDraft: "Generate draft",
+  extractingDraft: "Generating draft…",
+  extractDisclosure:
+    "Transcript text is temporarily sent to an external API. Processing will move to local models later.",
+  extractError:
+    "Could not generate the draft. Check the API configuration or try again later.",
+  extractRefresh: "Refresh result",
   pdf: "Download PDF",
   docx: "Download DOCX",
   exportUnavailable:
@@ -78,7 +94,16 @@ export const en: Record<keyof typeof ru, string> = {
   running: "Running",
   failed: "Failed",
   succeeded: "Completed",
-  retryUpload: "Choose the file again",
+  retryUpload: "Retry this file",
+  uploadFailed: "Could not upload the file. It is kept for retry.",
+  processingFailed: "Could not process the recording. Please retry.",
+  createFailed: "Could not create the meeting. Your form is preserved.",
+  invalidDate: "Check the date, time, and time zone.",
+  stage_decode: "Preparing audio",
+  stage_transcribe: "Transcribing speech",
+  stage_diarize: "Identifying speakers",
+  stage_extract: "Preparing result",
+  stage_complete: "Complete",
   meetingInfo: "Meeting information",
   recordingInfo: "Recording source",
   review: "Review result",
@@ -103,4 +128,36 @@ export const en: Record<keyof typeof ru, string> = {
   receiving: "Receiving file",
   incomplete: "Incomplete recording",
   unavailableStatus: "Unknown status",
+  processingSaveFirst:
+    "Save your result edits before starting another processing job.",
+  fullPipeline: "Transcript, speakers and draft minutes",
+  extracting: "Creating draft minutes",
+  extractionHelp:
+    "The full pipeline runs locally. Creating the draft on CPU currently takes about 15 minutes and may take longer. The result appears after processing finishes and requires manual review and confirmation.",
+  processingMode: "Processing mode",
+  transcriptionOnly: "Transcript only",
+  transcriptionSpeakers: "Transcript and speakers",
+  diarizationHelp:
+    "The system will separate voices in the recording. After processing, listen to the samples and identify participants manually.",
+  diarizing: "Identifying speakers",
+  diarizationUnavailable:
+    "The voice separation model is not available yet. You can choose “Transcript only”.",
+  speakerHelp:
+    "Choose a person for a detected voice: their name immediately appears on the timeline and every turn by that voice. Click Save above to keep the change. Action item owners are assigned separately.",
+  voiceSegments: "turns",
+  showVoiceRows: "Show turns",
+  voiceAssignmentPending: "Unsaved — click Save above",
+  speakerSample: "Go to sample",
+  listenSpeaker: "Listen",
+  stopSolo: "All voices",
+  speakerMerged: "Merged into",
+  noSpeakers: "No distinct voices were found in this recording.",
+  speakersUnavailable: "Run “Transcript and speakers” to identify voices.",
+  reviewConflict:
+    "Another session saved a newer revision. Your edits remain in the form.",
+  reviewReload: "Load server revision",
+  reviewReloadHelp:
+    "This replaces unsaved fields. Keep a separate copy of any edits you need before loading.",
+  reviewReloadError:
+    "Could not load the revision. Your edits remain in the form.",
 };

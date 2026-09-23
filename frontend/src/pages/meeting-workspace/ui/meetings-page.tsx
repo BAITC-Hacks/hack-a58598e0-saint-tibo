@@ -15,7 +15,7 @@ export function MeetingsPage() {
   const locale = useLocale();
   const [search, setSearch] = useState("");
   const [offset, setOffset] = useState(0);
-  const meetings = useQuery(meetingsQuery(offset));
+  const meetings = useQuery(meetingsQuery(0));
   const visible = meetings.data?.items.filter((meeting) =>
     meeting.title.toLocaleLowerCase().includes(search.toLocaleLowerCase())
   );
@@ -57,7 +57,10 @@ export function MeetingsPage() {
           type="search"
           value={search}
           placeholder={t.searchMeetings}
-          onChange={(event) => setSearch(event.target.value)}
+          onChange={(event) => {
+            setSearch(event.target.value);
+            setOffset(0);
+          }}
         />
       </label>
 
@@ -81,8 +84,9 @@ export function MeetingsPage() {
         </div>
       ) : visible?.length ? (
         <div className="overflow-hidden rounded-xl border bg-card">
-          {visible.map((meeting) => (
+          {visible.slice(offset, offset + 10).map((meeting) => (
             <Link
+              data-testid={`meeting-${meeting.id}`}
               className="flex flex-wrap items-center justify-between gap-3 border-b p-4 transition-colors last:border-0 hover:bg-muted/40 focus-visible:outline-2 focus-visible:outline-ring"
               key={meeting.id}
               to="/meetings/$meetingId"
@@ -94,7 +98,7 @@ export function MeetingsPage() {
                   <CalendarDays className="size-4" aria-hidden="true" />
                   <time dateTime={meeting.started_at}>
                     {new Intl.DateTimeFormat(locale, {
-                      dateStyle: "medium",
+                      dateStyle: locale === "kk" ? "short" : "medium",
                       timeStyle: "short",
                       timeZone: meeting.timezone,
                     }).format(new Date(meeting.started_at))}
@@ -123,19 +127,19 @@ export function MeetingsPage() {
         </div>
       )}
 
-      {!!meetings.data && meetings.data.total > 100 && (
+      {!!visible && visible.length > 10 && (
         <div className="flex justify-end gap-2">
           <Button
             variant="outline"
             disabled={offset === 0}
-            onClick={() => setOffset(Math.max(0, offset - 100))}
+            onClick={() => setOffset(Math.max(0, offset - 10))}
           >
             ←
           </Button>
           <Button
             variant="outline"
-            disabled={offset + 100 >= meetings.data.total}
-            onClick={() => setOffset(offset + 100)}
+            disabled={offset + 10 >= visible.length}
+            onClick={() => setOffset(offset + 10)}
           >
             →
           </Button>

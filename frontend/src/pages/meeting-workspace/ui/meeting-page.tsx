@@ -1,9 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { AlertCircle, FileAudio, Plus, RefreshCw } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type { ProcessingJobRead, RecordingRead } from "#/shared/api";
+import { isMockApi } from "#/shared/api";
 import { useLocale } from "#/shared/lib/locales";
 import { Button } from "#/shared/ui/shadcn/button";
 import { Input } from "#/shared/ui/shadcn/input";
@@ -17,8 +18,10 @@ import {
   startProcessing,
   uploadFile,
 } from "../api/meetings";
+import type { ProcessingTarget } from "../api/meetings";
 import { reviewQuery } from "../api/review";
 import { useCopy } from "../lib/copy";
+import { CanvasPanel } from "./canvas-panel";
 import { ReviewPanel } from "./review-panel";
 
 export function MeetingPage({ meetingId }: { meetingId: string }) {
@@ -34,8 +37,13 @@ export function MeetingPage({ meetingId }: { meetingId: string }) {
   const [participantError, setParticipantError] = useState("");
   const [uploadError, setUploadError] = useState("");
   const [processingError, setProcessingError] = useState("");
+  const [targetStage, setTargetStage] =
+    useState<ProcessingTarget>("transcribe");
+  const [reviewDirty, setReviewDirty] = useState(false);
+  const loadedJob = useRef<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadStep, setUploadStep] = useState(0);
+  const [failedFile, setFailedFile] = useState<File | null>(null);
   const add = useMutation({
     mutationFn: (body: { display_name: string; role: string | null }) =>
       addParticipant(meetingId, body),
@@ -47,7 +55,7 @@ export function MeetingPage({ meetingId }: { meetingId: string }) {
     }: {
       recordingId: string;
       retryOfJobId?: string;
-    }) => startProcessing(meetingId, recordingId, retryOfJobId),
+    }) => startProcessing(meetingId, recordingId, retryOfJobId, targetStage),
   });
   const latestRecording = recordings.data?.items[0] ?? null;
   const jobs = useQuery({
@@ -55,12 +63,29 @@ export function MeetingPage({ meetingId }: { meetingId: string }) {
     enabled: !!latestRecording,
   });
   const latestJob = jobs.data?.items[0] ?? null;
+  const retryJob =
+    latestJob &&
+    ["failed", "interrupted"].includes(latestJob.status) &&
+    latestJob.target_stage === targetStage
+      ? latestJob
+      : null;
+  const processingActive =
+    jobs.data?.items.some(
+      (job) => job.status === "queued" || job.status === "running"
+    ) ?? false;
   const result = review.data;
   const refetchReview = review.refetch;
 
   useEffect(() => {
-    if (latestJob?.status === "succeeded") void refetchReview();
-  }, [latestJob?.status, refetchReview]);
+    if (
+      latestJob?.status === "succeeded" &&
+      !reviewDirty &&
+      loadedJob.current !== latestJob.id
+    ) {
+      loadedJob.current = latestJob.id;
+      void refetchReview();
+    }
+  }, [latestJob?.id, latestJob?.status, refetchReview, reviewDirty]);
 
   if (meeting.isPending)
     return <output className="block rounded-xl border p-8">{t.loading}</output>;
@@ -81,13 +106,15 @@ export function MeetingPage({ meetingId }: { meetingId: string }) {
   async function submitUpload(file: File | null) {
     if (!file) return;
     setUploadError("");
+    setFailedFile(null);
     setUploading(true);
     setUploadStep(0);
     try {
       await uploadFile(meetingId, file, setUploadStep);
       await client.invalidateQueries({ queryKey: ["recordings", meetingId] });
-    } catch (reason) {
-      setUploadError(reason instanceof Error ? reason.message : t.error);
+    } catch {
+      setFailedFile(file);
+      setUploadError(t.uploadFailed);
     } finally {
       setUploading(false);
     }
@@ -103,8 +130,8 @@ export function MeetingPage({ meetingId }: { meetingId: string }) {
       await client.invalidateQueries({
         queryKey: ["jobs", meetingId, recording.id],
       });
-    } catch (reason) {
-      setProcessingError(reason instanceof Error ? reason.message : t.error);
+    } catch {
+      setProcessingError(t.processingFailed);
     }
   }
 
@@ -123,7 +150,7 @@ export function MeetingPage({ meetingId }: { meetingId: string }) {
         <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
           <time dateTime={meeting.data.started_at}>
             {new Intl.DateTimeFormat(locale, {
-              dateStyle: "medium",
+              dateStyle: locale === "kk" ? "short" : "medium",
               timeStyle: "short",
               timeZone: meeting.data.timezone,
             }).format(new Date(meeting.data.started_at))}
@@ -132,7 +159,7 @@ export function MeetingPage({ meetingId }: { meetingId: string }) {
         </div>
       </header>
 
-      {import.meta.env.DEV && import.meta.env.VITE_API_MODE === "mock" && (
+      {isMockApi() && (
         <p className="rounded-lg border border-amber-400/50 bg-amber-50 p-3 text-sm text-amber-950 dark:bg-amber-950/30 dark:text-amber-100">
           {t.sample}
         </p>
@@ -154,6 +181,7 @@ export function MeetingPage({ meetingId }: { meetingId: string }) {
               </span>
               <input
                 className="sr-only"
+                data-testid="recording-file"
                 type="file"
                 accept="audio/*,video/mp4,.flac,.ogg,.webm,.m4a"
                 disabled={uploading}
@@ -170,9 +198,20 @@ export function MeetingPage({ meetingId }: { meetingId: string }) {
               </output>
             )}
             {uploadError && (
-              <p role="alert" className="mt-2 text-sm text-destructive">
-                {uploadError} · {t.retryUpload}
-              </p>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <p role="alert" className="text-sm text-destructive">
+                  {uploadError}
+                </p>
+                {failedFile && (
+                  <Button
+                    variant="outline"
+                    disabled={uploading}
+                    onClick={() => void submitUpload(failedFile)}
+                  >
+                    {t.retryUpload}
+                  </Button>
+                )}
+              </div>
             )}
             {recordings.isPending ? (
               <output className="mt-4 block text-sm text-muted-foreground">
@@ -193,6 +232,7 @@ export function MeetingPage({ meetingId }: { meetingId: string }) {
                 {recordings.data.items.map((recording) => (
                   <li
                     key={recording.id}
+                    data-testid={`recording-${recording.id}`}
                     className="flex flex-wrap items-center justify-between gap-2 p-3 text-sm"
                   >
                     <span className="min-w-0 truncate">
@@ -209,7 +249,9 @@ export function MeetingPage({ meetingId }: { meetingId: string }) {
                         ? t.recordingReady
                         : recording.status === "failed"
                           ? t.failed
-                          : recording.status}
+                          : recording.status === "incomplete"
+                            ? t.incomplete
+                            : t.receiving}
                     </span>
                   </li>
                 ))}
@@ -224,24 +266,63 @@ export function MeetingPage({ meetingId }: { meetingId: string }) {
           <section className="rounded-xl border bg-card p-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h2 className="font-semibold">{t.processing}</h2>
-              {latestRecording?.status === "ready" &&
-                (!latestJob ||
-                  ["failed", "interrupted"].includes(latestJob.status)) && (
-                  <Button
-                    disabled={process.isPending}
-                    onClick={() =>
-                      void submitProcessing(latestRecording, latestJob?.id)
-                    }
-                  >
-                    {latestJob ? (
-                      <RefreshCw aria-hidden="true" />
-                    ) : (
-                      <Plus aria-hidden="true" />
-                    )}
-                    {latestJob ? t.retryProcessing : t.startProcessing}
-                  </Button>
-                )}
+              {latestRecording?.status === "ready" && (
+                <Button
+                  data-testid="processing-start"
+                  disabled={
+                    process.isPending ||
+                    processingActive ||
+                    jobs.isPending ||
+                    reviewDirty
+                  }
+                  onClick={() =>
+                    void submitProcessing(latestRecording, retryJob?.id)
+                  }
+                >
+                  {retryJob ? (
+                    <RefreshCw aria-hidden="true" />
+                  ) : (
+                    <Plus aria-hidden="true" />
+                  )}
+                  {retryJob ? t.retryProcessing : t.startProcessing}
+                </Button>
+              )}
             </div>
+            <label className="mt-4 block space-y-1 text-sm">
+              <span>{t.processingMode}</span>
+              <select
+                className="h-9 w-full rounded-md border border-input bg-background px-2"
+                value={targetStage}
+                disabled={process.isPending || processingActive}
+                onChange={(event) => {
+                  if (
+                    event.target.value === "transcribe" ||
+                    event.target.value === "diarize" ||
+                    event.target.value === "extract"
+                  )
+                    setTargetStage(event.target.value);
+                }}
+              >
+                <option value="transcribe">{t.transcriptionOnly}</option>
+                <option value="diarize">{t.transcriptionSpeakers}</option>
+                <option value="extract">{t.fullPipeline}</option>
+              </select>
+            </label>
+            {targetStage === "diarize" && (
+              <p className="mt-2 text-sm text-muted-foreground">
+                {t.diarizationHelp}
+              </p>
+            )}
+            {targetStage === "extract" && (
+              <p className="mt-2 text-sm text-muted-foreground">
+                {t.extractionHelp}
+              </p>
+            )}
+            {reviewDirty && (
+              <p className="mt-2 text-sm text-muted-foreground">
+                {t.processingSaveFirst}
+              </p>
+            )}
             {processingError && (
               <p role="alert" className="mt-3 text-sm text-destructive">
                 {processingError}
@@ -353,44 +434,60 @@ export function MeetingPage({ meetingId }: { meetingId: string }) {
         </aside>
       </div>
 
-      {review.isPending ? (
-        <output className="block rounded-xl border p-8">{t.loading}</output>
-      ) : review.isError ? (
-        <div
-          role="alert"
-          className="rounded-xl border border-destructive/40 p-6"
-        >
-          <p>{t.error}</p>
-          <Button
-            className="mt-3"
-            variant="outline"
-            onClick={() => void review.refetch()}
-          >
-            {t.retry}
-          </Button>
-        </div>
-      ) : result ? (
-        <ReviewPanel
-          key={`${result.result_version_id}:${result.revision}`}
+      <div className="grid items-start gap-5 lg:grid-cols-[minmax(280px,1fr)_minmax(0,2fr)]">
+        <CanvasPanel
           meetingId={meetingId}
-          review={result}
-          participants={participants.data?.items ?? []}
-          recording={
-            recordings.data?.items.find(
-              (recording) => recording.id === result.segments[0]?.recording_id
-            ) ?? latestRecording
+          result={
+            result?.source === "real" && result.recording_id
+              ? {
+                  recordingId: result.recording_id,
+                  versionId: result.result_version_id,
+                }
+              : undefined
           }
         />
-      ) : (
-        <div className="rounded-xl border border-dashed p-8">
-          <AlertCircle
-            className="mb-2 size-6 text-muted-foreground"
-            aria-hidden="true"
+        {review.isPending ? (
+          <output className="block rounded-xl border p-8">{t.loading}</output>
+        ) : review.isError ? (
+          <div
+            role="alert"
+            className="rounded-xl border border-destructive/40 p-6"
+          >
+            <p>{t.error}</p>
+            <Button
+              className="mt-3"
+              variant="outline"
+              onClick={() => void review.refetch()}
+            >
+              {t.retry}
+            </Button>
+          </div>
+        ) : result ? (
+          <ReviewPanel
+            key={`${result.result_version_id}:${result.revision}`}
+            meetingId={meetingId}
+            review={result}
+            onDirtyChange={setReviewDirty}
+            participants={participants.data?.items ?? []}
+            recording={
+              recordings.data?.items.find(
+                (recording) => recording.id === result.recording_id
+              ) ?? null
+            }
           />
-          <h2 className="font-medium">{t.noResult}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">{t.noResultHelp}</p>
-        </div>
-      )}
+        ) : (
+          <div className="rounded-xl border border-dashed p-8">
+            <AlertCircle
+              className="mb-2 size-6 text-muted-foreground"
+              aria-hidden="true"
+            />
+            <h2 className="font-medium">{t.noResult}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {t.noResultHelp}
+            </p>
+          </div>
+        )}
+      </div>
     </section>
   );
 }
@@ -409,7 +506,7 @@ function JobStatus({ job }: { job: ProcessingJobRead }) {
     <div className="mt-4 space-y-2">
       <div className="flex flex-wrap justify-between gap-2 text-sm">
         <span>
-          {label} · {job.stage}
+          {label} · {t[`stage_${job.stage}`]}
         </span>
         {job.progress !== null && (
           <span>{Math.round(job.progress * 100)}%</span>
@@ -423,9 +520,22 @@ function JobStatus({ job }: { job: ProcessingJobRead }) {
           aria-label={t.processing}
         />
       )}
+      <p className="text-xs text-muted-foreground">
+        {job.target_stage === "extract"
+          ? t.fullPipeline
+          : job.target_stage === "diarize"
+            ? t.transcriptionSpeakers
+            : t.transcriptionOnly}
+      </p>
+      {job.target_stage === "extract" &&
+        ["queued", "running"].includes(job.status) && (
+          <p className="text-sm text-muted-foreground">{t.extractionHelp}</p>
+        )}
       {job.error_code && (
         <p role="alert" className="text-sm text-destructive">
-          {job.error_code}
+          {job.error_code === "diarization_model_unavailable"
+            ? t.diarizationUnavailable
+            : t.processingFailed}
         </p>
       )}
     </div>

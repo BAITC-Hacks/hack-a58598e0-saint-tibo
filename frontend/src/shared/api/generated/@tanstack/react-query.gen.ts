@@ -3,8 +3,8 @@
 import { type InfiniteData, infiniteQueryOptions, queryOptions, type UseMutationOptions } from '@tanstack/react-query';
 
 import { client } from '../client.gen';
-import { createMeeting, createParticipant, createProcessingJob, createRecording, deleteMeeting, deleteParticipant, deleteRecording, exportReviewedResult, finalizeRecording, getAccessPolicy, getCurrentUser, getLiveness, getMeeting, getProcessingJob, getReadiness, getRecording, getRecordingMedia, getResultReview, getResultVersion, listMeetings, listParticipants, listProcessingJobs, listRecordings, listResultVersions, listTranscriptSegments, type Options, updateMeeting, updateParticipant, updateResultReview, uploadRecordingChunk, uploadRecordingFile } from '../sdk.gen';
-import type { CreateMeetingData, CreateMeetingError, CreateMeetingResponse, CreateParticipantData, CreateParticipantError, CreateParticipantResponse, CreateProcessingJobData, CreateProcessingJobError, CreateProcessingJobResponse, CreateRecordingData, CreateRecordingError, CreateRecordingResponse, DeleteMeetingData, DeleteMeetingError, DeleteMeetingResponse, DeleteParticipantData, DeleteParticipantError, DeleteParticipantResponse, DeleteRecordingData, DeleteRecordingError, DeleteRecordingResponse, ExportReviewedResultData, ExportReviewedResultError, ExportReviewedResultResponse, FinalizeRecordingData, FinalizeRecordingError, FinalizeRecordingResponse, GetAccessPolicyData, GetAccessPolicyError, GetAccessPolicyResponse, GetCurrentUserData, GetCurrentUserError, GetCurrentUserResponse, GetLivenessData, GetLivenessError, GetLivenessResponse, GetMeetingData, GetMeetingError, GetMeetingResponse, GetProcessingJobData, GetProcessingJobError, GetProcessingJobResponse, GetReadinessData, GetReadinessError, GetReadinessResponse, GetRecordingData, GetRecordingError, GetRecordingMediaData, GetRecordingMediaError, GetRecordingMediaResponse, GetRecordingResponse, GetResultReviewData, GetResultReviewError, GetResultReviewResponse, GetResultVersionData, GetResultVersionError, GetResultVersionResponse, ListMeetingsData, ListMeetingsError, ListMeetingsResponse, ListParticipantsData, ListParticipantsError, ListParticipantsResponse, ListProcessingJobsData, ListProcessingJobsError, ListProcessingJobsResponse, ListRecordingsData, ListRecordingsError, ListRecordingsResponse, ListResultVersionsData, ListResultVersionsError, ListResultVersionsResponse, ListTranscriptSegmentsData, ListTranscriptSegmentsError, ListTranscriptSegmentsResponse, UpdateMeetingData, UpdateMeetingError, UpdateMeetingResponse, UpdateParticipantData, UpdateParticipantError, UpdateParticipantResponse, UpdateResultReviewData, UpdateResultReviewError, UpdateResultReviewResponse, UploadRecordingChunkData, UploadRecordingChunkError, UploadRecordingChunkResponse, UploadRecordingFileData, UploadRecordingFileError, UploadRecordingFileResponse } from '../types.gen';
+import { askOrganizationQuestion, createMeeting, createParticipant, createProcessingJob, createRecording, deleteMeeting, deleteParticipant, deleteRecording, exportReviewedResult, extractResultDraft, finalizeRecording, getAccessPolicy, getCurrentUser, getLiveness, getMeeting, getMeetingCanvas, getMeetingCanvasVersion, getProcessingJob, getReadiness, getRecording, getRecordingMedia, getResultDiarization, getResultReview, getResultVersion, listMeetings, listParticipants, listProcessingJobs, listRecordings, listReminders, listResultVersions, listTranscriptSegments, type Options, saveMeetingCanvas, updateMeeting, updateParticipant, updateResultReview, uploadRecordingChunk, uploadRecordingFile } from '../sdk.gen';
+import type { AskOrganizationQuestionData, AskOrganizationQuestionError, AskOrganizationQuestionResponse, CreateMeetingData, CreateMeetingError, CreateMeetingResponse, CreateParticipantData, CreateParticipantError, CreateParticipantResponse, CreateProcessingJobData, CreateProcessingJobError, CreateProcessingJobResponse, CreateRecordingData, CreateRecordingError, CreateRecordingResponse, DeleteMeetingData, DeleteMeetingError, DeleteMeetingResponse, DeleteParticipantData, DeleteParticipantError, DeleteParticipantResponse, DeleteRecordingData, DeleteRecordingError, DeleteRecordingResponse, ExportReviewedResultData, ExportReviewedResultError, ExportReviewedResultResponse, ExtractResultDraftData, ExtractResultDraftError, ExtractResultDraftResponse, FinalizeRecordingData, FinalizeRecordingError, FinalizeRecordingResponse, GetAccessPolicyData, GetAccessPolicyError, GetAccessPolicyResponse, GetCurrentUserData, GetCurrentUserError, GetCurrentUserResponse, GetLivenessData, GetLivenessError, GetLivenessResponse, GetMeetingCanvasData, GetMeetingCanvasError, GetMeetingCanvasResponse, GetMeetingCanvasVersionData, GetMeetingCanvasVersionError, GetMeetingCanvasVersionResponse, GetMeetingData, GetMeetingError, GetMeetingResponse, GetProcessingJobData, GetProcessingJobError, GetProcessingJobResponse, GetReadinessData, GetReadinessError, GetReadinessResponse, GetRecordingData, GetRecordingError, GetRecordingMediaData, GetRecordingMediaError, GetRecordingMediaResponse, GetRecordingResponse, GetResultDiarizationData, GetResultDiarizationError, GetResultDiarizationResponse, GetResultReviewData, GetResultReviewError, GetResultReviewResponse, GetResultVersionData, GetResultVersionError, GetResultVersionResponse, ListMeetingsData, ListMeetingsError, ListMeetingsResponse, ListParticipantsData, ListParticipantsError, ListParticipantsResponse, ListProcessingJobsData, ListProcessingJobsError, ListProcessingJobsResponse, ListRecordingsData, ListRecordingsError, ListRecordingsResponse, ListRemindersData, ListRemindersError, ListRemindersResponse, ListResultVersionsData, ListResultVersionsError, ListResultVersionsResponse, ListTranscriptSegmentsData, ListTranscriptSegmentsError, ListTranscriptSegmentsResponse, SaveMeetingCanvasData, SaveMeetingCanvasError, SaveMeetingCanvasResponse, UpdateMeetingData, UpdateMeetingError, UpdateMeetingResponse, UpdateParticipantData, UpdateParticipantError, UpdateParticipantResponse, UpdateResultReviewData, UpdateResultReviewError, UpdateResultReviewResponse, UploadRecordingChunkData, UploadRecordingChunkError, UploadRecordingChunkResponse, UploadRecordingFileData, UploadRecordingFileError, UploadRecordingFileResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -224,6 +224,59 @@ export const updateMeetingMutation = (options?: Partial<Options<UpdateMeetingDat
     };
     return mutationOptions;
 };
+
+export const getMeetingCanvasQueryKey = (options: Options<GetMeetingCanvasData>) => createQueryKey('getMeetingCanvas', options, false, ['meetings']);
+
+/**
+ * Get Meeting Canvas
+ */
+export const getMeetingCanvasOptions = (options: Options<GetMeetingCanvasData>) => queryOptions<GetMeetingCanvasResponse, GetMeetingCanvasError, GetMeetingCanvasResponse, ReturnType<typeof getMeetingCanvasQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getMeetingCanvas({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getMeetingCanvasQueryKey(options)
+});
+
+/**
+ * Save Meeting Canvas
+ */
+export const saveMeetingCanvasMutation = (options?: Partial<Options<SaveMeetingCanvasData>>): UseMutationOptions<SaveMeetingCanvasResponse, SaveMeetingCanvasError, Options<SaveMeetingCanvasData>> => {
+    const mutationOptions: UseMutationOptions<SaveMeetingCanvasResponse, SaveMeetingCanvasError, Options<SaveMeetingCanvasData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await saveMeetingCanvas({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getMeetingCanvasVersionQueryKey = (options: Options<GetMeetingCanvasVersionData>) => createQueryKey('getMeetingCanvasVersion', options, false, ['meetings']);
+
+/**
+ * Get Meeting Canvas Version
+ */
+export const getMeetingCanvasVersionOptions = (options: Options<GetMeetingCanvasVersionData>) => queryOptions<GetMeetingCanvasVersionResponse, GetMeetingCanvasVersionError, GetMeetingCanvasVersionResponse, ReturnType<typeof getMeetingCanvasVersionQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getMeetingCanvasVersion({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getMeetingCanvasVersionQueryKey(options)
+});
 
 export const listParticipantsQueryKey = (options: Options<ListParticipantsData>) => createQueryKey('listParticipants', options, false, ['meetings']);
 
@@ -642,6 +695,26 @@ export const getResultVersionOptions = (options: Options<GetResultVersionData>) 
     queryKey: getResultVersionQueryKey(options)
 });
 
+export const getResultDiarizationQueryKey = (options: Options<GetResultDiarizationData>) => createQueryKey('getResultDiarization', options, false, ['results']);
+
+/**
+ * Get Diarization
+ *
+ * Read immutable anonymous turns; confirmed identities live in result review revisions.
+ */
+export const getResultDiarizationOptions = (options: Options<GetResultDiarizationData>) => queryOptions<GetResultDiarizationResponse, GetResultDiarizationError, GetResultDiarizationResponse, ReturnType<typeof getResultDiarizationQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getResultDiarization({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getResultDiarizationQueryKey(options)
+});
+
 export const exportReviewedResultQueryKey = (options: Options<ExportReviewedResultData>) => createQueryKey('exportReviewedResult', options, false, ['exports']);
 
 /**
@@ -661,6 +734,25 @@ export const exportReviewedResultOptions = (options: Options<ExportReviewedResul
     },
     queryKey: exportReviewedResultQueryKey(options)
 });
+
+/**
+ * Extract Result
+ *
+ * Send saved transcript text to the configured provider; save an unreviewed draft.
+ */
+export const extractResultDraftMutation = (options?: Partial<Options<ExtractResultDraftData>>): UseMutationOptions<ExtractResultDraftResponse, ExtractResultDraftError, Options<ExtractResultDraftData>> => {
+    const mutationOptions: UseMutationOptions<ExtractResultDraftResponse, ExtractResultDraftError, Options<ExtractResultDraftData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await extractResultDraft({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
 
 export const getResultReviewQueryKey = (options: Options<GetResultReviewData>) => createQueryKey('getResultReview', options, false, ['results']);
 
@@ -686,6 +778,9 @@ export const getResultReviewOptions = (options: Options<GetResultReviewData>) =>
  * Update Review
  *
  * Save manual corrections. Arrays/summary replace whole fields; omitted fields stay.
+ *
+ * speakers replaces assignments: omitted speakers become unknown; [] clears all.
+ * Merge sources must have no participant and point directly at a canonical speaker.
  *
  * revision must match the latest result revision. Content edits clear approval unless
  * reviewed=true is explicit. Each save creates an immutable snapshot for later export.
@@ -748,6 +843,75 @@ export const listTranscriptSegmentsInfiniteOptions = (options: Options<ListTrans
             return data;
         },
         queryKey: listTranscriptSegmentsInfiniteQueryKey(options)
+    });
+    return opts as Omit<typeof opts, 'initialData'>;
+};
+
+/**
+ * Ask Organization Question
+ */
+export const askOrganizationQuestionMutation = (options?: Partial<Options<AskOrganizationQuestionData>>): UseMutationOptions<AskOrganizationQuestionResponse, AskOrganizationQuestionError, Options<AskOrganizationQuestionData>> => {
+    const mutationOptions: UseMutationOptions<AskOrganizationQuestionResponse, AskOrganizationQuestionError, Options<AskOrganizationQuestionData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await askOrganizationQuestion({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const listRemindersQueryKey = (options?: Options<ListRemindersData>) => createQueryKey('listReminders', options, false, ['reminders']);
+
+/**
+ * List Reminders
+ *
+ * Refresh the owner's in-app inbox from current confirmed actions; no delivery side effects.
+ */
+export const listRemindersOptions = (options?: Options<ListRemindersData>) => queryOptions<ListRemindersResponse, ListRemindersError, ListRemindersResponse, ReturnType<typeof listRemindersQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listReminders({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listRemindersQueryKey(options)
+});
+
+export const listRemindersInfiniteQueryKey = (options?: Options<ListRemindersData>): QueryKey<Options<ListRemindersData>> => createQueryKey('listReminders', options, true);
+
+/**
+ * List Reminders
+ *
+ * Refresh the owner's in-app inbox from current confirmed actions; no delivery side effects.
+ */
+export const listRemindersInfiniteOptions = (options?: Options<ListRemindersData>) => {
+    const opts = infiniteQueryOptions<ListRemindersResponse, ListRemindersError, InfiniteData<ListRemindersResponse>, QueryKey<Options<ListRemindersData>>, number | Pick<QueryKey<Options<ListRemindersData>>[0], 'body' | 'headers' | 'path' | 'query'>>(
+    // @ts-ignore
+    {
+        queryFn: async ({ pageParam, queryKey, signal }) => {
+            // @ts-ignore
+            const page: Pick<QueryKey<Options<ListRemindersData>>[0], 'body' | 'headers' | 'path' | 'query'> = typeof pageParam === 'object' ? pageParam : {
+                query: {
+                    offset: pageParam
+                }
+            };
+            const params = createInfiniteParams(queryKey, page);
+            const { data } = await listReminders({
+                ...options,
+                ...params,
+                signal,
+                throwOnError: true
+            });
+            return data;
+        },
+        queryKey: listRemindersInfiniteQueryKey(options)
     });
     return opts as Omit<typeof opts, 'initialData'>;
 };
