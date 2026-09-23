@@ -1,33 +1,38 @@
 # DB-01 Schemas and migrations
 
-PostgreSQL is SoT. Two schemas, two tools — never cross:
+## Current Behavior
 
-| Schema | Owner | Tool | Files |
-| --- | --- | --- | --- |
-| `auth` | Better Auth | Drizzle | `frontend/drizzle/auth/` |
-| `app` | FastAPI | SQLAlchemy/Alembic | `backend/migrations/` |
+| Schema | Owner | Migration files |
+| --- | --- | --- |
+| `auth` | Better Auth / Drizzle | `frontend/drizzle/auth/` |
+| `app` | FastAPI / SQLAlchemy / Alembic | `backend/migrations/` |
 
-Rules: no FK from `app` to `auth` (user id is opaque `owner_id`);
-`bun run migrate` runs both; new domain → autogenerate revision +
-import models in `migrations/env.py`; parallel checkouts need unique
-`COMPOSE_PROJECT_NAME`/`POSTGRES_PORT`/DB name in `.env`.
+- PostgreSQL is the source of truth. `bun run migrate` runs both migration
+  tools; never use Drizzle for `app` or Alembic for `auth`.
+- `0001_app_schema` creates the app schema; `0002_meetings` adds meetings,
+  participants, recordings and recording_chunks (recording+sequence key).
+- `0003_processing_jobs` adds durable jobs with idempotency/lease fields.
+  `0004_transcript_versions` adds result_versions and segments, plus
+  `target_stage` on jobs. Those two revisions are in dev, not main `62b137d`.
+- ResultVersion stores one job link, revision/status/completed stage,
+  language/duration/model provenance/segment count. Segment stores recording
+  and result IDs, nullable speaker UUID, text and constrained interval.
+- Meeting deletion cascades recordings and their jobs/results/segments.
+  Recording file cleanup is coordinated by the meetings service.
+- `backend/migrations/env.py` imports meetings/processing/results models,
+  filters autogeneration to `app` and keeps the version table in `public`.
+- `owner_id` is an opaque Better Auth user ID, not an FK into `auth`.
+  FastAPI reads `auth` identity/session rows directly; there is no after-hook
+  copying Better Auth users into an `app` user table.
+- Parallel local databases need distinct Compose project/port/database values.
 
-## Table state
+## Known Gaps
 
-- `main` (since PR #80): `0001_app_schema` +
-  `0002_meetings` → `meetings`, `participants`, `recordings`,
-  `recording_chunks` (PK (recording_id, sequence);
-  start_ms/end_ms/sha256 per chunk).
-- `dev` additionally: `0003_processing_jobs` → `processing_jobs`
-  (status/stage/progress/attempt/request_key/lease — API-02) and
-  `0004_transcript_versions` → `result_versions` + `segments`
-  (`speaker_id` nullable until #12) + `target_stage` on jobs.
-- Contract tables Speaker/ActionItem — not yet migrated; come with
-  #12/#13.
+- No Speaker or ActionItem table is migrated in the audited tree.
+- `0005_reviewed_results.py` is claimed by the #13/#14 worker as future
+  additive work. Recheck migration graph and models after integration;
+  an announced filename is not an applied server migration.
+- Never infer server migration version from a Git branch tip. Read the
+  coordinator's deployment and runtime evidence separately (NEXT-SESSION).
 
-## Auth → app sync
-
-Better Auth commits to `auth` first; an `after`-hook projects the user
-row into `app` (see `docs/access-control.md`). Role changes take effect
-on the next FastAPI request (JWT 5-min + per-request identity re-check).
-First admin: `bun run seed` + `bun run admin:grant <email>` — local only.
+Last commit: `a2cfe28c10b214a8189b8c140d9d6b31167bf27a` (audited tree, 2026-09-23; not a live assertion).
