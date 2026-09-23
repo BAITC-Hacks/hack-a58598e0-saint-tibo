@@ -12,7 +12,9 @@ from zoneinfo import ZoneInfo
 
 from docx import Document
 from docx.document import Document as DocumentType
-from docx.shared import Pt
+from docx.oxml import OxmlElement
+from docx.shared import Mm, Pt
+from docx.table import Table as DocxTable
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle
@@ -39,6 +41,7 @@ _STATUS_LABELS = {
 }
 
 _MISSING = "—"
+_INCOMPLETE = "Неполная запись: протокол отражает только доступную часть совещания."
 
 
 def _started_at_label(payload: ProtocolExport) -> str:
@@ -76,8 +79,27 @@ def _action_item_rows(payload: ProtocolExport) -> list[list[str]]:
     ]
 
 
+def _docx_table(
+    document: DocumentType, headers: tuple[str, ...], widths: tuple[int, ...]
+) -> DocxTable:
+    table = document.add_table(rows=1, cols=len(headers))
+    table.style = "Table Grid"
+    table.autofit = False
+    for column, width in zip(table.columns, widths, strict=True):
+        column.width = Mm(width)
+    for cell, title, width in zip(table.rows[0].cells, headers, widths, strict=True):
+        cell.text = title
+        cell.width = Mm(width)
+    table.rows[0]._tr.get_or_add_trPr().append(OxmlElement("w:tblHeader"))
+    return table
+
+
 def render_docx(payload: ProtocolExport) -> bytes:
     document: DocumentType = Document()
+    page = document.sections[0]
+    page.page_width, page.page_height = Mm(210), Mm(297)
+    page.left_margin = page.right_margin = Mm(15)
+    page.top_margin = page.bottom_margin = Mm(15)
     normal = document.styles["Normal"]
     normal.font.name = FONT_FAMILY
     normal.font.size = Pt(10)
@@ -88,12 +110,11 @@ def render_docx(payload: ProtocolExport) -> bytes:
     document.add_paragraph(
         f"Версия результата: {payload.result_version_id}, ревизия {payload.revision}"
     )
+    if payload.is_incomplete:
+        document.add_paragraph(_INCOMPLETE)
 
     document.add_heading("Участники", level=1)
-    participants = document.add_table(rows=1, cols=2)
-    participants.style = "Table Grid"
-    participants.rows[0].cells[0].text = "Имя"
-    participants.rows[0].cells[1].text = "Роль"
+    participants = _docx_table(document, ("Имя", "Роль"), (80, 100))
     for participant in payload.participants:
         cells = participants.add_row().cells
         cells[0].text = participant.display_name
@@ -111,12 +132,9 @@ def render_docx(payload: ProtocolExport) -> bytes:
                 document.add_paragraph(entry, style="List Bullet")
 
     document.add_heading("Поручения", level=1)
-    items = document.add_table(rows=1, cols=5)
-    items.style = "Table Grid"
-    for cell, title in zip(
-        items.rows[0].cells, ("№", "Поручение", "Ответственный", "Срок", "Статус"), strict=True
-    ):
-        cell.text = title
+    items = _docx_table(
+        document, ("№", "Поручение", "Ответственный", "Срок", "Статус"), (8, 84, 42, 26, 20)
+    )
     for row in _action_item_rows(payload):
         for cell, value in zip(items.add_row().cells, row, strict=True):
             cell.text = value
@@ -134,9 +152,13 @@ def _register_fonts() -> None:
 def render_pdf(payload: ProtocolExport) -> bytes:
     _register_fonts()
     base = ParagraphStyle("Base", fontName=FONT_FAMILY, fontSize=9, leading=12)
-    heading = ParagraphStyle("Heading", parent=base, fontName=f"{FONT_FAMILY}-Bold", fontSize=15)
+    heading = ParagraphStyle(
+        "Heading", parent=base, fontName=f"{FONT_FAMILY}-Bold", fontSize=15,
+        leading=19, spaceAfter=6,
+    )
     section = ParagraphStyle(
-        "Section", parent=base, fontName=f"{FONT_FAMILY}-Bold", fontSize=11, spaceBefore=8
+        "Section", parent=base, fontName=f"{FONT_FAMILY}-Bold", fontSize=11,
+        leading=14, spaceBefore=8, spaceAfter=4,
     )
     cell = ParagraphStyle("Cell", parent=base, fontSize=8, leading=10)
 
@@ -151,6 +173,8 @@ def render_pdf(payload: ProtocolExport) -> bytes:
         p(f"Версия результата: {payload.result_version_id}, ревизия {payload.revision}", base),
         Spacer(1, 4 * mm),
     ]
+    if payload.is_incomplete:
+        story.append(p(_INCOMPLETE, base))
 
     story.append(Paragraph("Участники", section))
     participant_rows = [[p("Имя"), p("Роль")]] + [
@@ -162,6 +186,7 @@ def render_pdf(payload: ProtocolExport) -> bytes:
             participant_rows,
             colWidths=[80 * mm, 100 * mm],
             repeatRows=1,
+            splitInRow=1,
             style=TableStyle(
                 [
                     ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
@@ -193,6 +218,7 @@ def render_pdf(payload: ProtocolExport) -> bytes:
             item_rows,
             colWidths=[8 * mm, 84 * mm, 42 * mm, 26 * mm, 20 * mm],
             repeatRows=1,
+            splitInRow=1,
             style=TableStyle(
                 [
                     ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
