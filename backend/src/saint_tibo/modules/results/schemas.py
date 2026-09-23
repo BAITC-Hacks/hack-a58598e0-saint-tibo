@@ -27,7 +27,7 @@ class ResultVersionRead(ReadModel):
     job_id: UUID
     revision: int
     status: Literal["draft", "reviewed"]
-    completed_stage: Literal["transcribe"]
+    completed_stage: Literal["transcribe", "extract"]
     is_incomplete: bool
     language: str
     duration_ms: int
@@ -96,6 +96,24 @@ class ReviewSummary(BaseModel):
     source_segment_ids: list[UUID] = Field(default_factory=list, max_length=100)
 
 
+class ExtractionProvenance(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    model_id: str = Field(min_length=1, max_length=120)
+    model_revision: str = Field(pattern=r"^[0-9a-f]{40}$")
+    model_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    runtime_id: str = Field(min_length=1, max_length=120)
+    prompt_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+
+class ExtractionDraft(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    provenance: ExtractionProvenance
+    action_items: list[ReviewActionItem] = Field(max_length=64)
+    summary: ReviewSummary
+
+
 class ReviewUpdate(PartialUpdate):
     model_config = ConfigDict(extra="forbid")
     NON_NULLABLE = ("reviewed", "action_items", "summary")
@@ -130,6 +148,7 @@ class ReviewParticipant(ReadModel):
 
 class ReviewRead(BaseModel):
     source: Literal["persisted"] = "persisted"
+    extraction_provenance: ExtractionProvenance | None = None
     result_version_id: UUID
     recording_id: UUID
     revision: int

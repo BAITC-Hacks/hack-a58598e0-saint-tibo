@@ -53,6 +53,7 @@ def main() -> int:
     parser.add_argument("--model-file", required=True, type=Path, help="Local GGUF for hashing")
     parser.add_argument("--model-revision", required=True, help="Pinned source revision")
     parser.add_argument("--model-label", required=True)
+    parser.add_argument("--max-tokens", type=int, default=2048)
     parser.add_argument("--ctx-size", type=int, required=True)
     parser.add_argument("--threads", type=int, required=True)
     parser.add_argument("--title", required=True)
@@ -102,13 +103,16 @@ def main() -> int:
             build_user_prompt(segments, meeting),
             known_ids,
             model_label=args.model_label,
+            max_tokens=args.max_tokens,
         )
         elapsed = time.perf_counter() - started
         stage = "write_results"
         usage = meta.get("usage", {})
         timings = meta.get("timings", {})
         result = {
-            "schema_version": 1,
+            "schema_version": 2,
+            "prompt_sha256": hashlib.sha256(SYSTEM_PROMPT.encode()).hexdigest(),
+            "max_tokens": args.max_tokens,
             "status": "ok",
             "model_label": args.model_label,
             "model_file_sha256": sha256(args.model_file),

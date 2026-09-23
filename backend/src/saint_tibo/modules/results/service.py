@@ -13,6 +13,7 @@ from saint_tibo.modules.meetings.service import meeting, not_found, recording
 from saint_tibo.modules.processing.models import ProcessingJob
 from saint_tibo.modules.results.models import ResultReview, ResultVersion, Segment
 from saint_tibo.modules.results.schemas import (
+    ExtractionDraft,
     ReviewActionItemRead,
     ReviewMeeting,
     ReviewParticipant,
@@ -31,6 +32,9 @@ async def publish_transcript(
     segments: list[TranscriptSegment],
     language: str,
     duration_ms: int,
+    *,
+    segment_ids: list[UUID] | None = None,
+    extraction_draft: ExtractionDraft | None = None,
 ) -> UUID:
     # Same lock order as recording DELETE: recording first, job second. Inference
     # has finished before this transaction begins; no locks across model execution.
@@ -53,6 +57,25 @@ async def publish_transcript(
         raise APIError(
             422, "invalid_transcript_timing", "Transcript differs from the recording clock"
         )
+    segment_ids = segment_ids if segment_ids is not None else [uuid4() for _ in segments]
+    if len(segment_ids) != len(segments) or len(set(segment_ids)) != len(segment_ids):
+        raise APIError(422, "invalid_source_segment", "Segment IDs must be distinct")
+    if (current.target_stage == "extract") != (extraction_draft is not None):
+        raise APIError(422, "invalid_extraction_output", "Requested stage did not finish")
+    draft_payload = None
+    if extraction_draft is not None:
+        sources = set(extraction_draft.summary.source_segment_ids)
+        for item in extraction_draft.action_items:
+            sources.update(item.source_segment_ids)
+            if not item.source_segment_ids or item.assignee_participant_id is not None:
+                raise APIError(422, "invalid_extraction_output", "Invalid draft attribution")
+            if item.due_date is not None or item.status != "open":
+                raise APIError(422, "invalid_extraction_output", "Invalid draft status or date")
+        if not sources <= set(segment_ids):
+            raise APIError(422, "invalid_source_segment", "Sources must belong to this result")
+        draft_payload = extraction_draft.model_dump(mode="json")
+        if len(json.dumps(draft_payload, ensure_ascii=False).encode()) > 512 * 1024:
+            raise APIError(422, "review_too_large", "Draft exceeds the snapshot limit")
     version_id = uuid4()
     session.add(
         ResultVersion(
@@ -65,13 +88,15 @@ async def publish_transcript(
             model_id="Systran/faster-whisper-small",
             model_revision="536b0662742c02347bc0e980a01041f333bce120",
             segment_count=len(segments),
+            completed_stage="extract" if extraction_draft is not None else "transcribe",
+            extraction_draft=draft_payload,
         )
     )
     await session.flush()
     session.add_all(
         [
-            Segment(result_version_id=version_id, recording_id=media.id, **row.model_dump())
-            for row in segments
+            Segment(id=segment_id, result_version_id=version_id, recording_id=media.id, **row.model_dump())
+            for segment_id, row in zip(segment_ids, segments, strict=True)
         ]
     )
     current.status = "succeeded"
@@ -143,17 +168,21 @@ async def initial_review(
         .where(Participant.meeting_id == meeting_row.id)
         .order_by(Participant.created_at, Participant.id)
     )
+    draft = (ExtractionDraft.model_validate(version.extraction_draft)
+             if version.extraction_draft is not None else None)
     return ReviewRead(
+        extraction_provenance=draft.provenance if draft is not None else None,
         result_version_id=version.id,
         recording_id=version.recording_id,
-        revision=version.revision,
+        revision=1,
         reviewed=False,
         is_incomplete=version.is_incomplete,
         saved_at=None,
         meeting=ReviewMeeting.model_validate(meeting_row),
         participants=[ReviewParticipant.model_validate(row) for row in participants],
-        action_items=[],
-        summary=ReviewSummary(),
+        action_items=[ReviewActionItemRead(**item.model_dump(), result_version_id=version.id)
+                      for item in draft.action_items] if draft is not None else [],
+        summary=draft.summary if draft is not None else ReviewSummary(),
     )
 
 
@@ -170,7 +199,7 @@ async def get_review(
     snapshot = await review_snapshot(session, version, requested)
     if snapshot is not None:
         return snapshot
-    if requested == version.revision == 1:
+    if requested == 1 and (version.revision == 1 or version.extraction_draft is not None):
         meeting_row = await meeting(session, owner_id, meeting_id)
         return await initial_review(session, version, meeting_row)
     raise not_found()
@@ -193,16 +222,16 @@ async def update_review(
     if body.revision != version.revision:
         raise APIError(409, "version_conflict", "Reload the latest revision before saving")
     previous = await review_snapshot(session, version, version.revision)
-    summary = body.summary if body.summary is not None else (
-        previous.summary if previous is not None else ReviewSummary()
-    )
+    if previous is None:
+        previous = await initial_review(session, version, meeting_row)
+    summary = body.summary if body.summary is not None else previous.summary
     items = (
         [
             ReviewActionItemRead(**item.model_dump(), result_version_id=version.id)
             for item in body.action_items
         ]
         if body.action_items is not None
-        else previous.action_items if previous is not None else []
+        else previous.action_items
     )
     participants = list(await session.scalars(
         select(Participant)
@@ -233,9 +262,10 @@ async def update_review(
 
     content_changed = body.summary is not None or body.action_items is not None
     reviewed = body.reviewed if body.reviewed is not None else (
-        previous.reviewed if previous is not None and not content_changed else False
+        previous.reviewed if not content_changed else False
     )
     snapshot = ReviewRead(
+        extraction_provenance=previous.extraction_provenance,
         result_version_id=version.id,
         recording_id=recording_id,
         revision=version.revision + 1,
@@ -255,7 +285,7 @@ async def update_review(
     ))
     version.revision = snapshot.revision
     version.status = "reviewed" if reviewed else "draft"
-    # completed_stage remains transcribe: human review does not claim ML extraction.
+    # Human review preserves the completed ML stage and its original provenance.
     await session.commit()
     logger.info(
         "Saved result review result_version_id=%s revision=%s reviewed=%s",

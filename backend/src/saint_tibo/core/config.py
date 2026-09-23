@@ -34,3 +34,7 @@ class Settings(BaseSettings):
     stt_python_path: Path = Path("/app/stt/.venv/bin/python")
     stt_script_path: Path = Path("/app/stt/transcribe.py")
     stt_model_path: Path = Path("/models/small")
+
+    extract_script_path: Path = Path("/app/extract/run.py")
+    extract_runtime_path: Path = Path("/llama/llama-server")
+    extract_model_path: Path = Path("/extract-model/Qwen3-8B-Q4_K_M.gguf")

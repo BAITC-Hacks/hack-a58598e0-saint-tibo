@@ -72,6 +72,32 @@ export type ErrorResponse = {
 };
 
 /**
+ * ExtractionProvenance
+ */
+export type ExtractionProvenance = {
+    /**
+     * Model Id
+     */
+    model_id: string;
+    /**
+     * Model Revision
+     */
+    model_revision: string;
+    /**
+     * Model Sha256
+     */
+    model_sha256: string;
+    /**
+     * Prompt Sha256
+     */
+    prompt_sha256: string;
+    /**
+     * Runtime Id
+     */
+    runtime_id: string;
+};
+
+/**
  * HealthResponse
  */
 export type HealthResponse = {
@@ -373,9 +399,9 @@ export type ProcessingJobCreate = {
     /**
      * Target Stage
      *
-     * Success means transcript ready; extraction is separate.
+     * transcribe produces a transcript; extract also produces an unreviewed local-model draft.
      */
-    target_stage?: 'transcribe';
+    target_stage?: 'transcribe' | 'extract';
 };
 
 /**
@@ -447,7 +473,7 @@ export type ProcessingJobRead = {
     /**
      * Target Stage
      */
-    target_stage: 'transcribe';
+    target_stage: 'transcribe' | 'extract';
     /**
      * Updated At
      */
@@ -556,7 +582,7 @@ export type ResultVersionRead = {
     /**
      * Completed Stage
      */
-    completed_stage: 'transcribe';
+    completed_stage: 'transcribe' | 'extract';
     /**
      * Created At
      */
@@ -729,6 +755,7 @@ export type ReviewRead = {
      * Action Items
      */
     action_items: Array<ReviewActionItemRead>;
+    extraction_provenance?: ExtractionProvenance | null;
     /**
      * Is Incomplete
      */

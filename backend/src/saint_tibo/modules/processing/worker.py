@@ -17,8 +17,9 @@ from saint_tibo.core.config import Settings
 from saint_tibo.core.errors import APIError
 from saint_tibo.core.logging import configure_logging
 from saint_tibo.db.session import create_engine
-from saint_tibo.modules.meetings.models import Recording
+from saint_tibo.modules.meetings.models import Meeting, Recording
 from saint_tibo.modules.meetings.storage import recording_dir
+from saint_tibo.modules.processing.extraction import extract
 from saint_tibo.modules.processing.models import ProcessingJob
 from saint_tibo.modules.processing.service import interrupt_expired
 from saint_tibo.modules.processing.transcription import transcribe
@@ -121,6 +122,12 @@ async def process(factory: SessionFactory, config: Settings, job: ProcessingJob)
         if media.status == "incomplete" and not job.allow_incomplete:
             raise APIError(409, "incomplete_recording", "Incomplete audio was not accepted")
         duration = media.duration_ms
+        meeting_row = await session.get(Meeting, media.meeting_id)
+        if meeting_row is None:
+            raise LeaseLost
+        meeting_context = {"title": meeting_row.title,
+                           "started_at": meeting_row.started_at.isoformat(),
+                           "timezone": meeting_row.timezone}
     path = recording_dir(config.recording_storage_path, job.recording_id) / "media.wav"
     await asyncio.to_thread(validate_audio, path, duration, config)
     await save(factory, job, stage="transcribe", progress=None)
@@ -130,8 +137,14 @@ async def process(factory: SessionFactory, config: Settings, job: ProcessingJob)
         await save(factory, job, progress=value)
 
     segments, detected_language = await transcribe(config, path, job.language, duration, progress)
+    segment_ids = [uuid4() for _ in segments]
+    draft = None
+    if job.target_stage == "extract":
+        await save(factory, job, stage="extract", progress=None)
+        draft = await extract(config, segments, segment_ids, meeting_context)
     async with factory() as session:
-        await publish_transcript(session, job, segments, detected_language, duration)
+        await publish_transcript(session, job, segments, detected_language, duration,
+                                 segment_ids=segment_ids, extraction_draft=draft)
 
 
 async def run_job(factory: SessionFactory, config: Settings, job: ProcessingJob) -> None:

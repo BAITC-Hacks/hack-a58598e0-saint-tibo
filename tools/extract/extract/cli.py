@@ -1,88 +1,103 @@
-"""Run one extraction pass over a transcript JSON produced by benchmark-stt.py.
-
-Usage: python -m extract.cli --transcript T.json --server http://127.0.0.1:8080 \
-    --title ... --started-at ... --timezone ... --participants a,b \
-    --result out.json
-"""
+"""Private JSON stdin/stdout worker transport or explicit private benchmark files."""
 
 import argparse
+import hashlib
 import json
+import os
 import sys
+import time
+from contextlib import nullcontext
 from pathlib import Path
 
 from extract.client import chat_extraction
 from extract.prompt import SYSTEM_PROMPT, MeetingContext, build_user_prompt
+from extract.runtime import MODEL_ID, MODEL_REVISION, MODEL_SHA256, RUNTIME_ID, local_runtime
 from extract.schema import ExtractionError
 
 
-def load_segments(transcript_path: Path) -> tuple[list[dict], set[int]]:
-    data = json.loads(transcript_path.read_text(encoding="utf-8"))
-    segments = [
-        {
-            "segment_id": index,
-            "speaker": row.get("speaker"),
-            "start_ms": row["start_ms"],
-            "end_ms": row["end_ms"],
-            "text": row["text"],
-        }
-        for index, row in enumerate(data["segments"])
-    ]
-    return segments, {segment["segment_id"] for segment in segments}
+def load_segments(data: dict) -> tuple[list[dict], set[int]]:
+    rows = data["segments"]
+    if not isinstance(rows, list) or not 1 <= len(rows) <= 20000:
+        raise ExtractionError("invalid_extraction_input")
+    segments = []
+    for index, row in enumerate(rows):
+        if not isinstance(row, dict) or not isinstance(row.get("text"), str) or not row["text"].strip():
+            raise ExtractionError("invalid_extraction_input")
+        segments.append({"segment_id": index, "speaker": row.get("speaker"), "text": row["text"]})
+    return segments, set(range(len(segments)))
+
+
+def write_private(path: Path, data: dict) -> None:
+    descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(descriptor, "w", encoding="utf-8") as target:
+        json.dump(data, target, ensure_ascii=False, allow_nan=False)
+        target.write("\n")
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--transcript", required=True, type=Path)
-    parser.add_argument("--server", required=True, help="Loopback URL of the local server")
-    parser.add_argument("--title", required=True)
-    parser.add_argument("--started-at", required=True, help="RFC 3339 with offset")
-    parser.add_argument("--timezone", required=True)
-    parser.add_argument("--participants", default="", help="Comma-separated display names")
-    parser.add_argument("--model-label", default="local")
-    parser.add_argument("--max-tokens", type=int, default=4096)
-    parser.add_argument("--result", required=True, type=Path, help="New result JSON (mode 0600)")
-    parser.add_argument("--metrics", type=Path, help="Optional metrics JSON (mode 0600)")
+    parser.add_argument("--transcript", type=Path, help="Omit for private stdin transport")
+    parser.add_argument("--server", help="Existing loopback runtime (benchmark only)")
+    parser.add_argument("--llama-server", type=Path)
+    parser.add_argument("--model-file", type=Path)
+    parser.add_argument("--title", default="")
+    parser.add_argument("--started-at", default="")
+    parser.add_argument("--timezone", default="")
+    parser.add_argument("--participants", default="")
+    parser.add_argument("--max-tokens", type=int, default=2048)
+    parser.add_argument("--result", type=Path)
+    parser.add_argument("--metrics", type=Path)
     args = parser.parse_args()
-
-    for path in (args.result, args.metrics):
-        if path is not None and (path.exists() or path.is_symlink()):
-            print(json.dumps({"status": "error", "stage": "args", "error_type": "OutputExists"}))
-            return 1
-
     try:
-        segments, known_ids = load_segments(args.transcript)
+        outputs = [p for p in (args.result, args.metrics) if p is not None]
+        if len({p.resolve() for p in outputs}) != len(outputs) or any(
+            p.exists() or p.is_symlink() for p in outputs
+        ):
+            raise ExtractionError("extraction_output_exists")
+        raw = args.transcript.read_bytes() if args.transcript else sys.stdin.buffer.read(65537)
+        if len(raw) > 65536:
+            raise ExtractionError("extraction_input_too_large")
+        data = json.loads(raw)
+        segments, known = load_segments(data)
+        context = data.get("meeting", {})
         meeting = MeetingContext(
-            title=args.title,
-            started_at=args.started_at,
-            timezone=args.timezone,
-            participants=tuple(p for p in args.participants.split(",") if p.strip()),
+            title=context.get("title", args.title), started_at=context.get("started_at", args.started_at),
+            timezone=context.get("timezone", args.timezone),
+            participants=tuple(context.get("participants", args.participants.split(",") if args.participants else [])),
         )
-        payload, meta = chat_extraction(
-            args.server,
-            SYSTEM_PROMPT,
-            build_user_prompt(segments, meeting),
-            known_ids,
-            model_label=args.model_label,
-            max_tokens=args.max_tokens,
-        )
+        if not args.server and (args.llama_server is None or args.model_file is None):
+            raise ExtractionError("extraction_unavailable")
+        manager = nullcontext((args.server, None)) if args.server else local_runtime(args.llama_server, args.model_file)
+        started = time.monotonic()
+        with manager as (url, pid):
+            payload, meta = chat_extraction(url, SYSTEM_PROMPT, build_user_prompt(segments, meeting),
+                                            known, max_tokens=args.max_tokens)
+            peak_rss = None
+            if pid is not None:
+                for line in Path(f"/proc/{pid}/status").read_text().splitlines():
+                    if line.startswith("VmHWM:"):
+                        peak_rss = int(line.split()[1]) * 1024
+            meta.update(elapsed_seconds=round(time.monotonic() - started, 3), server_peak_rss_bytes=peak_rss)
+        provenance = {"model_id": MODEL_ID, "model_revision": MODEL_REVISION,
+                      "model_sha256": MODEL_SHA256, "runtime_id": RUNTIME_ID,
+                      "prompt_sha256": hashlib.sha256(SYSTEM_PROMPT.encode()).hexdigest()}
+        result = {"status": "ok", "payload": payload, "provenance": provenance, "metrics": meta}
+        # An external benchmark server has not been fingerprinted by this process.
+        if args.server:
+            result["provenance"] = None
+        if args.result:
+            write_private(args.result, result)
+            print(json.dumps({"status": "ok", "action_item_count": len(payload["action_items"]), **meta}))
+        else:
+            print(json.dumps(result, ensure_ascii=False, allow_nan=False))
+        if args.metrics:
+            write_private(args.metrics, {"status": "ok", **meta})
+        return 0
     except ExtractionError as exc:
-        print(json.dumps({"status": "error", "stage": "extract", "error_type": str(exc)[:200]}))
-        return 1
-
-    import os
-
-    descriptor = os.open(args.result, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-    with os.fdopen(descriptor, "w", encoding="utf-8") as target:
-        json.dump(payload, target, ensure_ascii=False, indent=2)
-        target.write("\n")
-    if args.metrics is not None:
-        descriptor = os.open(args.metrics, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-        with os.fdopen(descriptor, "w", encoding="utf-8") as target:
-            json.dump({"status": "ok", **meta}, target, ensure_ascii=False, indent=2)
-            target.write("\n")
-    print(json.dumps({"status": "ok", "action_items": len(payload["action_items"]),
-                      "usage": meta.get("usage", {})}))
-    return 0
+        print(json.dumps({"status": "error", "code": str(exc)}))
+    except Exception:
+        print(json.dumps({"status": "error", "code": "extraction_failed"}))
+    return 1
 
 
 if __name__ == "__main__":
