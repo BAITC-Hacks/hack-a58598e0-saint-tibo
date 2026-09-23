@@ -1,5 +1,8 @@
 # API-10 Processing jobs and transcript results
 
+Latest release: [GPU/speakers/extraction/inbox delta](RELEASE-94-runtime-wave.md).
+The core snapshot below retains its original audit boundary.
+
 ## Current Behavior
 
 - Code: `modules/processing/`, `modules/results/` under
