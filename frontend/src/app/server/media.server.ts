@@ -4,6 +4,7 @@ import type { ErrorResponse } from "#/shared/api";
 import { serverEnv } from "#/shared/config/index.server";
 
 import { auth } from "./auth.server";
+import { mockSelectedFor, proxyMock } from "./mock-mode.server";
 
 const uuidPattern =
   /^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/i;
@@ -63,6 +64,18 @@ export const proxyRecordingMedia = async (
       422,
       "validation_error",
       "Meeting and recording IDs must be UUIDs."
+    );
+  }
+
+  if (await mockSelectedFor(request)) {
+    return proxyMock(
+      new Request(
+        new URL(
+          `/api/mock/api/v1/meetings/${params.meetingId}/recordings/${params.recordingId}/media`,
+          request.url
+        ),
+        request
+      )
     );
   }
 

@@ -63,6 +63,12 @@ export const MeetingCapture = () => {
     incomplete: m.capture_incomplete({}, t),
     error: m.capture_error({}, t),
   };
+  const savedStatuses = {
+    receiving: m.capture_status_receiving({}, t),
+    ready: m.capture_status_ready({}, t),
+    incomplete: m.capture_status_incomplete({}, t),
+    failed: m.capture_status_failed({}, t),
+  };
   const start = () => {
     target.current = null;
     setTargetCreated(false);
@@ -88,6 +94,7 @@ export const MeetingCapture = () => {
     setTargetCreated(false);
     setSaving(false);
     setSaveError("");
+    setTitle("");
     setSaved(undefined);
     setSavedMeetingId(undefined);
     capture.current?.dispose();
@@ -121,12 +128,19 @@ export const MeetingCapture = () => {
         setSavedMeetingId(target.current.meetingId);
       }
     } catch (error) {
-      if (!controller.signal.aborted)
+      if (!controller.signal.aborted) {
+        const status =
+          typeof error === "object" && error !== null && "status" in error
+            ? Number(error.status)
+            : 0;
         setSaveError(
-          error instanceof Error && error.message
-            ? error.message
-            : m.capture_save_error({}, t)
+          status === 401 || status === 403
+            ? m.capture_save_auth_error({}, t)
+            : [409, 413, 415, 422].includes(status)
+              ? m.capture_save_rejected_error({}, t)
+              : m.capture_save_error({}, t)
         );
+      }
     } finally {
       if (saveAbort.current === controller) {
         saveAbort.current = null;
@@ -302,7 +316,7 @@ export const MeetingCapture = () => {
             <Button disabled={saving} onClick={() => void save()}>
               {saving
                 ? m.capture_saving({}, t)
-                : targetCreated
+                : targetCreated || saveError
                   ? m.capture_save_retry({}, t)
                   : m.capture_save({}, t)}
             </Button>
@@ -312,10 +326,15 @@ export const MeetingCapture = () => {
               {saveError}
             </p>
           )}
+          {saveError && targetCreated && (
+            <p className="text-sm text-muted-foreground">
+              {m.capture_save_resume({}, t)}
+            </p>
+          )}
           {saved && (
             <div className="space-y-2 text-sm">
               <output className="block">
-                {m.capture_saved({ status: saved.status }, t)}
+                {m.capture_saved({ status: savedStatuses[saved.status] }, t)}
               </output>
               {savedMeetingId && (
                 <Link

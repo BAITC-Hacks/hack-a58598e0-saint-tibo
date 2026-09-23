@@ -10,10 +10,7 @@ import { paraglideConfig } from "./paraglide.config.ts";
 // Ports come from the root .env so a worktree can run its own stack without clashing.
 const port = Number(process.env.FRONTEND_PORT ?? 3000);
 
-const config = defineConfig(({ command }) => {
-  if (command === "build" && process.env.VITE_API_MODE === "mock") {
-    throw new Error("Mock API mode cannot be built for production.");
-  }
+const config = defineConfig(() => {
   return {
     resolve: { tsconfigPaths: true },
     server: { port, strictPort: true },

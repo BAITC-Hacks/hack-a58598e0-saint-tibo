@@ -3,7 +3,16 @@
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import BigInteger, CheckConstraint, DateTime, ForeignKey, String
+from sqlalchemy import (
+    BigInteger,
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    String,
+    Text,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from saint_tibo.db.base import Base
@@ -16,6 +25,27 @@ class Meeting(UUIDPrimaryKey, OwnedByUser, Timestamps, Base):
     title: Mapped[str] = mapped_column(String(200))
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     timezone: Mapped[str] = mapped_column(String(64))
+
+
+class MeetingCanvas(UUIDPrimaryKey, Base):
+    __tablename__ = "meeting_canvases"
+    __table_args__ = (
+        UniqueConstraint("meeting_id", "revision"),
+        CheckConstraint("revision > 0", name="valid_revision"),
+    )
+
+    meeting_id: Mapped[UUID] = mapped_column(
+        ForeignKey("app.meetings.id", ondelete="CASCADE"), index=True
+    )
+    revision: Mapped[int]
+    purpose: Mapped[str | None] = mapped_column(Text)
+    inputs: Mapped[str | None] = mapped_column(Text)
+    expected_outputs: Mapped[str | None] = mapped_column(Text)
+    facilitation_flow: Mapped[str | None] = mapped_column(Text)
+    agenda_structure: Mapped[str | None] = mapped_column(Text)
+    participants: Mapped[str | None] = mapped_column(Text)
+    expected_artifacts: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class Participant(UUIDPrimaryKey, Timestamps, Base):
@@ -37,6 +67,9 @@ class Recording(UUIDPrimaryKey, Timestamps, Base):
 
     meeting_id: Mapped[UUID] = mapped_column(
         ForeignKey("app.meetings.id", ondelete="CASCADE"), index=True
+    )
+    canvas_version_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("app.meeting_canvases.id", ondelete="SET NULL")
     )
     source: Mapped[str] = mapped_column(String(20))
     original_filename: Mapped[str] = mapped_column(String(255))
