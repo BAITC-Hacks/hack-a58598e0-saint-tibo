@@ -33,4 +33,4 @@
   includes immediate 401 after logout for old JWT/cookie, owner isolation
   and dev login. It does not replace the broader security acceptance backlog.
 
-Last commit: `f8cf4dae60e29c64a35a477e46673379c834cadd` (audited tree, 2026-09-23; not a live assertion).
+Last commit: `a2cfe28c10b214a8189b8c140d9d6b31167bf27a` (audited tree, 2026-09-23; not a live assertion).

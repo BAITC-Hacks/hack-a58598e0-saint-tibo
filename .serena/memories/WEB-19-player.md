@@ -1,34 +1,39 @@
-# WEB-19 Local recording player
+# WEB-19 Protected and local recording player
 
 ## Current Behavior
 
-- `frontend/src/shared/ui/meeting-player/` exports MeetingPlayer,
-  MediaSource (`id,url,title`) and handle `seek(timeMs)/pause()`.
-  Position/duration callbacks use integer milliseconds and source ID.
-- Controls cover loading/buffering/error/end, speed, volume, seeking and
-  source cleanup. A new source creates its own playback session.
-- Protected `frontend/src/pages/player/ui/player-page.tsx` uses local
-  browser files; it does not upload, call meeting APIs or transcribe.
-- Optional local STT JSON is validated by
-  `frontend/src/pages/player/lib/local-transcript.ts`: required
-  `audio_sha256` plus segments with `index,start_ms,end_ms,text`.
-  Hash must match selected audio; time intervals/text are validated.
-  Limits: 8 MiB JSON, 256 MiB audio hash input, 10k segments.
-- Local segments use WEB-20 synchronization and are bound to the chosen
-  audio bytes. Do not replace this format with a bare segment array.
-- [#19 integration evidence](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/19#issuecomment-5793184594)
-  and [#20 local STT proof](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/20#issuecomment-5793184614)
-  describe local playback/seek on Ivan dev; no complete server flow is claimed.
+- Integrated dev `a2cfe28` includes protected selector `c55d1a9` and rich
+  timeline `c026616`; source: `frontend/src/pages/player/`,
+  `frontend/src/shared/ui/meeting-player/`, `docs/player.md`.
+- Protected `/player` queries generated listMeetings/listRecordings,
+  filters records with media URL/type and passes server `media_url` to
+  MeetingPlayer. Cookie media proxy handles auth/Range; no second login.
+- MeetingPlayer accepts MediaSource (`id,url,title`), optional waveform
+  and TimelineMarker list, integer-ms position/duration callback and
+  `seek(timeMs)/pause()` handle. New id/URL replaces playback session.
+- Controls: play/pause, ±10s, position, speed, volume, loading/buffering/
+  error/end; seeking preserves play state and is bounded by media duration.
+- Local audio/video remains in the browser and is not uploaded/transcribed.
+  `lib/audio-waveform.ts` samples decoded local audio into 180 peaks
+  only for files <=32 MiB; unsupported/large files show no fake waveform.
+  Server media is not downloaded in full for visualization.
+- Local STT JSON uses `lib/local-transcript.ts`: required `audio_sha256`
+  and segment `index,start_ms,end_ms,text`; hash must match selected audio.
+  Limits: 8 MiB JSON, 256 MiB audio for hashing, 10k segments.
+- Up to eight local transcript markers derive from actual segment timestamps;
+  WEB-20 handles click-to-seek and follow. Switching sources clears local data.
 
 ## Known Gaps
 
-- Existing cookie media proxy/API supports protected media, but this audited
-  player page is not connected to it or server result pagination.
-- #19/#20 stay open for real stored recordings, Range/access/error scenarios
-  and server result/action-source integration.
-- #95 rich player is separate Ivan-owned branch work; its
-  [claim](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/95#issuecomment-5793340879)
-  does not establish integration or live readiness. Artem owns global
-  routes/navigation and meeting workspace.
+- Server selector loads first 100 meetings and first 100 recordings per meeting;
+  it does not exhaust pagination or fetch server result versions/segments.
+- [#95 deploy report](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/95#issuecomment-5793559235)
+  reports Ivan dev at a2cfe28 with readiness/player HTTP 200. Interactive
+  waveform/marker seek, protected selector/playback and browser logs were
+  explicitly not verified in that run; #19/#20/#95 remain open.
+- Earlier local playback/STT proof cannot establish the new selector's
+  acceptance. Current Danil LIVE-OK58ee537 predates this feature.
+- Ivan owns player code; Artem owns global navigation/meeting workspace.
+  Full server result/action-source/editor integration is still separate.
 
-Last commit: `f8cf4dae60e29c64a35a477e46673379c834cadd` (audited tree, 2026-09-23; not a live assertion).
+Last commit: `a2cfe28c10b214a8189b8c140d9d6b31167bf27a` (audited tree, 2026-09-23; not a live assertion).

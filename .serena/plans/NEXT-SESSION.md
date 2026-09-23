@@ -1,7 +1,7 @@
 # NEXT-SESSION — Saint Tibo synchronization wave
 
 Snapshot: 2026-09-23. Refresh GitHub refs/claims before acting.
-Last commit: `f8cf4dae60e29c64a35a477e46673379c834cadd` (audited dev tree, not runtime).
+Last commit: `a2cfe28c10b214a8189b8c140d9d6b31167bf27a` (audited dev tree, not runtime).
 
 ## Current law and ownership
 
@@ -20,17 +20,20 @@ Last commit: `f8cf4dae60e29c64a35a477e46673379c834cadd` (audited dev tree, not r
 - Artem owns UI/design/#83–85; Ivan owns player/capture/#95/#96.
   API-03-mock.md filename is reserved by #85. Check issue claims, not this
   snapshot, before taking work. #69 separate WIP is preserved.
+- Finish bounded slices and narrow remaining acceptance; avoid new subsystems.
 
 ## Done and evidence boundaries
 
-- Fetched main `62b137d`, dev `f8cf4da`, danil `cae7b9d`.
+- Fetched main `62b137d`, dev `a2cfe28`, danil `cae7b9d`.
 - Main has recording/media API. Dev adds durable jobs `bcc02e5`,
   offline STT/results `b7d7a52`, export renderer `2341256`,
-  local player/capture/platform prototypes and guarded dev access.
+  local capture/platform prototypes and guarded dev access. Player selector
+  `c55d1a9` and waveform/timeline `c026616` are now integrated in a2cfe28.
 - Last independent Danil LIVE-OK: `58ee53734cdcbad1e50cd589425ec090adac3261`
   ([#94 proof](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/94#issuecomment-5793355510)).
-  Later dev diff through f8cf4da is docs/memories only; no fresh deployment
-  or server check was performed by this Serena task.
+  Later dev through f8cf4da changes docs/memories; a2cfe28 adds player code.
+  Ivan reports a2cfe28 deployed with HTTP probes only; Danil deployment and
+  interactive player proof are unconfirmed. This task performed no server check.
 - RU STT succeeded; interrupted-job retry completion, KK/mixed accuracy,
   diarization, extracted results and full product UI acceptance remain open.
 
@@ -43,8 +46,8 @@ Last commit: `f8cf4dae60e29c64a35a477e46673379c834cadd` (audited dev tree, not r
 3. Preserve #69 local LLM WIP; no automatic extraction claim without evidence.
    #12 diarization, #15 reminders, #81 trusted sink and #11/#70/#89 quality
    remain assigned/backlogged work, not implied authorization for this task.
-4. Keep #95/#96 and UI branches separate until their owners/coordinator
-   establish readiness. Never import cloud audio/text processing defaults.
+4. #95 code is integrated but interactive acceptance is pending. Keep #96/UI
+   readiness separate. Never import cloud audio/text processing defaults.
 5. For broader handoff read #94, `docs/session-handoff.md` and current parent
    state docs when present. No user input is currently required for this sync.
 

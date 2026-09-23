@@ -5,7 +5,7 @@
 - TanStack Start SPA under `frontend/src/`; thin route → page modules.
   Shared UI is vendored shadcn/Base UI; reuse existing auth and controls.
 - `app/routes/`: protected `_app` shell/home placeholder, `/capture`
-  (WEB-21), local `/player` (WEB-19), public synthetic `/transcript-demo`
+  (WEB-21), local/stored-media `/player` (WEB-19), synthetic `/transcript-demo`
   (WEB-20), login/dev-login and auth/media server routes.
 - Server modules in `app/server/` own Better Auth, auth guards, dev login
   and cookie→JWT media proxy. API requests use the generated backend client.
@@ -27,7 +27,8 @@
   are not integrated into audited dev. Home is still a placeholder.
 - Mock meeting-level review/export routes (#85) differ from version-scoped
   backend work (#13/#14); reconcile through an adapter/generated contract.
-- Ivan owns player/capture integration; current local demos do not prove
-  the whole authenticated meeting→results→review→export flow.
+- Ivan's protected recording selector and rich player are integrated in dev
+  `a2cfe28`; reported Ivan deploy passed HTTP probes, interactive QA is pending.
+  Server transcript fetching and the full review/export flow remain separate.
 
-Last commit: `f8cf4dae60e29c64a35a477e46673379c834cadd` (audited tree, 2026-09-23; not a live assertion).
+Last commit: `a2cfe28c10b214a8189b8c140d9d6b31167bf27a` (audited tree, 2026-09-23; not a live assertion).

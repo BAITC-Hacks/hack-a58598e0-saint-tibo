@@ -31,4 +31,4 @@
 - Unmerged worker features and their dependencies are not this stack.
   Check GitHub refs/claims and NEXT-SESSION before selecting a work area.
 
-Last commit: `f8cf4dae60e29c64a35a477e46673379c834cadd` (audited tree, 2026-09-23; not a live assertion).
+Last commit: `a2cfe28c10b214a8189b8c140d9d6b31167bf27a` (audited tree, 2026-09-23; not a live assertion).

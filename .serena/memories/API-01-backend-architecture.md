@@ -15,7 +15,7 @@
 - Wire truth: `contracts/openapi.json` and generated frontend SDK.
   Regenerate via `bun run api:generate`; never hand-edit generated types.
 - UUID IDs, snake_case JSON, camelCase operation IDs; UTC RFC3339 timestamps.
-  Errors use `{"error":{"code","message","details"}}`; codes are snake_case.
+  Errors carry `error.code`, `error.message`, `error.details`; codes are snake_case.
 - Lists use `{items,total,limit,offset}`, default limit 20/max 100.
   Entity lists are newest-first; transcript segments are timeline-ordered.
 - PATCH conventions use `PartialUpdate` with nonnullable-field guards.
@@ -30,4 +30,4 @@
 - Auth is database-backed on each request; no copied app user table or
   independent five-minute logout window exists (AUTH-01, DB-01).
 
-Last commit: `f8cf4dae60e29c64a35a477e46673379c834cadd` (audited tree, 2026-09-23; not a live assertion).
+Last commit: `a2cfe28c10b214a8189b8c140d9d6b31167bf27a` (audited tree, 2026-09-23; not a live assertion).

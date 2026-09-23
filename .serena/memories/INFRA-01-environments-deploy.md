@@ -38,8 +38,10 @@
   coordinator; no worker should replace another worker's live version.
 - Last independent Danil runtime evidence is `58ee537` in
   [#94](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/94#issuecomment-5793355510).
-  Audited dev `f8cf4da` differs only in docs/memories; this is not a new deploy.
+  Through `f8cf4da` only docs/memories changed; dev `a2cfe28` also adds player
+  code and is not proven deployed on Danil. Ivan's [#95 report](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/95#issuecomment-5793559235)
+  claims that exact commit deployed on his dev with HTTP probes, no interactive QA.
 - Organizational controls, retention/backup proof and enterprise hardening
   remain separate issues; local model egress isolation is not total certification.
 
-Last commit: `f8cf4dae60e29c64a35a477e46673379c834cadd` (audited tree, 2026-09-23; not a live assertion).
+Last commit: `a2cfe28c10b214a8189b8c140d9d6b31167bf27a` (audited tree, 2026-09-23; not a live assertion).

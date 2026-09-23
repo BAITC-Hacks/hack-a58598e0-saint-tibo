@@ -22,6 +22,8 @@
   and HTTP/UI downloads were outside that proof.
 - Browser proof covered logout/manual login/root dev-login; it is not a
   claim that the complete meeting UI or real player integration is finished.
+- Later [Ivan #95 report](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/95#issuecomment-5793559235) deploys `a2cfe28`, readiness/player HTTP 200;
+  waveform/marker/selector/browser-console interaction proof remains pending.
 - QA removed its own temporary data; historic cleanup is not authorization
   to delete other users' meetings/jobs/accounts.
 
@@ -35,4 +37,4 @@
 - Evidence must include exact SHA, scenario, observed result and limitations.
   Never publish tokens, meeting text/audio or raw private logs as proof.
 
-Last commit: `f8cf4dae60e29c64a35a477e46673379c834cadd` (audited tree, 2026-09-23; not a live assertion).
+Last commit: `a2cfe28c10b214a8189b8c140d9d6b31167bf27a` (audited tree, 2026-09-23; not a live assertion).
