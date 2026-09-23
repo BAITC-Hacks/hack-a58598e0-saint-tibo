@@ -19,6 +19,8 @@ class Settings(BaseSettings):
     http_timeout_seconds: float = Field(default=5, gt=0)
     database_timeout_seconds: float = Field(default=5, gt=0)
     log_level: str = "INFO"
+    honcho_url: str | None = None
+    honcho_jwt_secret: str | None = None
 
     recording_storage_path: Path = Path("../.data/recordings")
     recording_max_bytes: int = Field(default=512 * 1024 * 1024, ge=1)

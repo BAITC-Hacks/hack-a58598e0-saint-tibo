@@ -33,6 +33,34 @@
         "title": "ActionItemStatus",
         "type": "string"
       },
+      "Answer": {
+        "properties": {
+          "answer": {
+            "title": "Answer",
+            "type": "string"
+          },
+          "meeting_count": {
+            "title": "Meeting Count",
+            "type": "integer"
+          },
+          "participant_count": {
+            "title": "Participant Count",
+            "type": "integer"
+          },
+          "provider": {
+            "default": "honcho",
+            "title": "Provider",
+            "type": "string"
+          }
+        },
+        "required": [
+          "answer",
+          "meeting_count",
+          "participant_count"
+        ],
+        "title": "Answer",
+        "type": "object"
+      },
       "CurrentUser": {
         "properties": {
           "email": {
@@ -972,6 +1000,21 @@
           "finished_at"
         ],
         "title": "ProcessingJobRead",
+        "type": "object"
+      },
+      "Question": {
+        "properties": {
+          "query": {
+            "maxLength": 500,
+            "minLength": 3,
+            "title": "Query",
+            "type": "string"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "title": "Question",
         "type": "object"
       },
       "RecordingCreate": {
@@ -6694,6 +6737,92 @@
         "summary": "List Segments",
         "tags": [
           "results"
+        ]
+      }
+    },
+    "/api/v1/org/questions": {
+      "post": {
+        "operationId": "askOrganizationQuestion",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Question"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Answer"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Ask Organization Question",
+        "tags": [
+          "organization"
         ]
       }
     },

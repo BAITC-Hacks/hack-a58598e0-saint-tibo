@@ -22,6 +22,28 @@ export type AccessPolicy = {
 export type ActionItemStatus = 'open' | 'in_progress' | 'done' | 'cancelled';
 
 /**
+ * Answer
+ */
+export type Answer = {
+    /**
+     * Answer
+     */
+    answer: string;
+    /**
+     * Meeting Count
+     */
+    meeting_count: number;
+    /**
+     * Participant Count
+     */
+    participant_count: number;
+    /**
+     * Provider
+     */
+    provider?: string;
+};
+
+/**
  * CurrentUser
  */
 export type CurrentUser = {
@@ -565,6 +587,16 @@ export type ProcessingJobRead = {
      * Updated At
      */
     updated_at: string;
+};
+
+/**
+ * Question
+ */
+export type Question = {
+    /**
+     * Query
+     */
+    query: string;
 };
 
 /**
@@ -3275,6 +3307,47 @@ export type ListTranscriptSegmentsResponses = {
 };
 
 export type ListTranscriptSegmentsResponse = ListTranscriptSegmentsResponses[keyof ListTranscriptSegmentsResponses];
+
+export type AskOrganizationQuestionData = {
+    body: Question;
+    path?: never;
+    query?: never;
+    url: '/api/v1/org/questions';
+};
+
+export type AskOrganizationQuestionErrors = {
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ErrorResponse;
+    /**
+     * Internal Server Error
+     */
+    500: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
+};
+
+export type AskOrganizationQuestionError = AskOrganizationQuestionErrors[keyof AskOrganizationQuestionErrors];
+
+export type AskOrganizationQuestionResponses = {
+    /**
+     * Successful Response
+     */
+    200: Answer;
+};
+
+export type AskOrganizationQuestionResponse = AskOrganizationQuestionResponses[keyof AskOrganizationQuestionResponses];
 
 export type ListRemindersData = {
     body?: never;
