@@ -66,8 +66,8 @@ function PlayerSession({ source, ref, onPositionChange }: Props) {
     setDuration(length);
     onPositionChange?.({
       sourceId: source.id,
-      positionMs: current * 1000,
-      durationMs: length === null ? null : length * 1000,
+      positionMs: Math.round(current * 1000),
+      durationMs: length === null ? null : Math.round(length * 1000),
     });
   };
 

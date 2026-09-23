@@ -18,7 +18,11 @@ const player = useRef<MeetingPlayerHandle>(null);
 
 <MeetingPlayer
   ref={player}
-  source={{ id: recording.id, url: recording.mediaUrl, title: recording.title }}
+  source={{
+    id: recording.id,
+    url: recording.media_url,
+    title: recording.original_filename,
+  }}
   onPositionChange={({ positionMs, durationMs, sourceId }) => {
     // Feed the transcript's active-segment selection for this recording.
   }}
@@ -29,7 +33,7 @@ player.current?.seek(segment.start_ms);
 player.current?.pause();
 ```
 
-Все внешние таймкоды — миллисекунды. Время берётся из исходного медиа,
+Все внешние таймкоды — целые миллисекунды. Время берётся из исходного медиа,
 не из длительности последней реплики. Неизвестная длительность — `null`.
 Перемотка до загрузки метаданных откладывается; отрицательное время
 ограничивается нулём, время за концом — длительностью. Нечисловые значения
@@ -44,12 +48,13 @@ player.current?.pause();
 
 ## Серверная интеграция ещё ожидается
 
-В #8/#9 требуется browser-playable URL с серверной проверкой доступа
-и HTTP Range/206. HTMLMediaElement не устанавливает произвольный
-Authorization header. Схему выдачи определяет backend; плеер не создаёт
-вторую авторизацию, не хранит токены и не скачивает весь файл через fetch
-только ради установки заголовка. URL должен относиться к той же временной
-шкале, что и реплики. Родитель снимает компонент при смене сессии.
+По контракту #8/#9 URL — относительный `media_url` из записи, защищённый
+same-origin cookie proxy и серверной проверкой владельца на каждом запросе,
+включая HTTP Range/206. HTMLMediaElement не устанавливает произвольный
+Authorization header. Плеер не создаёт вторую авторизацию, не хранит токены
+и не скачивает весь файл через fetch ради установки заголовка. URL должен
+относиться к той же временной шкале, что и реплики. Родитель снимает
+компонент при смене сессии.
 
 При использовании локальных файлов вызывающая страница владеет blob URL
 и освобождает его при смене/удалении записи. #20 подключит синхронизацию
