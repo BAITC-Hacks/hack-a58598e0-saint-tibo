@@ -5,5 +5,3 @@ Current Behavior: `docs/meeting-connectors.md` records official Teams/Meet/Zoom 
 Known Gaps: No test organizer/account, vendor-provided charts/images, Kubernetes bot pool or complete local queue/storage setup. Teams browser participant remains an experiment, Zoom RTMS is not automatically a separate participant, Meet Media API requires Preview enrollment. No issue #22–25 is complete without live join/audio proof.
 
 Sources: See links and decision table in `docs/meeting-connectors.md` and comments on issue #22. Public research must not include local reference paths, meeting URLs, credentials, real recordings or private data.
-
-Last commit: `214bfdd`.
