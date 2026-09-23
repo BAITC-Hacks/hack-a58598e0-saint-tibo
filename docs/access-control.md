@@ -18,11 +18,15 @@ JWT действует 5 минут. FastAPI проверяет подпись �
 | Эффективные права интерфейса | `GET /api/v1/me` → `#/shared/auth` |
 | Типы Role / Permission / CurrentUser | OpenAPI → сгенерированный клиент |
 
-Обе роли имеют `profile:read`. Только `admin`: `access:read`, `users:read`,
+Обе роли имеют `profile:read`, `meeting:read`, `meeting:write`.
+Совещания, участники и записи дополнительно ограничены владельцем в SQL;
+участник протокола не получает доступ автоматически, admin не обходит owner ACL.
+Cookie media proxy получает серверный JWT и повторно проходит эти же проверки API.
+Только `admin`: `access:read`, `users:read`,
 `users:manage`, `sessions:revoke`. Новые permissions выдаются явно;
 неизвестные роли запрещены. Admin plugin отдельно проверяет операции с аккаунтами.
 Публичная регистрация создаёт обычного пользователя. Первый администратор
-назначается вне приложения: `bun run seed` создаёт `admin@saint_tibo.local`,
+назначается вне приложения: `bun run seed` создаёт `admin@saint-tibo.local`,
 `bun run admin:grant <email>` повышает существующий аккаунт.
 
 ## Запись в `app` по событию Better Auth

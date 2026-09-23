@@ -38,6 +38,16 @@ if (!(await environment.exists())) {
   }
 }
 
+const configured = await environment.text();
+if (!/^BACKEND_INTERNAL_URL=/m.test(configured)) {
+  await writeFile(
+    `${root}.env`,
+    `${configured.trimEnd()}\nBACKEND_INTERNAL_URL=http://localhost:\${BACKEND_PORT}\n`,
+    { mode: 0o600 }
+  );
+  process.stdout.write("Added the local backend origin for media playback.\n");
+}
+
 const install = Bun.spawn(["bun", "run", "install:all"], {
   cwd: root,
   stdin: "inherit",
