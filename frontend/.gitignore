@@ -1,0 +1,8 @@
+node_modules
+.DS_Store
+dist
+.env
+*.local
+.tanstack
+src/shared/lib/i18n
+src/app/routeTree.gen.ts

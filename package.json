@@ -1,0 +1,30 @@
+{
+  "name": "saint-tibo",
+  "private": true,
+  "packageManager": "bun@1.4.2",
+  "engines": {
+    "bun": "1.4.2"
+  },
+  "scripts": {
+    "setup": "bun run frontend/scripts/setup.ts && bun run infra && bun run migrate",
+    "install:all": "bun install --cwd frontend --frozen-lockfile && uv sync --locked --directory backend && bun install --cwd tools/api-client --frozen-lockfile --ignore-scripts",
+    "dev": "bun run infra && bun run migrate && bun --env-file=../.env run --cwd frontend dev:stack",
+    "infra": "docker compose up -d --wait postgres",
+    "infra:stop": "docker compose stop postgres",
+    "demo": "docker compose --profile app up -d --build --wait",
+    "demo:stop": "docker compose --profile app down",
+    "migrate": "bun --env-file=.env run migrate:all",
+    "seed": "bun --env-file=../.env run --cwd frontend seed",
+    "admin:grant": "bun --env-file=../.env run --cwd frontend admin:grant",
+    "token": "bun --env-file=../.env run --cwd frontend token",
+    "check": "bun --env-file=../.env run --cwd frontend typecheck && bun --env-file=../.env run --cwd frontend check && bun --env-file=../.env run --cwd frontend lint:fsd && bun --env-file=../.env run --cwd frontend i18n:check && uv run --directory backend ruff check . && uv run --directory backend ruff format --check . && uv run --directory backend mypy && uv run --directory backend python scripts/export_openapi.py --check",
+    "fix": "bun --env-file=../.env run --cwd frontend fix && uv run --directory backend ruff format . && uv run --directory backend ruff check --fix . && uv run --directory backend ruff format .",
+    "test": "bun --env-file=../.env run --cwd frontend test && uv run --directory backend pytest",
+    "test:integration": "bun run frontend/scripts/test-integration.ts",
+    "build": "bun --env-file=../.env run --cwd frontend build && uv build --directory backend",
+    "api:generate": "uv run --directory backend python scripts/export_openapi.py && bun --env-file=../.env run --cwd frontend api:generate",
+    "verify": "bun run check && bun run test && bun run build",
+    "migrate:all": "bun --env-file=../.env run --cwd frontend auth:db:migrate && uv run --directory backend alembic upgrade head",
+    "preview": "bun run infra && bun run migrate && bun --env-file=../.env run --cwd frontend preview:stack"
+  }
+}
