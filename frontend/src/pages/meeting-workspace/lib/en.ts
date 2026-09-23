@@ -50,8 +50,10 @@ export const en: Record<keyof typeof ru, string> = {
   saveError: "Could not save. Your changes remain in the form.",
   extractDraft: "Generate draft",
   extractingDraft: "Generating draft…",
-  extractDisclosure: "Transcript text is temporarily sent to an external API. Processing will move to local models later.",
-  extractError: "Could not generate the draft. Check the API configuration or try again later.",
+  extractDisclosure:
+    "Transcript text is temporarily sent to an external API. Processing will move to local models later.",
+  extractError:
+    "Could not generate the draft. Check the API configuration or try again later.",
   extractRefresh: "Refresh result",
   pdf: "Download PDF",
   docx: "Download DOCX",
@@ -123,7 +125,10 @@ export const en: Record<keyof typeof ru, string> = {
   diarizationUnavailable:
     "The voice separation model is not available yet. You can choose “Transcript only”.",
   speakerHelp:
-    "Labels represent different voices. Listen to a sample in the player and choose a participant if you recognize the voice. Action item owners are set separately.",
+    "Choose a person for a detected voice: their name immediately appears on the timeline and every turn by that voice. Click Save above to keep the change. Action item owners are assigned separately.",
+  voiceSegments: "turns",
+  showVoiceRows: "Show turns",
+  voiceAssignmentPending: "Unsaved — click Save above",
   speakerSample: "Go to sample",
   listenSpeaker: "Listen",
   stopSolo: "All voices",

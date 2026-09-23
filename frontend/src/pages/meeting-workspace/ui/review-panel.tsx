@@ -300,7 +300,9 @@ export function ReviewPanel({
       {canExtract && (
         <div className="rounded-lg border bg-muted/40 p-4">
           <Button
-            disabled={dirty || save.isPending || reload.isPending || extract.isPending}
+            disabled={
+              dirty || save.isPending || reload.isPending || extract.isPending
+            }
             onClick={() => {
               setExtractError(false);
               extract.mutate();
@@ -308,9 +310,14 @@ export function ReviewPanel({
           >
             {extract.isPending ? t.extractingDraft : t.extractDraft}
           </Button>
-          <p className="mt-2 text-sm text-muted-foreground">{t.extractDisclosure}</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {t.extractDisclosure}
+          </p>
           {extractError && (
-            <div role="alert" className="mt-2 space-y-2 text-sm text-destructive">
+            <div
+              role="alert"
+              className="mt-2 space-y-2 text-sm text-destructive"
+            >
               <p>{t.extractError}</p>
               <Button
                 variant="outline"
@@ -571,10 +578,29 @@ export function ReviewPanel({
                 {draft.speakers.map((speaker, index) => {
                   const canonical = canonicalSpeaker(speaker.id);
                   const turn = firstTurnBySpeaker.get(speaker.id);
+                  const displayName = participantById.get(
+                    canonical?.participant_id ?? ""
+                  )?.display_name;
+                  const segmentCount = review.segments.filter(
+                    (segment) =>
+                      canonicalSpeaker(segment.speaker_id)?.id === canonical?.id
+                  ).length;
+                  const savedAssignment =
+                    review.speakers.find((item) => item.id === speaker.id)
+                      ?.participant_id ?? null;
+                  const assignmentPending =
+                    !speaker.merged_into_speaker_id &&
+                    (speaker.participant_id ?? null) !== savedAssignment;
                   return (
-                    <div key={speaker.id} className="space-y-1 text-sm">
+                    <div
+                      key={speaker.id}
+                      className="space-y-2 rounded-lg border p-2 text-sm"
+                    >
                       <label className="block space-y-1">
-                        <span>{speaker.label}</span>
+                        <span className="font-medium">
+                          {speaker.label}
+                          {displayName ? ` → ${displayName}` : ""}
+                        </span>
                         <select
                           aria-label={`${speaker.label}: ${t.participants}`}
                           className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm disabled:opacity-60"
@@ -603,6 +629,29 @@ export function ReviewPanel({
                           ))}
                         </select>
                       </label>
+                      <p className="text-xs text-muted-foreground">
+                        {displayName ?? t.unknown} · {segmentCount} {t.voiceSegments}
+                      </p>
+                      {displayName && segmentCount > 0 && (
+                        <button
+                          type="button"
+                          className="text-xs font-medium text-primary underline"
+                          onClick={() => {
+                            setSpeakerFilter(canonical?.id ?? "");
+                            setTab("transcript");
+                          }}
+                        >
+                          {t.showVoiceRows}
+                        </button>
+                      )}
+                      {assignmentPending && (
+                        <p
+                          role="status"
+                          className="text-xs font-medium text-amber-700 dark:text-amber-300"
+                        >
+                          {t.voiceAssignmentPending}
+                        </p>
+                      )}
                       {speaker.merged_into_speaker_id && (
                         <p className="text-xs text-muted-foreground">
                           {t.speakerMerged}: {canonical?.label}
