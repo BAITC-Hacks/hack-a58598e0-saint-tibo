@@ -52,7 +52,7 @@ if [ -n "$deployed_revision" ]; then
 fi
 # Only tracked source is transferred. No GitHub credentials or workstation .env.
 git archive "$revision" | ssh "$host" "umask 077; mkdir -p '$release'; tar -xf - -C '$release'"
-ssh "$host" sh -s -- "$release" "$revision" "$domain" "$dev_login" "$deployed_revision" <<'REMOTE'
+MSYS_NO_PATHCONV=1 ssh "$host" sh -s -- "$release" "$revision" "$domain" "$dev_login" "$deployed_revision" <<'REMOTE'
 set -eu
 release=$1
 revision=$2
