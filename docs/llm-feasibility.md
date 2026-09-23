@@ -120,8 +120,57 @@ Ten focused schema/client rejection cases cover foreign/boolean references,
 extra keys, duplicate keys, invented dates, missing evidence and nonlocal URLs.
 No repository test or linter suite was run.
 
-Current constrained CPU runtime/live evidence is recorded below after execution.
+The constrained case-2 CPU run **failed** with `extraction_incomplete`; no
+live API extraction success is claimed. See the exact result below.
+The exact pinned launcher also runs inside the existing processing Docker image
+(`--version`: build 11120, commit `08b1d2aea`, GNU 11.4.0, Linux x86_64),
+and the model bind is readable as the image's unprivileged application user.
 
 A separate synthetic supervisor scenario confirmed that a reported incomplete
 completion remains an error and cancellation leaves no child process group.
 It uses no model and makes no inference-quality claim.
+
+The separately delivered release fix #104 (`ac8cfa4`) must be present when
+running case 2 through the complete STT pipeline: its WAV has 3,296,500 frames
+at 16 kHz, whose canonical integer-ceil duration is 206,032 ms. The previous
+STT rounding produced 206,031 ms and failed the strict terminal-duration
+check. This extraction benchmark consumes an existing transcript and does
+not by itself exercise that repaired STT boundary.
+
+## Current one-case runtime result — NO-GO
+
+2026-09-23, existing private case-2 STT transcript, one run only. Unit
+`saint-extract-69-case2` on `saint-dev-danil`, 4 CPU, MemoryMax 6 GiB,
+PrivateNetwork enabled, current compact schema/prompt, thinking disabled,
+no repacking, context 8,192, output limit 2,048 tokens.
+
+- Exit 1 / `extraction_incomplete` after **820.418 seconds** (13 min 40 s).
+  The client rejected a non-`stop` finish reason. The raw finish reason and
+  final usage were not persisted on this error path; hitting the output cap
+  is the likely explanation, not a separately captured final counter.
+- Last sampled progress: 2,977 prompt tokens processed, 1,535 decoded tokens,
+  513 tokens remaining in the output budget. This was active generation.
+- CPU usage: 3,250.424 CPU-seconds. A short concurrent frontend build means
+  wall time is not an uncontended performance comparison.
+- Sampled model VmHWM: **6,335,348,736 bytes** (~5.90 GiB). The final model
+  peak was not captured before shutdown; do not call this sample the final peak.
+- Cgroup memory peak: 1,364,332,544 bytes. Weights were already in the host's
+  file cache, whose charges may belong to another cgroup. This smaller number
+  is not the full model footprint or proof of a cold-start 6 GiB safety margin.
+- The running namespace had only `lo` and zero IPv4 routes. No outside
+  transcript call, download or cloud fallback was used.
+- No result file was created and no result version was published. The child
+  runtime exited, MainPID became 0, and the CPU slot was returned to the coordinator.
+
+Safe failure metrics are private at
+`/opt/saint-llm-bench/continuation-69/private/case2-failure-metrics.json`.
+Original bench files and the original Devin worktree remain unchanged.
+No retry, second model, or model sweep was run.
+
+The adapter and draft persistence are implemented on the feature branch, but
+this profile is **not ready for automatic protocol delivery or release**.
+Current blockers are a bounded complete response, semantic acceptance of both
+case recordings (especially corrected/event deadlines and assignee vs speaker),
+and a real deployed `target_stage=extract` success. A future focused run may
+adjust the output budget or reduce requested summary volume after the owner
+allocates another CPU slot; this task does not claim that change was measured.
