@@ -1,5 +1,6 @@
 import json
 import logging
+from collections.abc import Sequence
 from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
@@ -10,19 +11,86 @@ from saint_tibo.core.errors import APIError
 from saint_tibo.core.pagination import PageParams, paginate
 from saint_tibo.modules.meetings.models import Meeting, Participant, Recording
 from saint_tibo.modules.meetings.service import meeting, not_found, recording
+from saint_tibo.modules.processing.diarization import DiarizationOutput
 from saint_tibo.modules.processing.models import ProcessingJob
 from saint_tibo.modules.results.models import ResultReview, ResultVersion, Segment
 from saint_tibo.modules.results.schemas import (
+    DiarizationData,
+    DiarizationProvenance,
+    DiarizationRead,
+    DiarizationSpeaker,
+    DiarizationTurn,
     ReviewActionItemRead,
     ReviewMeeting,
     ReviewParticipant,
     ReviewRead,
+    ReviewSpeakerAssignment,
+    ReviewSpeakerRead,
     ReviewSummary,
     ReviewUpdate,
     TranscriptSegment,
 )
 
 logger = logging.getLogger(__name__)
+
+
+def speaker_data(output: DiarizationOutput) -> DiarizationData:
+    ids = {label: uuid4() for label in dict.fromkeys(turn.speaker_label for turn in output.turns)}
+    return DiarizationData(
+        duration_ms=output.provenance.duration_ms,
+        speakers=[DiarizationSpeaker(speaker_id=value, label=key) for key, value in ids.items()],
+        turns=[DiarizationTurn(speaker_id=ids[turn.speaker_label], start_ms=turn.start_ms,
+                               end_ms=turn.end_ms) for turn in output.turns],
+        provenance=DiarizationProvenance.model_validate(output.provenance.model_dump(include={
+            "bundle_id", "sherpa_onnx_version", "model_sha256", "requested_num_speakers",
+            "cluster_threshold",
+        })),
+    )
+
+
+def segment_speakers(
+    segments: list[TranscriptSegment], data: DiarizationData,
+) -> dict[int, UUID | None]:
+    """Keep a sentence unknown whenever its interval intersects multiple voices."""
+    assignments: dict[int, UUID | None] = {}
+    active: list[DiarizationTurn] = []
+    cursor = 0
+    for index, segment in sorted(enumerate(segments), key=lambda item: item[1].start_ms):
+        while cursor < len(data.turns) and data.turns[cursor].start_ms < segment.end_ms:
+            active.append(data.turns[cursor])
+            cursor += 1
+        active = [turn for turn in active if turn.end_ms > segment.start_ms]
+        overlapping = {turn.speaker_id for turn in active if turn.start_ms < segment.end_ms}
+        assignments[index] = next(iter(overlapping)) if len(overlapping) == 1 else None
+    return assignments
+
+
+def default_speakers(version: ResultVersion) -> list[ReviewSpeakerRead]:
+    if version.diarization is None:
+        return []
+    data = DiarizationData.model_validate(version.diarization)
+    return [ReviewSpeakerRead(speaker_id=row.speaker_id, label=row.label) for row in data.speakers]
+
+
+def reviewed_speakers(
+    version: ResultVersion, assignments: Sequence[ReviewSpeakerAssignment], participant_ids: set[UUID],
+) -> list[ReviewSpeakerRead]:
+    speakers = {row.speaker_id: row for row in default_speakers(version)}
+    for assignment in assignments:
+        if assignment.speaker_id not in speakers:
+            raise APIError(422, "invalid_speaker", "Speaker must belong to this result")
+        speakers[assignment.speaker_id] = ReviewSpeakerRead(
+            **assignment.model_dump(exclude={"label"}), label=speakers[assignment.speaker_id].label
+        )
+    for speaker in speakers.values():
+        if speaker.participant_id is not None and speaker.participant_id not in participant_ids:
+            raise APIError(422, "invalid_speaker_participant", "Participant must belong to this meeting")
+        if speaker.merged_into_speaker_id is not None:
+            target = speakers.get(speaker.merged_into_speaker_id)
+            if (target is None or target.speaker_id == speaker.speaker_id
+                    or target.merged_into_speaker_id is not None or speaker.participant_id is not None):
+                raise APIError(422, "invalid_speaker_merge", "Merge into a distinct canonical speaker")
+    return list(speakers.values())
 
 
 async def publish_transcript(
@@ -34,6 +102,7 @@ async def publish_transcript(
     *,
     model_id: str,
     model_revision: str,
+    diarization: DiarizationOutput | None = None,
 ) -> UUID:
     # Same lock order as recording DELETE: recording first, job second. Inference
     # has finished before this transaction begins; no locks across model execution.
@@ -56,6 +125,12 @@ async def publish_transcript(
         raise APIError(
             422, "invalid_transcript_timing", "Transcript differs from the recording clock"
         )
+    if (current.target_stage == "diarize") != (diarization is not None):
+        raise APIError(422, "invalid_diarization_output", "Diarization does not match the requested stage")
+    data = speaker_data(diarization) if diarization is not None else None
+    if data is not None and data.duration_ms != duration_ms:
+        raise APIError(422, "invalid_diarization_output", "Diarization differs from the recording clock")
+    assignments = segment_speakers(segments, data) if data is not None else {}
     version_id = uuid4()
     session.add(
         ResultVersion(
@@ -68,13 +143,16 @@ async def publish_transcript(
             model_id=model_id,
             model_revision=model_revision,
             segment_count=len(segments),
+            completed_stage="diarize" if data is not None else "transcribe",
+            diarization=data.model_dump(mode="json") if data is not None else None,
         )
     )
     await session.flush()
     session.add_all(
         [
-            Segment(result_version_id=version_id, recording_id=media.id, **row.model_dump())
-            for row in segments
+            Segment(result_version_id=version_id, recording_id=media.id,
+                    speaker_id=assignments.get(index), **row.model_dump())
+            for index, row in enumerate(segments)
         ]
     )
     current.status = "succeeded"
@@ -131,6 +209,17 @@ async def list_versions(
     return list(rows), total
 
 
+async def get_diarization(
+    session: AsyncSession, owner_id: str, meeting_id: UUID, recording_id: UUID, version_id: UUID,
+) -> DiarizationRead:
+    version = await get_version(session, owner_id, meeting_id, recording_id, version_id)
+    if version.diarization is None:
+        raise APIError(409, "diarization_not_available", "This result has no speaker diarization")
+    return DiarizationRead(
+        result_version_id=version.id, recording_id=recording_id, **version.diarization
+    )
+
+
 async def review_snapshot(
     session: AsyncSession, version: ResultVersion, revision: int
 ) -> ReviewRead | None:
@@ -157,6 +246,7 @@ async def initial_review(
         participants=[ReviewParticipant.model_validate(row) for row in participants],
         action_items=[],
         summary=ReviewSummary(),
+        speakers=default_speakers(version),
     )
 
 
@@ -194,10 +284,11 @@ async def update_review(
     if body.revision != version.revision:
         raise APIError(409, "version_conflict", "Reload the latest revision before saving")
     previous = await review_snapshot(session, version, version.revision)
+    base = previous if previous is not None else await initial_review(session, version, meeting_row)
     summary = (
         body.summary
         if body.summary is not None
-        else (previous.summary if previous is not None else ReviewSummary())
+        else base.summary
     )
     items = (
         [
@@ -205,9 +296,7 @@ async def update_review(
             for item in body.action_items
         ]
         if body.action_items is not None
-        else previous.action_items
-        if previous is not None
-        else []
+        else base.action_items
     )
     participants = list(
         await session.scalars(
@@ -218,6 +307,9 @@ async def update_review(
         )
     )
     participant_ids = {row.id for row in participants}
+    speakers = reviewed_speakers(
+        version, body.speakers if body.speakers is not None else base.speakers, participant_ids,
+    )
     if any(
         item.assignee_participant_id is not None
         and item.assignee_participant_id not in participant_ids
@@ -240,7 +332,7 @@ async def update_review(
         if found != source_ids:
             raise APIError(422, "invalid_source_segment", "Sources must belong to this result")
 
-    content_changed = body.summary is not None or body.action_items is not None
+    content_changed = any(value is not None for value in (body.summary, body.action_items, body.speakers))
     reviewed = (
         body.reviewed
         if body.reviewed is not None
@@ -257,6 +349,7 @@ async def update_review(
         participants=[ReviewParticipant.model_validate(row) for row in participants],
         action_items=items,
         summary=summary,
+        speakers=speakers,
     )
     payload = snapshot.model_dump(mode="json")
     if len(json.dumps(payload, ensure_ascii=False).encode()) > 512 * 1024:
@@ -266,7 +359,7 @@ async def update_review(
     )
     version.revision = snapshot.revision
     version.status = "reviewed" if reviewed else "draft"
-    # completed_stage remains transcribe: human review does not claim ML extraction.
+    # Human corrections do not change which model stages actually completed.
     await session.commit()
     logger.info(
         "Saved result review result_version_id=%s revision=%s reviewed=%s",

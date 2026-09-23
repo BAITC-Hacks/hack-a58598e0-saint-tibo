@@ -19,6 +19,7 @@ from saint_tibo.core.logging import configure_logging
 from saint_tibo.db.session import create_engine
 from saint_tibo.modules.meetings.models import Recording
 from saint_tibo.modules.meetings.storage import recording_dir
+from saint_tibo.modules.processing.diarization import diarize
 from saint_tibo.modules.processing.models import ProcessingJob
 from saint_tibo.modules.processing.service import interrupt_expired
 from saint_tibo.modules.processing.transcription import transcribe
@@ -133,6 +134,10 @@ async def process(factory: SessionFactory, config: Settings, job: ProcessingJob)
     segments, detected_language, model_id, model_revision = await transcribe(
         config, path, job.language, duration, progress
     )
+    diarization = None
+    if job.target_stage == "diarize":
+        await save(factory, job, stage="diarize", progress=None)
+        diarization = await diarize(config, path, duration)
     async with factory() as session:
         await publish_transcript(
             session,
@@ -142,6 +147,7 @@ async def process(factory: SessionFactory, config: Settings, job: ProcessingJob)
             duration,
             model_id=model_id,
             model_revision=model_revision,
+            diarization=diarization,
         )
 
 
