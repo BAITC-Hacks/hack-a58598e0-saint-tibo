@@ -3022,6 +3022,68 @@ export type ExportReviewedResultResponses = {
 
 export type ExportReviewedResultResponse = ExportReviewedResultResponses[keyof ExportReviewedResultResponses];
 
+export type ExtractResultDraftData = {
+    body?: never;
+    path: {
+        /**
+         * Meeting Id
+         */
+        meeting_id: string;
+        /**
+         * Recording Id
+         */
+        recording_id: string;
+        /**
+         * Result Version Id
+         */
+        result_version_id: string;
+    };
+    query?: never;
+    url: '/api/v1/meetings/{meeting_id}/recordings/{recording_id}/results/{result_version_id}/extract';
+};
+
+export type ExtractResultDraftErrors = {
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ErrorResponse;
+    /**
+     * Internal Server Error
+     */
+    500: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
+};
+
+export type ExtractResultDraftError = ExtractResultDraftErrors[keyof ExtractResultDraftErrors];
+
+export type ExtractResultDraftResponses = {
+    /**
+     * Successful Response
+     */
+    200: ReviewRead;
+};
+
+export type ExtractResultDraftResponse = ExtractResultDraftResponses[keyof ExtractResultDraftResponses];
+
 export type GetResultReviewData = {
     body?: never;
     path: {
