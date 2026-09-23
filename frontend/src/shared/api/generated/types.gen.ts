@@ -235,6 +235,50 @@ export type PageRecordingRead = {
 };
 
 /**
+ * PageResultVersionRead
+ */
+export type PageResultVersionRead = {
+    /**
+     * Items
+     */
+    items: Array<ResultVersionRead>;
+    /**
+     * Limit
+     */
+    limit: number;
+    /**
+     * Offset
+     */
+    offset: number;
+    /**
+     * Total
+     */
+    total: number;
+};
+
+/**
+ * PageSegmentRead
+ */
+export type PageSegmentRead = {
+    /**
+     * Items
+     */
+    items: Array<SegmentRead>;
+    /**
+     * Limit
+     */
+    limit: number;
+    /**
+     * Offset
+     */
+    offset: number;
+    /**
+     * Total
+     */
+    total: number;
+};
+
+/**
  * ParticipantCreate
  */
 export type ParticipantCreate = {
@@ -321,6 +365,12 @@ export type ProcessingJobCreate = {
      * Retry a failed/interrupted job of this recording as a new job.
      */
     retry_of_job_id?: string | null;
+    /**
+     * Target Stage
+     *
+     * Success means transcript ready; extraction is separate.
+     */
+    target_stage?: 'transcribe';
 };
 
 /**
@@ -389,6 +439,10 @@ export type ProcessingJobRead = {
      * Status
      */
     status: 'queued' | 'running' | 'succeeded' | 'failed' | 'interrupted';
+    /**
+     * Target Stage
+     */
+    target_stage: 'transcribe';
     /**
      * Updated At
      */
@@ -491,9 +545,105 @@ export type RecordingSource = 'file' | 'live' | 'teams' | 'google_meet' | 'zoom'
 export type RecordingStatus = 'receiving' | 'ready' | 'incomplete' | 'failed';
 
 /**
+ * ResultVersionRead
+ */
+export type ResultVersionRead = {
+    /**
+     * Completed Stage
+     */
+    completed_stage: 'transcribe';
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Duration Ms
+     */
+    duration_ms: number;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Is Incomplete
+     */
+    is_incomplete: boolean;
+    /**
+     * Job Id
+     */
+    job_id: string;
+    /**
+     * Language
+     */
+    language: string;
+    /**
+     * Model Id
+     */
+    model_id: string;
+    /**
+     * Model Revision
+     */
+    model_revision: string;
+    /**
+     * Recording Id
+     */
+    recording_id: string;
+    /**
+     * Revision
+     */
+    revision: number;
+    /**
+     * Segment Count
+     */
+    segment_count: number;
+    /**
+     * Status
+     */
+    status: 'draft' | 'reviewed';
+    /**
+     * Updated At
+     */
+    updated_at: string;
+};
+
+/**
  * Role
  */
 export type Role = 'user' | 'admin';
+
+/**
+ * SegmentRead
+ */
+export type SegmentRead = {
+    /**
+     * End Ms
+     */
+    end_ms: number;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Recording Id
+     */
+    recording_id: string;
+    /**
+     * Result Version Id
+     */
+    result_version_id: string;
+    /**
+     * Speaker Id
+     */
+    speaker_id: string | null;
+    /**
+     * Start Ms
+     */
+    start_ms: number;
+    /**
+     * Text
+     */
+    text: string;
+};
 
 /**
  * ValidationIssue
@@ -2155,6 +2305,194 @@ export type HeadRecordingMediaResponses = {
 };
 
 export type HeadRecordingMediaResponse = HeadRecordingMediaResponses[keyof HeadRecordingMediaResponses];
+
+export type ListResultVersionsData = {
+    body?: never;
+    path: {
+        /**
+         * Meeting Id
+         */
+        meeting_id: string;
+        /**
+         * Recording Id
+         */
+        recording_id: string;
+    };
+    query?: {
+        /**
+         * Limit
+         */
+        limit?: number;
+        /**
+         * Offset
+         */
+        offset?: number;
+    };
+    url: '/api/v1/meetings/{meeting_id}/recordings/{recording_id}/results';
+};
+
+export type ListResultVersionsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ErrorResponse;
+    /**
+     * Internal Server Error
+     */
+    500: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
+};
+
+export type ListResultVersionsError = ListResultVersionsErrors[keyof ListResultVersionsErrors];
+
+export type ListResultVersionsResponses = {
+    /**
+     * Successful Response
+     */
+    200: PageResultVersionRead;
+};
+
+export type ListResultVersionsResponse = ListResultVersionsResponses[keyof ListResultVersionsResponses];
+
+export type GetResultVersionData = {
+    body?: never;
+    path: {
+        /**
+         * Meeting Id
+         */
+        meeting_id: string;
+        /**
+         * Recording Id
+         */
+        recording_id: string;
+        /**
+         * Result Version Id
+         */
+        result_version_id: string;
+    };
+    query?: never;
+    url: '/api/v1/meetings/{meeting_id}/recordings/{recording_id}/results/{result_version_id}';
+};
+
+export type GetResultVersionErrors = {
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ErrorResponse;
+    /**
+     * Internal Server Error
+     */
+    500: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
+};
+
+export type GetResultVersionError = GetResultVersionErrors[keyof GetResultVersionErrors];
+
+export type GetResultVersionResponses = {
+    /**
+     * Successful Response
+     */
+    200: ResultVersionRead;
+};
+
+export type GetResultVersionResponse = GetResultVersionResponses[keyof GetResultVersionResponses];
+
+export type ListTranscriptSegmentsData = {
+    body?: never;
+    path: {
+        /**
+         * Meeting Id
+         */
+        meeting_id: string;
+        /**
+         * Recording Id
+         */
+        recording_id: string;
+        /**
+         * Result Version Id
+         */
+        result_version_id: string;
+    };
+    query?: {
+        /**
+         * Limit
+         */
+        limit?: number;
+        /**
+         * Offset
+         */
+        offset?: number;
+    };
+    url: '/api/v1/meetings/{meeting_id}/recordings/{recording_id}/results/{result_version_id}/segments';
+};
+
+export type ListTranscriptSegmentsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ErrorResponse;
+    /**
+     * Internal Server Error
+     */
+    500: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
+};
+
+export type ListTranscriptSegmentsError = ListTranscriptSegmentsErrors[keyof ListTranscriptSegmentsErrors];
+
+export type ListTranscriptSegmentsResponses = {
+    /**
+     * Successful Response
+     */
+    200: PageSegmentRead;
+};
+
+export type ListTranscriptSegmentsResponse = ListTranscriptSegmentsResponses[keyof ListTranscriptSegmentsResponses];
 
 export type GetLivenessData = {
     body?: never;
