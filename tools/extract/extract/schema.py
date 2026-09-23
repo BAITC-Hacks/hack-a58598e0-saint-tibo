@@ -91,7 +91,7 @@ def validate(payload: Any, known_segment_ids: set[int]) -> dict[str, Any]:
         # An explicit absence marker is not a deadline. Preserve all actual
         # relative/event-based phrases and leave attribution to human review.
         if item["due_text"] is not None and " ".join(item["due_text"].casefold().split()) in {
-            "не указан", "срок не указан",
+            "не указан", "не указано", "срок не указан",
         }:
             item["due_text"] = None
         _check(item["due_date"] is None)

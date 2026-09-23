@@ -332,7 +332,7 @@ above remain open; replay validates wiring and persistence, not model quality.
 ## Confirmed unknown-deadline normalization — 2026-09-23
 
 The local structured-output validator now converts only the exact absence
-markers `не указан` and `срок не указан` (case/whitespace normalized) in
+markers `не указан`, `не указано` and `срок не указан` (case/whitespace normalized) in
 `due_text` to null. It preserves every other deadline phrase, task, assignee,
 source reference and summary field. This does not infer dates or merge similar
 tasks. The prompt and model remain unchanged; #115's separate extraction API
