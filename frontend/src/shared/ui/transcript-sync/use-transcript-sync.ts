@@ -9,6 +9,7 @@ type Options = {
   resultVersionId: string;
   segments: readonly TranscriptSegment[];
   seek: (positionMs: number) => void;
+  playbackPosition?: PlaybackPosition | null;
 };
 
 /** Mount with key={`${recordingId}:${resultVersionId}`} to reset a transcript session. */
@@ -17,6 +18,7 @@ export function useTranscriptSync({
   resultVersionId,
   segments,
   seek,
+  playbackPosition,
 }: Options) {
   const [position, setPosition] = useState<PlaybackPosition | null>(null);
   const [follow, setFollow] = useState(true);
@@ -32,8 +34,12 @@ export function useTranscriptSync({
         segment.end_ms > segment.start_ms
     )
     .toSorted((a, b) => a.start_ms - b.start_ms || a.id.localeCompare(b.id));
+  const currentPosition =
+    playbackPosition === undefined ? position : playbackPosition;
   const positionMs =
-    position?.sourceId === recordingId ? position.positionMs : null;
+    currentPosition?.sourceId === recordingId
+      ? currentPosition.positionMs
+      : null;
   // Half-open intervals: silence clears the highlight; latest start wins overlaps.
   const activeSegmentId =
     positionMs === null
