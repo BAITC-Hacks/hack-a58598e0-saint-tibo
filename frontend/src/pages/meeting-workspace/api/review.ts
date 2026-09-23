@@ -7,13 +7,19 @@ import {
   jsonBodySerializer,
 } from "#/shared/api";
 import {
+  getResultDiarization,
   getResultReview,
   listRecordings,
   listResultVersions,
   listTranscriptSegments,
   updateResultReview,
 } from "#/shared/api";
-import type { ResultVersionRead, ReviewRead, SegmentRead } from "#/shared/api";
+import type {
+  DiarizationRead,
+  ResultVersionRead,
+  ReviewRead,
+  SegmentRead,
+} from "#/shared/api";
 
 const segment = z.object({
   id: z.string(),
@@ -29,6 +35,7 @@ const speaker = z.object({
   result_version_id: z.string(),
   label: z.string(),
   participant_id: z.string().nullable(),
+  merged_into_speaker_id: z.string().nullable().default(null),
 });
 const action = z.object({
   id: z.string(),
@@ -62,7 +69,9 @@ export const reviewSchema = z.object({
   action_items: z.array(action),
 });
 
-export type ReviewDocument = z.infer<typeof reviewSchema>;
+export type ReviewDocument = z.infer<typeof reviewSchema> & {
+  diarization?: DiarizationRead;
+};
 
 export class ReviewConflictError extends Error {}
 
@@ -71,7 +80,8 @@ const summaryEntries = (items: string[]) =>
 
 function realDocument(
   data: ReviewRead,
-  segments: SegmentRead[]
+  segments: SegmentRead[],
+  diarization?: DiarizationRead
 ): ReviewDocument {
   return {
     source: "real",
@@ -80,7 +90,14 @@ function realDocument(
     revision: data.revision,
     reviewed: data.reviewed,
     segments,
-    speakers: [],
+    diarization,
+    speakers: (data.speakers ?? []).map((item) => ({
+      id: item.speaker_id,
+      result_version_id: data.result_version_id,
+      label: item.label,
+      participant_id: item.participant_id ?? null,
+      merged_into_speaker_id: item.merged_into_speaker_id ?? null,
+    })),
     action_items: data.action_items.map((item) => ({
       id: item.id ?? crypto.randomUUID(),
       result_version_id: item.result_version_id,
@@ -156,7 +173,21 @@ async function realTranscript(
   });
   if (!review.data)
     throw new Error(apiErrorMessage(review.error, "Could not load review"));
-  return realDocument(review.data, segments);
+  let diarization: DiarizationRead | undefined;
+  if (latest.completed_stage === "diarize") {
+    const result = await getResultDiarization({
+      client: backendClient,
+      path: {
+        meeting_id: meetingId,
+        recording_id: latest.recording_id,
+        result_version_id: latest.id,
+      },
+    });
+    if (!result.data)
+      throw new Error(apiErrorMessage(result.error, "Could not load speakers"));
+    diarization = result.data;
+  }
+  return realDocument(review.data, segments, diarization);
 }
 
 export async function loadReview(
@@ -197,6 +228,11 @@ export async function saveReview(meetingId: string, review: ReviewDocument) {
       body: {
         revision: review.revision,
         reviewed: review.reviewed,
+        speakers: review.speakers.map((item) => ({
+          speaker_id: item.id,
+          participant_id: item.participant_id,
+          merged_into_speaker_id: item.merged_into_speaker_id,
+        })),
         summary: {
           topics: review.summary.topics.map((entry) => entry.text),
           decisions: review.summary.decisions.map((entry) => entry.text),
@@ -221,7 +257,7 @@ export async function saveReview(meetingId: string, review: ReviewDocument) {
       throw new ReviewConflictError("Review revision changed");
     if (!result.data)
       throw new Error(apiErrorMessage(result.error, "Could not save review"));
-    return realDocument(result.data, review.segments);
+    return realDocument(result.data, review.segments, review.diarization);
   }
   const result = await backendClient.patch({
     ...jsonBodySerializer,
@@ -260,7 +296,7 @@ export async function reloadReview(meetingId: string, review: ReviewDocument) {
   });
   if (!result.data)
     throw new Error(apiErrorMessage(result.error, "Could not load review"));
-  return realDocument(result.data, review.segments);
+  return realDocument(result.data, review.segments, review.diarization);
 }
 
 export async function downloadReview(

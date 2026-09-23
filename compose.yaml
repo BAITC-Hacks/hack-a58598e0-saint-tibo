@@ -100,6 +100,8 @@ services:
     volumes:
       - recordings_data:/var/lib/saint-tibo/recordings:ro
       - ${STT_MODELS_PATH:-./models}:/models:ro
+      - ${EXTRACT_RUNTIME_PATH:-./models/llama-b11120}:/llama:ro
+      - ${EXTRACT_MODELS_PATH:-./models/qwen3-8b}:/extract-model:ro
     networks: [processing]
     cpus: 4
     mem_limit: 6g
