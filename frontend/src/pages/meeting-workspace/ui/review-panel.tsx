@@ -108,6 +108,27 @@ export function ReviewPanel({
   const segmentById = new Map(
     review.segments.map((segment) => [segment.id, segment])
   );
+  const overviewTopics = review.summary.topics
+    .map((entry) => entry.text.trim())
+    .filter(Boolean);
+  const overviewDecisions = review.summary.decisions
+    .map((entry) => entry.text.trim())
+    .filter(Boolean);
+  const overviewQuestions = review.summary.open_questions.filter((entry) =>
+    entry.text.trim()
+  );
+  const overviewActions = review.action_items.filter((item) => item.text.trim());
+  const overviewSources = [...new Set([
+    ...(review.summary_source_segment_ids ?? []),
+    ...overviewActions.flatMap((item) => item.source_segment_ids),
+  ])]
+    .map((id) => segmentById.get(id))
+    .filter((segment) => segment !== undefined);
+  const hasOverview =
+    overviewTopics.length > 0 ||
+    overviewDecisions.length > 0 ||
+    overviewQuestions.length > 0 ||
+    overviewActions.length > 0;
   const participantById = new Map(
     participants.map((participant) => [participant.id, participant])
   );
@@ -486,6 +507,64 @@ export function ReviewPanel({
           <p className="rounded-xl border p-5 text-sm text-muted-foreground">
             {t.detailsUnavailable}
           </p>
+        )}
+        {tab === "summary" && review.source === "real" && (
+          <section className="space-y-3 rounded-xl border bg-card p-5" aria-label={t.overviewTitle}>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h3 className="text-lg font-semibold">{t.overviewTitle}</h3>
+              <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium">
+                {review.reviewed ? t.overviewConfirmed : t.overviewDraft}
+              </span>
+            </div>
+            {hasOverview ? (
+              <>
+                {overviewTopics.length > 0 && (
+                  <p className="text-sm leading-relaxed">
+                    {overviewTopics.join(" · ")}
+                  </p>
+                )}
+                {overviewDecisions.length > 0 && (
+                  <div className="text-sm">
+                    <h4 className="font-medium">{t.decisions}</h4>
+                    <ul className="mt-1 list-disc space-y-1 ps-5">
+                      {overviewDecisions.map((decision, index) => (
+                        <li key={index}>{decision}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {overviewActions.length > 0 && (
+                  <div className="text-sm">
+                    <h4 className="font-medium">{t.actions}</h4>
+                    <ul className="mt-1 list-disc space-y-1 ps-5">
+                      {overviewActions.slice(0, 3).map((item) => (
+                        <li key={item.id}>{item.text}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                <p className="text-sm text-muted-foreground">
+                  {t.actions}: {overviewActions.length} · {t.openQuestions}: {overviewQuestions.length}
+                </p>
+                {overviewSources.length > 0 && (
+                  <div className="flex flex-wrap gap-x-3 gap-y-1">
+                    {overviewSources.map((segment) => (
+                      <button
+                        key={segment.id}
+                        type="button"
+                        className="text-xs text-primary underline"
+                        onClick={() => seekSource(segment.id)}
+                      >
+                        {t.source} {transcriptTime(segment.start_ms)}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">{t.overviewEmpty}</p>
+            )}
+          </section>
         )}
         {tab === "summary" && canEdit && (
           <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_260px]">

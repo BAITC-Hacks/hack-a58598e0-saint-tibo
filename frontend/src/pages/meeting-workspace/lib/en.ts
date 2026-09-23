@@ -37,6 +37,10 @@ export const en: Record<keyof typeof ru, string> = {
   notice:
     "Inform participants about recording and AI processing. This system does not collect consent confirmations.",
   summary: "Summary",
+  overviewTitle: "Meeting overview",
+  overviewDraft: "Draft — needs review",
+  overviewConfirmed: "Confirmed minutes",
+  overviewEmpty: "No summary yet. Generate a draft from the transcript or fill in the result manually.",
   transcript: "Transcript",
   actions: "Action items",
   speakers: "Speakers",
