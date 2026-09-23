@@ -272,19 +272,24 @@ export function MeetingPage({ meetingId }: { meetingId: string }) {
                 onChange={(event) => {
                   if (
                     event.target.value === "transcribe" ||
-                    event.target.value === "diarize"
+                    event.target.value === "diarize" ||
+                    event.target.value === "extract"
                   )
                     setTargetStage(event.target.value);
                 }}
               >
                 <option value="transcribe">{t.transcriptionOnly}</option>
                 <option value="diarize">{t.transcriptionSpeakers}</option>
+                <option value="extract">{t.fullPipeline}</option>
               </select>
             </label>
             {targetStage === "diarize" && (
               <p className="mt-2 text-sm text-muted-foreground">
                 {t.diarizationHelp}
               </p>
+            )}
+            {targetStage === "extract" && (
+              <p className="mt-2 text-sm text-muted-foreground">{t.extractionHelp}</p>
             )}
             {reviewDirty && (
               <p className="mt-2 text-sm text-muted-foreground">
@@ -459,7 +464,7 @@ function JobStatus({ job }: { job: ProcessingJobRead }) {
     <div className="mt-4 space-y-2">
       <div className="flex flex-wrap justify-between gap-2 text-sm">
         <span>
-          {label} · {job.stage === "diarize" ? t.diarizing : job.stage}
+          {label} · {job.stage === "extract" ? t.extracting : job.stage === "diarize" ? t.diarizing : job.stage}
         </span>
         {job.progress !== null && (
           <span>{Math.round(job.progress * 100)}%</span>
@@ -474,10 +479,15 @@ function JobStatus({ job }: { job: ProcessingJobRead }) {
         />
       )}
       <p className="text-xs text-muted-foreground">
-        {job.target_stage === "diarize"
+        {job.target_stage === "extract"
+          ? t.fullPipeline
+          : job.target_stage === "diarize"
           ? t.transcriptionSpeakers
           : t.transcriptionOnly}
       </p>
+      {job.target_stage === "extract" && ["queued", "running"].includes(job.status) && (
+        <p className="text-sm text-muted-foreground">{t.extractionHelp}</p>
+      )}
       {job.error_code && (
         <p role="alert" className="text-sm text-destructive">
           {job.error_code === "diarization_model_unavailable"
