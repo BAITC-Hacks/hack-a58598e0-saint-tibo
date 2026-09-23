@@ -95,7 +95,7 @@ export function MeetingsPage() {
                   <CalendarDays className="size-4" aria-hidden="true" />
                   <time dateTime={meeting.started_at}>
                     {new Intl.DateTimeFormat(locale, {
-                      dateStyle: "medium",
+                      dateStyle: locale === "kk" ? "short" : "medium",
                       timeStyle: "short",
                       timeZone: meeting.timezone,
                     }).format(new Date(meeting.started_at))}

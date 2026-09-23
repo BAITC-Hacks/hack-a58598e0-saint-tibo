@@ -126,7 +126,7 @@ export function MeetingPage({ meetingId }: { meetingId: string }) {
         <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
           <time dateTime={meeting.data.started_at}>
             {new Intl.DateTimeFormat(locale, {
-              dateStyle: "medium",
+              dateStyle: locale === "kk" ? "short" : "medium",
               timeStyle: "short",
               timeZone: meeting.data.timezone,
             }).format(new Date(meeting.data.started_at))}

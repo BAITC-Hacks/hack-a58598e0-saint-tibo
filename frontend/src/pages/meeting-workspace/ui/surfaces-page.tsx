@@ -307,7 +307,7 @@ export function SurfacesPage({
                       <span className="text-sm text-muted-foreground">
                         {item.due_date
                           ? new Intl.DateTimeFormat(locale, {
-                              dateStyle: "medium",
+                              dateStyle: locale === "kk" ? "short" : "medium",
                             }).format(new Date(`${item.due_date}T00:00:00`))
                           : (item.due_text ?? t.unknown)}
                       </span>
@@ -356,7 +356,7 @@ export function SurfacesPage({
                   </Button>
                   <h2 className="font-medium">
                     {new Intl.DateTimeFormat(locale, {
-                      month: "long",
+                      month: locale === "kk" ? "2-digit" : "long",
                       year: "numeric",
                     }).format(month)}
                   </h2>
@@ -420,7 +420,7 @@ export function SurfacesPage({
               <aside className="rounded-xl border bg-card p-4">
                 <h2 className="font-medium">
                   {new Intl.DateTimeFormat(locale, {
-                    dateStyle: "medium",
+                    dateStyle: locale === "kk" ? "short" : "medium",
                   }).format(new Date(`${selectedDay}T00:00:00`))}
                 </h2>
                 {meetings.data?.items
