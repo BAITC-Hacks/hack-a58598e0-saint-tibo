@@ -5,7 +5,11 @@ from typing import Any
 
 
 class ExtractionError(ValueError):
-    """Safe error code only: never attach generated content to an exception."""
+    """Safe error code and allowlisted metrics only, never generated content."""
+
+    def __init__(self, code: str, metrics: dict | None = None):
+        super().__init__(code)
+        self.metrics = metrics or {}
 
 
 _TEXT = {"type": "string", "minLength": 1, "maxLength": 500}

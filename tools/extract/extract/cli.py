@@ -44,16 +44,19 @@ def main() -> int:
     parser.add_argument("--started-at", default="")
     parser.add_argument("--timezone", default="")
     parser.add_argument("--participants", default="")
-    parser.add_argument("--max-tokens", type=int, default=2048)
+    parser.add_argument("--max-tokens", type=int, default=3072)
     parser.add_argument("--result", type=Path)
     parser.add_argument("--metrics", type=Path)
     args = parser.parse_args()
+    meta = {}
+    metrics_path_ready = False
     try:
         outputs = [p for p in (args.result, args.metrics) if p is not None]
         if len({p.resolve() for p in outputs}) != len(outputs) or any(
             p.exists() or p.is_symlink() for p in outputs
         ):
             raise ExtractionError("extraction_output_exists")
+        metrics_path_ready = True
         raw = args.transcript.read_bytes() if args.transcript else sys.stdin.buffer.read(65537)
         if len(raw) > 65536:
             raise ExtractionError("extraction_input_too_large")
@@ -70,14 +73,25 @@ def main() -> int:
         manager = nullcontext((args.server, None)) if args.server else local_runtime(args.llama_server, args.model_file)
         started = time.monotonic()
         with manager as (url, pid):
-            payload, meta = chat_extraction(url, SYSTEM_PROMPT, build_user_prompt(segments, meeting),
-                                            known, max_tokens=args.max_tokens)
-            peak_rss = None
-            if pid is not None:
-                for line in Path(f"/proc/{pid}/status").read_text().splitlines():
-                    if line.startswith("VmHWM:"):
-                        peak_rss = int(line.split()[1]) * 1024
-            meta.update(elapsed_seconds=round(time.monotonic() - started, 3), server_peak_rss_bytes=peak_rss)
+            try:
+                payload, meta = chat_extraction(
+                    url, SYSTEM_PROMPT, build_user_prompt(segments, meeting),
+                    known, max_tokens=args.max_tokens,
+                )
+            except ExtractionError as exc:
+                meta.update(exc.metrics)
+                raise
+            finally:
+                peak_rss = None
+                if pid is not None:
+                    try:
+                        for line in Path(f"/proc/{pid}/status").read_text().splitlines():
+                            if line.startswith("VmHWM:"):
+                                peak_rss = int(line.split()[1]) * 1024
+                    except OSError:
+                        pass
+                meta.update(elapsed_seconds=round(time.monotonic() - started, 3),
+                            server_peak_rss_bytes=peak_rss, max_tokens=args.max_tokens)
         provenance = {"model_id": MODEL_ID, "model_revision": MODEL_REVISION,
                       "model_sha256": MODEL_SHA256, "runtime_id": RUNTIME_ID,
                       "prompt_sha256": hashlib.sha256(SYSTEM_PROMPT.encode()).hexdigest()}
@@ -94,9 +108,16 @@ def main() -> int:
             write_private(args.metrics, {"status": "ok", **meta})
         return 0
     except ExtractionError as exc:
-        print(json.dumps({"status": "error", "code": str(exc)}))
+        meta.update(exc.metrics)
+        failure = {"status": "error", "code": str(exc), **meta}
     except Exception:
-        print(json.dumps({"status": "error", "code": "extraction_failed"}))
+        failure = {"status": "error", "code": "extraction_failed", **meta}
+    if args.metrics and metrics_path_ready:
+        try:
+            write_private(args.metrics, failure)
+        except OSError:
+            pass
+    print(json.dumps(failure, allow_nan=False))
     return 1
 
 

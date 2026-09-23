@@ -43,7 +43,7 @@ def local_request(server_url: str, path: str, body: dict | None = None, timeout:
 
 def chat_extraction(
     server_url: str, system_prompt: str, user_prompt: str, known_segment_ids: set[int], *,
-    model_label: str = "local", temperature: float = 0.0, max_tokens: int = 2048,
+    model_label: str = "local", temperature: float = 0.0, max_tokens: int = 3072,
     timeout_s: float = 1800,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     result = local_request(server_url, "/v1/chat/completions", {
@@ -54,18 +54,26 @@ def chat_extraction(
         "response_format": response_format(), "stream": False, "cache_prompt": False,
         "chat_template_kwargs": {"enable_thinking": False},
     }, timeout_s)
+    # Keep diagnostics even for incomplete/invalid responses, without retaining content.
+    usage = result.get("usage", {})
+    meta = {"usage": {k: usage[k] for k in ("prompt_tokens", "completion_tokens")
+                       if isinstance(usage, dict) and type(usage.get(k)) is int
+                       and 0 <= usage[k] <= 100_000_000}}
     choices = result.get("choices")
     if not isinstance(choices, list) or len(choices) != 1 or not isinstance(choices[0], dict):
-        raise ExtractionError("invalid_extraction_output")
+        raise ExtractionError("invalid_extraction_output", meta)
     choice = choices[0]
-    if choice.get("finish_reason") != "stop":
-        raise ExtractionError("extraction_incomplete")
+    reason = choice.get("finish_reason")
+    meta["finish_reason"] = reason if reason in ("stop", "length", "tool_calls", "content_filter") else "unknown"
+    if reason != "stop":
+        raise ExtractionError("extraction_incomplete", meta)
     message = choice.get("message")
     content = message.get("content") if isinstance(message, dict) else None
     if not isinstance(content, str):
-        raise ExtractionError("invalid_extraction_output")
-    payload = parse_and_validate(content, known_segment_ids)
-    # Return numeric metrics only; an untrusted runtime cannot smuggle content into logs.
-    usage = result.get("usage", {})
-    return payload, {"usage": {k: usage[k] for k in ("prompt_tokens", "completion_tokens")
-                               if isinstance(usage, dict) and type(usage.get(k)) is int}}
+        raise ExtractionError("invalid_extraction_output", meta)
+    try:
+        payload = parse_and_validate(content, known_segment_ids)
+    except ExtractionError as exc:
+        exc.metrics = meta
+        raise
+    return payload, meta

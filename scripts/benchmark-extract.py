@@ -53,7 +53,7 @@ def main() -> int:
     parser.add_argument("--model-file", required=True, type=Path, help="Local GGUF for hashing")
     parser.add_argument("--model-revision", required=True, help="Pinned source revision")
     parser.add_argument("--model-label", required=True)
-    parser.add_argument("--max-tokens", type=int, default=2048)
+    parser.add_argument("--max-tokens", type=int, default=3072)
     parser.add_argument("--ctx-size", type=int, required=True)
     parser.add_argument("--threads", type=int, required=True)
     parser.add_argument("--title", required=True)
@@ -140,7 +140,7 @@ def main() -> int:
         print(json.dumps(result, allow_nan=False))
         return 0
     except ExtractionError as exc:
-        print(json.dumps({"status": "error", "stage": stage, "error_type": str(exc)[:200]}))
+        print(json.dumps({"status": "error", "stage": stage, "error_type": str(exc), **exc.metrics}))
         return 1
     except Exception as error:
         print(json.dumps({"status": "error", "stage": stage, "error_type": type(error).__name__}))
