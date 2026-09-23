@@ -2,7 +2,7 @@
 set -eu
 cd "$(dirname "$0")"
 mkdir -p tiktoken-cache
-image=${HONCHO_IMAGE:-ghcr.io/plastic-labs/honcho:v3.2.0}
+image=${HONCHO_IMAGE:-ghcr.io/plastic-labs/honcho@sha256:6369a1a8387f560fd71296866a5e109420e3442ce2ea9ffdcf9f38529de416c1}
 # Fetch public tokenizer data once; runtime services consume it from a
 # read-only cache while running on an egress-isolated network.
 docker run --rm \
