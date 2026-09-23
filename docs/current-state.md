@@ -8,6 +8,8 @@ The canonical flow is recording → private GPU transcription → anonymous spea
 
 Production deployment completed with healthy services and an ordinary demo login/read-only test1 walkthrough. The user's test1 recording and permanent demo accounts are preserved. The earlier production release `7d5b481` independently passed actual STT, manual reviewed revision and PDF/DOCX downloads; it is retained in history.
 
+The final shared source `b435586` also incorporates Artem's facilitator canvas with version provenance, trilingual landing, recording recovery copy and session-scoped development fixtures, plus Ivan's organizer reproduction guide. Production deployment forces development login and mock mode off. The latest #94 receipt distinguishes this combined release's live checks from the earlier processing evidence.
+
 [Final browser receipt](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/94#issuecomment-5794894930): diarized transcripts appear in /player; changing recordings clears stale speaker filters; solo playback follows the selected speaker's intervals; route changes and reload preserve position; participant briefing links to the correct stored meeting. The saved overview and honest empty state were checked on existing data. Console errors/warnings: zero in the bounded walkthrough.
 
 [Reminder receipt](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/15#issuecomment-5794676238): explicit reviewed deadlines in Asia/Almaty produced yesterday/today/tomorrow items; done, reschedule, unreview and reconfirm changed the UI/sidebar automatically 3→2→1→0→1 without reload. #15 and #120 are completed. Speaker mapping edits preserved action ownership and immutable raw diarization; edits clear approval, stale revisions return 409, and unreviewed export is rejected.
@@ -36,7 +38,7 @@ A small generic prompt correction did **not** resolve the case-two deadline miss
 
 ## Coordination
 
-- Additive migrations have one head: 0008 → 0007 → 0005. A fresh private production backup preceded the release.
+- Additive migrations have one head: 0009 → 0008 → 0007 → 0005. The canvas migration adds a table and nullable references without rewriting existing records. A fresh private production backup preceded the release.
 - Accessible Codex/Devin/Claude sessions and published GitHub refs were reconciled. Private teammate-machine chats are not claimed inspected.
 - One coordinator owns shared merges/deploys; one dedicated task owns Serena. Preserve all teammate history and unmerged experiments.
 - Verification follows Danil's builds plus bounded actual scenarios, without test suites/linters. No new broad audit cycle is required.

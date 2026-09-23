@@ -6,6 +6,8 @@ Owner: Danil (rldyourmnd). The verified GPU baseline is `1adbcb5`; [PR #127](htt
 
 The full private recording → GPU STT → diarization → GPU draft pipeline runs through the real application. Review, approval reset/CAS, PDF/DOCX, confirmed speaker labels, persistent/solo playback, person briefing, saved overview and automatically refreshed curator reminders are integrated. #14, #15, #104, #105, #107 and #120 have completed evidence. Actual GPU case-two processing took 152.05 seconds; automatic content is still a draft.
 
+The final shared source `b435586` adds the versioned facilitator canvas, trilingual landing and capture/development-fixture refinements. Read the #94 receipt for the combined release's actual live proof; merging source alone does not complete each feature's acceptance.
+
 No extra model, workflow engine, external messaging channel or organizational-memory system is needed to demonstrate this release.
 
 ## Narrow remaining scope
