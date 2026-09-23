@@ -30,9 +30,7 @@ export function ReviewPanel({
   const t = useCopy();
   const client = useQueryClient();
   const [draft, setDraft] = useState(review);
-  const [tab, setTab] = useState<Tab>(
-    review.source === "real" ? "transcript" : "summary"
-  );
+  const [tab, setTab] = useState<Tab>("summary");
   const [search, setSearch] = useState("");
   const [speakerFilter, setSpeakerFilter] = useState("");
   const [saveError, setSaveError] = useState("");
@@ -46,12 +44,13 @@ export function ReviewPanel({
     seek: (ms) => player.current?.seek(ms),
   });
   const dirty = JSON.stringify(draft) !== JSON.stringify(review);
-  const canEdit = review.source === "mock";
+  const canEdit = true;
   const save = useMutation({
     mutationFn: (next: ReviewDocument) => saveReview(meetingId, next),
   });
   const download = useMutation({
-    mutationFn: (format: "pdf" | "docx") => downloadReview(meetingId, format),
+    mutationFn: (format: "pdf" | "docx") =>
+      downloadReview(meetingId, format, review),
   });
   const canPlay =
     recording?.status === "ready" || recording?.status === "incomplete";

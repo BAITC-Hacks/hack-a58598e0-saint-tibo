@@ -1,14 +1,19 @@
 import { queryOptions } from "@tanstack/react-query";
 import { z } from "zod";
 
-import { apiErrorMessage, backendClient } from "#/shared/api";
 import {
+  apiErrorMessage,
+  backendClient,
+  jsonBodySerializer,
+} from "#/shared/api";
+import {
+  getResultReview,
   listRecordings,
   listResultVersions,
   listTranscriptSegments,
+  updateResultReview,
 } from "#/shared/api";
-import type { ResultVersionRead, SegmentRead } from "#/shared/api";
-import { jsonBodySerializer } from "#/shared/api/generated/client";
+import type { ResultVersionRead, ReviewRead, SegmentRead } from "#/shared/api";
 
 const segment = z.object({
   id: z.string(),
@@ -42,6 +47,7 @@ const summaryEntry = z.object({
 });
 export const reviewSchema = z.object({
   source: z.enum(["mock", "real"]),
+  recording_id: z.string().optional(),
   result_version_id: z.string(),
   revision: z.number().int().nonnegative(),
   reviewed: z.boolean(),
@@ -50,12 +56,48 @@ export const reviewSchema = z.object({
     decisions: z.array(summaryEntry),
     open_questions: z.array(summaryEntry),
   }),
+  summary_source_segment_ids: z.array(z.string()).optional(),
   segments: z.array(segment),
   speakers: z.array(speaker),
   action_items: z.array(action),
 });
 
 export type ReviewDocument = z.infer<typeof reviewSchema>;
+
+const summaryEntries = (items: string[]) =>
+  items.map((text) => ({ text, source_segment_ids: [] as string[] }));
+
+function realDocument(
+  data: ReviewRead,
+  segments: SegmentRead[]
+): ReviewDocument {
+  return {
+    source: "real",
+    recording_id: data.recording_id,
+    result_version_id: data.result_version_id,
+    revision: data.revision,
+    reviewed: data.reviewed,
+    segments,
+    speakers: [],
+    action_items: data.action_items.map((item) => ({
+      id: item.id ?? crypto.randomUUID(),
+      result_version_id: item.result_version_id,
+      text: item.text,
+      assignee_participant_id: item.assignee_participant_id ?? null,
+      assignee_text: item.assignee_text ?? null,
+      due_text: item.due_text ?? null,
+      due_date: item.due_date ?? null,
+      status: item.status ?? "open",
+      source_segment_ids: item.source_segment_ids ?? [],
+    })),
+    summary: {
+      topics: summaryEntries(data.summary.topics ?? []),
+      decisions: summaryEntries(data.summary.decisions ?? []),
+      open_questions: summaryEntries(data.summary.open_questions ?? []),
+    },
+    summary_source_segment_ids: data.summary.source_segment_ids ?? [],
+  };
+}
 
 async function realTranscript(
   meetingId: string
@@ -102,19 +144,19 @@ async function realTranscript(
     segments.push(...result.data.items);
     if (offset + result.data.items.length >= result.data.total) break;
   }
-  return {
-    source: "real",
-    result_version_id: latest.id,
-    revision: latest.revision,
-    reviewed: latest.status === "reviewed",
-    segments,
-    speakers: [],
-    action_items: [],
-    summary: { topics: [], decisions: [], open_questions: [] },
-  };
+  const review = await getResultReview({
+    client: backendClient,
+    path: {
+      meeting_id: meetingId,
+      recording_id: latest.recording_id,
+      result_version_id: latest.id,
+    },
+  });
+  if (!review.data)
+    throw new Error(apiErrorMessage(review.error, "Could not load review"));
+  return realDocument(review.data, segments);
 }
 
-/** Only the dev mock has draft review operations; real transcript reads use the generated SDK. */
 export async function loadReview(
   meetingId: string
 ): Promise<ReviewDocument | null> {
@@ -138,6 +180,42 @@ export const reviewQuery = (meetingId: string) =>
   });
 
 export async function saveReview(meetingId: string, review: ReviewDocument) {
+  if (review.source === "real") {
+    if (!review.recording_id) throw new Error("Recording unavailable");
+    const result = await updateResultReview({
+      client: backendClient,
+      path: {
+        meeting_id: meetingId,
+        recording_id: review.recording_id,
+        result_version_id: review.result_version_id,
+      },
+      body: {
+        revision: review.revision,
+        reviewed: review.reviewed,
+        summary: {
+          topics: review.summary.topics.map((entry) => entry.text),
+          decisions: review.summary.decisions.map((entry) => entry.text),
+          open_questions: review.summary.open_questions.map(
+            (entry) => entry.text
+          ),
+          source_segment_ids: review.summary_source_segment_ids ?? [],
+        },
+        action_items: review.action_items.map((item) => ({
+          id: item.id,
+          text: item.text,
+          assignee_participant_id: item.assignee_participant_id,
+          assignee_text: item.assignee_text,
+          due_text: item.due_text,
+          due_date: item.due_date,
+          status: item.status,
+          source_segment_ids: item.source_segment_ids,
+        })),
+      },
+    });
+    if (!result.data)
+      throw new Error(apiErrorMessage(result.error, "Could not save review"));
+    return realDocument(result.data, review.segments);
+  }
   const result = await backendClient.patch({
     ...jsonBodySerializer,
     url: `/api/v1/meetings/${encodeURIComponent(meetingId)}/review`,
@@ -158,11 +236,18 @@ export async function saveReview(meetingId: string, review: ReviewDocument) {
 
 export async function downloadReview(
   meetingId: string,
-  format: "pdf" | "docx"
+  format: "pdf" | "docx",
+  review: ReviewDocument
 ) {
   const result = await backendClient.get<Blob>({
-    url: `/api/v1/meetings/${encodeURIComponent(meetingId)}/export`,
-    query: { format },
+    url:
+      review.source === "mock"
+        ? `/api/v1/meetings/${encodeURIComponent(meetingId)}/export`
+        : `/api/v1/meetings/${encodeURIComponent(meetingId)}/recordings/${encodeURIComponent(review.recording_id ?? "")}/results/${encodeURIComponent(review.result_version_id)}/export`,
+    query:
+      review.source === "mock"
+        ? { format }
+        : { format, revision: review.revision },
     parseAs: "blob",
     security: [{ scheme: "bearer", type: "http" }],
   });
