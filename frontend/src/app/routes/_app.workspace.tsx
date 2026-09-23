@@ -1,7 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
-
-import { WorkspacePage } from "#/pages/workspace";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_app/workspace")({
-  component: WorkspacePage,
+  beforeLoad: () => {
+    throw redirect({ to: "/player" });
+  },
 });
