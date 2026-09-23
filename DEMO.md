@@ -13,8 +13,9 @@
 | Dev Данила | https://dev-danil.saint-tibo.win/login | https://dev-danil.saint-tibo.win/meetings?auth=manual |
 | Production | https://saint-tibo.win/login | https://saint-tibo.win/meetings |
 
-Дополнительный маршрут с прямым подключением существующего API:
-`/workspace?auth=manual` на dev и `/workspace` на production.
+Резервная реализация `/workspace` сохранена в ветке
+`feat/107-real-meeting-workspace` (#107) и пока не включена в выпуск.
+Для демонстрации используйте основной интерфейс `/meetings`.
 
 Для обоих окружений:
 
@@ -35,9 +36,7 @@
 ## Что показывать
 
 Основной интерфейс `/meetings` поставляется задачей
-[#83](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/83),
-дополнительный `/workspace` — задачей
-[#107](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/107).
+[#83](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/83).
 Точный статус деплоя и готовой версии — в
 [#94](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/94).
 Ссылка выше не является утверждением, что незавершённая ветка уже развёрнута.
