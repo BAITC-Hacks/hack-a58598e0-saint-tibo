@@ -21,6 +21,9 @@ LLM. Must work with egress disabled after model bundle is prepared.
 
 ## Integrated STT (#11) — on `dev`
 
+Ops doc: `docs/transcription.md` (model prep path, one worker/one job at
+a time, CPU INT8 4 threads).
+
 `tools/transcribe/` is a separate Python env with its own Dockerfile:
 `prepare_model.py` pins `Systran/faster-whisper-small` by revision +
 model.bin SHA256 into `models/`; `transcribe.py` loads it CPU/int8,
