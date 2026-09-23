@@ -2,35 +2,55 @@
 
 ## Current Behavior
 
-- Audited dev has read-only transcript ResultVersion/Segment storage (API-10).
-  Human corrections, summary/action-item persistence and review HTTP routes
-  are absent from this tree.
-- Existing `backend/src/saint_tibo/modules/exports/{schemas,render}.py`
-  renders PDF/DOCX from `ProtocolExport` (implementation `2341256`).
-  It accepts result ID/revision, meeting metadata, participants, speakers,
-  segments, action items and optional summary.
-- Action fields include assignee participant/text, original deadline text,
-  nullable normalized date, status and source segment IDs.
-  Summary contains topics, decisions and open questions.
-- Vendored DejaVu fonts and license support Cyrillic/Kazakh output;
-  keep attribution. Renderer existence does not imply an export endpoint.
-- [#94 renderer proof](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/94#issuecomment-5793355510)
-  verified PDF/DOCX generation and DOCX characters on the prior runtime;
-  page layout and HTTP/UI downloads were not verified there.
+- Integrated dev `97e804e` contains #13/#14 feature `0203111`
+  (implementation `fadf4bc`), `modules/results/`, `modules/exports/`,
+  migration 0005 and generated OpenAPI/SDK. Details: `docs/reviewed-results.md`.
+- Prefix `R=/api/v1/meetings/{meeting_id}/recordings/{recording_id}/results/{result_version_id}`.
+  `GET R/review[?revision=N]`, `PATCH R/review` and
+  `GET R/export?format=pdf|docx&revision=N` require owner JWT.
+  Read/export need meeting:read; PATCH needs meeting:write; foreign admin →404.
+- GET returns source=persisted, IDs/revision/reviewed/incomplete/saved_at,
+  meeting/participants, action_items and summary; no speakers/segments.
+  Initial revision=1 is empty manual draft; saved history starts at revision=2.
+- PATCH requires current revision plus a change; stale →409 version_conflict.
+  Arrays/summary replace whole supplied fields; omitted fields persist.
+  Explicit null is rejected. Content changes clear approval unless the
+  same save explicitly includes reviewed=true.
+- Action items keep ID, nullable participant/free-text assignee, original
+  due_text, nullable due_date, status and source_segment_ids. PATCH excludes
+  read-only result_version_id. Server does not infer assignee or date.
+- Same-meeting assignee and same-recording/result source IDs are validated.
+  Summary has topics/decisions/open_questions and one shared source-ID list.
+  Manual notes may have empty sources; they are not evidence of model output.
+- Each save freezes metadata/participants, review fields and approval in
+  ResultReview JSONB; later metadata edits do not change old exports.
+  New processing creates another result version; deletion cascades reviews.
+- Limits: 200 action items, 100 summary entries per list/100 sources per object,
+  2000-character text, 500-character labels, 512 KiB snapshot.
+  Whitespace-only/invalid document characters are rejected.
+- Explicit export revision is required: saved reviewed snapshot → PDF/DOCX,
+  draft →409 result_not_reviewed, missing revision →404. Older approved
+  snapshots remain exportable after current approval is cleared.
+- Export renders in a threadpool with attachment/no-store/nosniff headers;
+  generated SDK uses authenticated fetch with parseAs=blob. Never put JWT in URL.
+- PDF embeds vendored DejaVu; DOCX specifies the font without embedding TTF.
+  Incomplete source is marked; local table/page/character checks are linked
+  in [#14 evidence](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/14#issuecomment-5793605774).
+- Independent [LIVE-OK 97e804e](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/14#issuecomment-5793710152)
+  proves real JWT/save/reload/conflict/ACL/422 validation and authenticated
+  PDF/DOCX downloads; historical r2 JSON/decoded documents stayed immutable.
+  Targeted continuation passed 57/57, own app/auth cleanup counts=0.
 
 ## Known Gaps
 
-- Active #13/#14 work is `feat/13-reviewed-export`; the
-  [worker claim](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/14#issuecomment-5793502247)
-  proposes owner-scoped version `/review`, revision CAS, immutable review
-  snapshots and version `/export?format=pdf|docx&revision=N`.
-  This is WIP until its commit is audited and integrated.
-- #85's meeting-level `/meetings/{id}/review` and `/export` are UI mock
-  contracts; do not advertise them as production API.
-- Automated extraction/model selection (#69), speaker confirmation (#12),
-  source-segment editing and reminders (#15) are separate acceptance.
-  Do not invent assignee/deadline/year or equate speaker with executor.
-- Relative dates require meeting date+timezone and retained original wording.
-  Text/audio must remain within local/self-hosted processing.
+- #14 is closed for backend downloads/renderer; UI button integration stays
+  with Artem. Local identity-substituted proof and real live proof are separate.
+- completed_stage stays transcribe after human review. Automatic extraction
+  (#69), diarization/speaker confirmation (#12), STT text edits and reminders
+  (#15) are separate work. #13 is only partially delivered.
+- Renderer headings are RU; summary sources are shared, manual duplicate
+  merging remains manual, and JSONB actions lack cross-meeting query projection.
+- #85 meeting-level review/export mock paths are not real API. Select a
+  recording/result and use the version routes; fetch transcript separately.
 
-Last commit: `a2cfe28c10b214a8189b8c140d9d6b31167bf27a` (audited tree, 2026-09-23; not a live assertion).
+Last commit: `ab3d3312c3bafb3892bde93539383cea9e48b6de` (audited tree, 2026-09-23; live evidence is separate).
