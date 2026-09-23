@@ -1,14 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useMemo } from "react";
 
 import { backendClient, listMeetings, listRecordings } from "#/shared/api";
 import { m } from "#/shared/lib/i18n/messages";
 import { useLocale } from "#/shared/lib/locales";
-import { MeetingPlayer } from "#/shared/ui/meeting-player";
-import type {
-  MeetingPlayerHandle,
-  TimelineMarker,
-} from "#/shared/ui/meeting-player";
+import { usePersistentPlayer } from "#/shared/ui/meeting-player";
 import {
   TranscriptPanel,
   useTranscriptSync,
@@ -20,11 +16,13 @@ import {
   latestCompletedResult,
 } from "../lib/server-transcript";
 
+const noSegments: never[] = [];
+
 /** Protected meeting recordings and their persisted transcript share one timeline. */
 export const PlayerPage = () => {
   const locale = useLocale();
-  const [selectedServerRecording, setSelectedServerRecording] = useState("");
-  const player = useRef<MeetingPlayerHandle>(null);
+  const player = usePersistentPlayer();
+  const selectedServerRecording = player.source?.id ?? "";
 
   const meetingsQuery = useQuery({
     queryKey: ["player", "meetings"],
@@ -137,27 +135,35 @@ export const PlayerPage = () => {
           )
         : [],
   });
-  const activeSegments = segmentsQuery.data ?? [];
+  const activeSegments = segmentsQuery.data ?? noSegments;
   const sync = useTranscriptSync({
     recordingId: selectedServerMedia?.id ?? "",
     resultVersionId: resultVersionQuery.data?.id ?? "",
     segments: activeSegments,
-    seek: (positionMs) => player.current?.seek(positionMs),
+    seek: player.seek,
+    playbackPosition: player.position,
   });
-  const markers: TimelineMarker[] = activeSegments.length
-    ? activeSegments
-
-        .filter(
-          (_, index) =>
-            index % Math.max(1, Math.ceil(activeSegments.length / 8)) === 0
-        )
-        .slice(0, 8)
-        .map((segment) => ({
-          id: segment.id,
-          startMs: segment.start_ms,
-          label: segment.text,
-        }))
-    : [];
+  const markers = useMemo(
+    () =>
+      activeSegments.length
+        ? activeSegments
+            .filter(
+              (_, index) =>
+                index % Math.max(1, Math.ceil(activeSegments.length / 8)) === 0
+            )
+            .slice(0, 8)
+            .map((segment) => ({
+              id: segment.id,
+              startMs: segment.start_ms,
+              label: segment.text,
+            }))
+        : [],
+    [activeSegments]
+  );
+  const setDetails = player.setDetails;
+  useEffect(() => {
+    setDetails(markers, waveformQuery.data ?? null);
+  }, [markers, setDetails, waveformQuery.data]);
 
   return (
     <section className="mx-auto max-w-7xl space-y-7">
@@ -185,7 +191,17 @@ export const PlayerPage = () => {
               recordingsQuery.isPending || serverRecordings.length === 0
             }
             onChange={(event) => {
-              setSelectedServerRecording(event.target.value);
+              const recording = serverRecordings.find(
+                (item) => item.id === event.target.value
+              );
+              if (recording?.media_url) {
+                player.select({
+                  id: recording.id,
+                  meetingId: recording.meeting_id,
+                  url: recording.media_url,
+                  title: `${recording.meetingTitle} — ${recording.original_filename}`,
+                });
+              } else player.clear();
             }}
           >
             <option value="">
@@ -213,14 +229,6 @@ export const PlayerPage = () => {
       </div>
       {selectedServerMedia ? (
         <div className="space-y-7">
-          <MeetingPlayer
-            key={selectedServerMedia.id}
-            source={selectedServerMedia}
-            ref={player}
-            onPositionChange={sync.onPositionChange}
-            markers={markers}
-            waveform={waveformQuery.data ?? null}
-          />
           {resultVersionQuery.isPending ? (
             <output className="block text-sm text-muted-foreground">
               {m.player_server_transcript_loading({}, { locale })}

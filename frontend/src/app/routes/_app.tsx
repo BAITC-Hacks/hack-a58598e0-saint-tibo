@@ -1,6 +1,7 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 
 import { authClient, requireAccess } from "#/shared/auth";
+import { PersistentPlayerProvider } from "#/shared/ui/meeting-player";
 
 import { AppShell } from "../layouts/app-shell";
 
@@ -38,7 +39,9 @@ export const Route = createFileRoute("/_app")({
   },
   component: () => (
     <AppShell>
-      <Outlet />
+      <PersistentPlayerProvider>
+        <Outlet />
+      </PersistentPlayerProvider>
     </AppShell>
   ),
 });
