@@ -33,6 +33,7 @@ services:
       - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks: [default, processing]
     healthcheck:
       test: ["CMD-SHELL", 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
       interval: 5s
@@ -67,11 +68,20 @@ services:
   processing-worker:
     profiles: [app]
     <<: *backend
+    image: saint-tibo-processing:local
+    build:
+      context: .
+      dockerfile: tools/transcribe/Dockerfile
     command: ["python", "-m", "saint_tibo.modules.processing.worker"]
     restart: unless-stopped
     stop_grace_period: 20s
     volumes:
       - recordings_data:/var/lib/saint-tibo/recordings:ro
+      - ${STT_MODELS_PATH:-./models}:/models:ro
+    networks: [processing]
+    cpus: 4
+    mem_limit: 6g
+    extra_hosts: []
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -151,3 +161,8 @@ volumes:
   postgres_data:
   caddy_data:
   caddy_config:
+
+networks:
+  default:
+  processing:
+    internal: true
