@@ -41,3 +41,13 @@ class Settings(BaseSettings):
     diarization_python_path: Path = Path("/app/diarize/.venv/bin/python")
     diarization_script_path: Path = Path("/app/diarize/diarize.py")
     diarization_model_path: Path = Path("/models/diarization-v1")
+
+    stt_remote_enabled: bool = False
+    stt_remote_host: str = Field(default="", pattern=r"^[A-Za-z0-9.:-]*$")
+    stt_remote_user: str = Field(default="saint-stt", pattern=r"^[a-z_][a-z0-9_-]*$")
+    stt_remote_port: int = Field(default=22, ge=1, le=65535)
+    stt_remote_identity_file: Path = Path("/run/stt-ssh/id_ed25519")
+    stt_remote_known_hosts_file: Path = Path("/run/stt-ssh/known_hosts")
+    stt_remote_runner_path: str = Field(
+        default="/opt/saint-tibo/stt/remote_runner.py", pattern=r"^/[A-Za-z0-9_./-]+$"
+    )
