@@ -6,11 +6,18 @@ TanStack Start SPA, one origin with auth. Conventions:
 ## Structure
 
 - Routes `src/app/routes/`: `__root`, `_app` shell + `_app.index`
-  (home/meetings placeholder), `login`, `api/auth/$` (Better Auth
+  (home/meetings placeholder), `login`, `dev-login` + `api/dev-login`
+  (guarded dev auto-login — AUTH-01), `api/auth/$` (Better Auth
   catch-all), `api/media/meetings/$meetingId/recordings/$recordingId`
   (same-origin media proxy — on main).
 - Server code `src/app/server/`: `auth.server.ts` (Better Auth),
   `auth-guards.server.ts`, `media.server.ts` (cookie→JWT media proxy).
+- Dev entry: `_app` automatically creates an ordinary Better Auth session
+  through `POST /api/dev-login`; `/dev-login?role=admin` is explicit admin
+  entry. Existing sessions are preserved. `/login` stays manual and logout
+  returns there; `?auth=manual` skips auto entry for that navigation.
+  `dev-login.server.ts` enforces the server flag, exact dev-origin allowlist
+  and same-origin POST. Passwords/identity constants stay server-side.
 - Pages `src/pages/<slice>/{index.ts,ui/}` — thin route → page import.
 - `src/shared/api/generated/` — SDK from `contracts/openapi.json` via
   `bun run api:generate`; NEVER hand-edit or hand-write API types.

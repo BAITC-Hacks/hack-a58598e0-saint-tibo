@@ -3,8 +3,8 @@
 import { type InfiniteData, infiniteQueryOptions, queryOptions, type UseMutationOptions } from '@tanstack/react-query';
 
 import { client } from '../client.gen';
-import { createMeeting, createParticipant, createRecording, deleteMeeting, deleteParticipant, deleteRecording, finalizeRecording, getAccessPolicy, getCurrentUser, getLiveness, getMeeting, getReadiness, getRecording, getRecordingMedia, listMeetings, listParticipants, listRecordings, type Options, updateMeeting, updateParticipant, uploadRecordingChunk, uploadRecordingFile } from '../sdk.gen';
-import type { CreateMeetingData, CreateMeetingError, CreateMeetingResponse, CreateParticipantData, CreateParticipantError, CreateParticipantResponse, CreateRecordingData, CreateRecordingError, CreateRecordingResponse, DeleteMeetingData, DeleteMeetingError, DeleteMeetingResponse, DeleteParticipantData, DeleteParticipantError, DeleteParticipantResponse, DeleteRecordingData, DeleteRecordingError, DeleteRecordingResponse, FinalizeRecordingData, FinalizeRecordingError, FinalizeRecordingResponse, GetAccessPolicyData, GetAccessPolicyError, GetAccessPolicyResponse, GetCurrentUserData, GetCurrentUserError, GetCurrentUserResponse, GetLivenessData, GetLivenessError, GetLivenessResponse, GetMeetingData, GetMeetingError, GetMeetingResponse, GetReadinessData, GetReadinessError, GetReadinessResponse, GetRecordingData, GetRecordingError, GetRecordingMediaData, GetRecordingMediaError, GetRecordingMediaResponse, GetRecordingResponse, ListMeetingsData, ListMeetingsError, ListMeetingsResponse, ListParticipantsData, ListParticipantsError, ListParticipantsResponse, ListRecordingsData, ListRecordingsError, ListRecordingsResponse, UpdateMeetingData, UpdateMeetingError, UpdateMeetingResponse, UpdateParticipantData, UpdateParticipantError, UpdateParticipantResponse, UploadRecordingChunkData, UploadRecordingChunkError, UploadRecordingChunkResponse, UploadRecordingFileData, UploadRecordingFileError, UploadRecordingFileResponse } from '../types.gen';
+import { createMeeting, createParticipant, createProcessingJob, createRecording, deleteMeeting, deleteParticipant, deleteRecording, finalizeRecording, getAccessPolicy, getCurrentUser, getLiveness, getMeeting, getProcessingJob, getReadiness, getRecording, getRecordingMedia, listMeetings, listParticipants, listProcessingJobs, listRecordings, type Options, updateMeeting, updateParticipant, uploadRecordingChunk, uploadRecordingFile } from '../sdk.gen';
+import type { CreateMeetingData, CreateMeetingError, CreateMeetingResponse, CreateParticipantData, CreateParticipantError, CreateParticipantResponse, CreateProcessingJobData, CreateProcessingJobError, CreateProcessingJobResponse, CreateRecordingData, CreateRecordingError, CreateRecordingResponse, DeleteMeetingData, DeleteMeetingError, DeleteMeetingResponse, DeleteParticipantData, DeleteParticipantError, DeleteParticipantResponse, DeleteRecordingData, DeleteRecordingError, DeleteRecordingResponse, FinalizeRecordingData, FinalizeRecordingError, FinalizeRecordingResponse, GetAccessPolicyData, GetAccessPolicyError, GetAccessPolicyResponse, GetCurrentUserData, GetCurrentUserError, GetCurrentUserResponse, GetLivenessData, GetLivenessError, GetLivenessResponse, GetMeetingData, GetMeetingError, GetMeetingResponse, GetProcessingJobData, GetProcessingJobError, GetProcessingJobResponse, GetReadinessData, GetReadinessError, GetReadinessResponse, GetRecordingData, GetRecordingError, GetRecordingMediaData, GetRecordingMediaError, GetRecordingMediaResponse, GetRecordingResponse, ListMeetingsData, ListMeetingsError, ListMeetingsResponse, ListParticipantsData, ListParticipantsError, ListParticipantsResponse, ListProcessingJobsData, ListProcessingJobsError, ListProcessingJobsResponse, ListRecordingsData, ListRecordingsError, ListRecordingsResponse, UpdateMeetingData, UpdateMeetingError, UpdateMeetingResponse, UpdateParticipantData, UpdateParticipantError, UpdateParticipantResponse, UploadRecordingChunkData, UploadRecordingChunkError, UploadRecordingChunkResponse, UploadRecordingFileData, UploadRecordingFileError, UploadRecordingFileResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -474,6 +474,89 @@ export const finalizeRecordingMutation = (options?: Partial<Options<FinalizeReco
     };
     return mutationOptions;
 };
+
+export const listProcessingJobsQueryKey = (options: Options<ListProcessingJobsData>) => createQueryKey('listProcessingJobs', options, false, ['processing']);
+
+/**
+ * List Jobs
+ */
+export const listProcessingJobsOptions = (options: Options<ListProcessingJobsData>) => queryOptions<ListProcessingJobsResponse, ListProcessingJobsError, ListProcessingJobsResponse, ReturnType<typeof listProcessingJobsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listProcessingJobs({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listProcessingJobsQueryKey(options)
+});
+
+export const listProcessingJobsInfiniteQueryKey = (options: Options<ListProcessingJobsData>): QueryKey<Options<ListProcessingJobsData>> => createQueryKey('listProcessingJobs', options, true);
+
+/**
+ * List Jobs
+ */
+export const listProcessingJobsInfiniteOptions = (options: Options<ListProcessingJobsData>) => {
+    const opts = infiniteQueryOptions<ListProcessingJobsResponse, ListProcessingJobsError, InfiniteData<ListProcessingJobsResponse>, QueryKey<Options<ListProcessingJobsData>>, number | Pick<QueryKey<Options<ListProcessingJobsData>>[0], 'body' | 'headers' | 'path' | 'query'>>(
+    // @ts-ignore
+    {
+        queryFn: async ({ pageParam, queryKey, signal }) => {
+            // @ts-ignore
+            const page: Pick<QueryKey<Options<ListProcessingJobsData>>[0], 'body' | 'headers' | 'path' | 'query'> = typeof pageParam === 'object' ? pageParam : {
+                query: {
+                    offset: pageParam
+                }
+            };
+            const params = createInfiniteParams(queryKey, page);
+            const { data } = await listProcessingJobs({
+                ...options,
+                ...params,
+                signal,
+                throwOnError: true
+            });
+            return data;
+        },
+        queryKey: listProcessingJobsInfiniteQueryKey(options)
+    });
+    return opts as Omit<typeof opts, 'initialData'>;
+};
+
+/**
+ * Create Job
+ */
+export const createProcessingJobMutation = (options?: Partial<Options<CreateProcessingJobData>>): UseMutationOptions<CreateProcessingJobResponse, CreateProcessingJobError, Options<CreateProcessingJobData>> => {
+    const mutationOptions: UseMutationOptions<CreateProcessingJobResponse, CreateProcessingJobError, Options<CreateProcessingJobData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await createProcessingJob({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getProcessingJobQueryKey = (options: Options<GetProcessingJobData>) => createQueryKey('getProcessingJob', options, false, ['processing']);
+
+/**
+ * Get Job
+ */
+export const getProcessingJobOptions = (options: Options<GetProcessingJobData>) => queryOptions<GetProcessingJobResponse, GetProcessingJobError, GetProcessingJobResponse, ReturnType<typeof getProcessingJobQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getProcessingJob({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getProcessingJobQueryKey(options)
+});
 
 export const getRecordingMediaQueryKey = (options: Options<GetRecordingMediaData>) => createQueryKey('getRecordingMedia', options, false, ['meetings']);
 

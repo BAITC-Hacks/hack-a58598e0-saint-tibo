@@ -2,6 +2,8 @@
 
 Repo: github.com/BAITC-Hacks/hack-a58598e0-saint-tibo (private —
 still: no secrets, tokens, or credentials in git/issues).
+Exception explicitly requested by the owner: disposable dev-account
+credentials in `docs/browser-testing.md`; never production/server secrets.
 
 ## Roles
 
@@ -16,6 +18,7 @@ still: no secrets, tokens, or credentials in git/issues).
 Assignments and priorities live in issues — check
 `gh issue list --assignee @me`, never this file. No issue, no work.
 Claim files in an issue comment before editing; one owner per file.
+Danil's agents take only `rldyourmnd` issues and check current claims.
 
 Lifecycle in comments: `implemented` (branch pushed) → `done: <sha>`
 (merged to personal lane) → `integrated: <sha>` (merged to dev) →
@@ -31,3 +34,6 @@ Flow detail: `docs/development.md`.
 
 Work happens in separate worktrees off `origin/dev`; never edit inside
 a checkout another session is using.
+Features and housekeeping both originate in feature branches; personal,
+dev and main branches are integration targets only. Existing `codex/<issue>`
+features remain valid; new work uses `feat/<issue>-<slug>`.
