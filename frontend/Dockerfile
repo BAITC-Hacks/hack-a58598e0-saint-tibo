@@ -2,6 +2,7 @@
 FROM oven/bun:1.4.2-alpine AS deps
 WORKDIR /app
 COPY package.json bun.lock bunfig.toml ./
+COPY patches ./patches
 RUN bun install --frozen-lockfile
 COPY . .
 
@@ -23,6 +24,7 @@ FROM oven/bun:1.4.2-alpine
 WORKDIR /app
 RUN addgroup -g 10001 app && adduser -D -u 10001 -G app app
 COPY package.json bun.lock bunfig.toml ./
+COPY patches ./patches
 RUN bun install --frozen-lockfile --production
 COPY server.ts ./
 COPY --from=builder /app/dist ./dist
