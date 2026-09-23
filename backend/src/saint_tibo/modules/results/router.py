@@ -11,6 +11,7 @@ from saint_tibo.core.pagination import Page, Pagination
 from saint_tibo.db.session import DatabaseSession
 from saint_tibo.modules.results import service
 from saint_tibo.modules.results.schemas import (
+    DiarizationRead,
     ResultVersionRead,
     ReviewRead,
     ReviewUpdate,
@@ -91,6 +92,28 @@ async def get_review(
     )
 
 
+@router.get(
+    "/{result_version_id}/diarization",
+    operation_id="getResultDiarization",
+    responses={409: {"model": ErrorResponse}},
+)
+async def get_diarization(
+    meeting_id: UUID,
+    recording_id: UUID,
+    result_version_id: UUID,
+    session: DatabaseSession,
+    user: ReadUser,
+) -> DiarizationRead:
+    """Read immutable anonymous turns; confirmed identities live in result review revisions."""
+    return await service.get_diarization(
+        session,
+        user.id,
+        meeting_id,
+        recording_id,
+        result_version_id,
+    )
+
+
 @router.patch(
     "/{result_version_id}/review",
     operation_id="updateResultReview",
@@ -105,6 +128,9 @@ async def update_review(
     user: WriteUser,
 ) -> ReviewRead:
     """Save manual corrections. Arrays/summary replace whole fields; omitted fields stay.
+
+    speakers replaces assignments: omitted speakers become unknown; [] clears all.
+    Merge sources must have no participant and point directly at a canonical speaker.
 
     revision must match the latest result revision. Content edits clear approval unless
     reviewed=true is explicit. Each save creates an immutable snapshot for later export.

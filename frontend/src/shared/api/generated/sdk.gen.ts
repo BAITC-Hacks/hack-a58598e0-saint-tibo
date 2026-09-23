@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { CreateMeetingData, CreateMeetingErrors, CreateMeetingResponses, CreateParticipantData, CreateParticipantErrors, CreateParticipantResponses, CreateProcessingJobData, CreateProcessingJobErrors, CreateProcessingJobResponses, CreateRecordingData, CreateRecordingErrors, CreateRecordingResponses, DeleteMeetingData, DeleteMeetingErrors, DeleteMeetingResponses, DeleteParticipantData, DeleteParticipantErrors, DeleteParticipantResponses, DeleteRecordingData, DeleteRecordingErrors, DeleteRecordingResponses, ExportReviewedResultData, ExportReviewedResultErrors, ExportReviewedResultResponses, FinalizeRecordingData, FinalizeRecordingErrors, FinalizeRecordingResponses, GetAccessPolicyData, GetAccessPolicyErrors, GetAccessPolicyResponses, GetCurrentUserData, GetCurrentUserErrors, GetCurrentUserResponses, GetLivenessData, GetLivenessErrors, GetLivenessResponses, GetMeetingData, GetMeetingErrors, GetMeetingResponses, GetProcessingJobData, GetProcessingJobErrors, GetProcessingJobResponses, GetReadinessData, GetReadinessErrors, GetReadinessResponses, GetRecordingData, GetRecordingErrors, GetRecordingMediaData, GetRecordingMediaErrors, GetRecordingMediaResponses, GetRecordingResponses, GetResultReviewData, GetResultReviewErrors, GetResultReviewResponses, GetResultVersionData, GetResultVersionErrors, GetResultVersionResponses, HeadRecordingMediaData, HeadRecordingMediaErrors, HeadRecordingMediaResponses, ListMeetingsData, ListMeetingsErrors, ListMeetingsResponses, ListParticipantsData, ListParticipantsErrors, ListParticipantsResponses, ListProcessingJobsData, ListProcessingJobsErrors, ListProcessingJobsResponses, ListRecordingsData, ListRecordingsErrors, ListRecordingsResponses, ListResultVersionsData, ListResultVersionsErrors, ListResultVersionsResponses, ListTranscriptSegmentsData, ListTranscriptSegmentsErrors, ListTranscriptSegmentsResponses, UpdateMeetingData, UpdateMeetingErrors, UpdateMeetingResponses, UpdateParticipantData, UpdateParticipantErrors, UpdateParticipantResponses, UpdateResultReviewData, UpdateResultReviewErrors, UpdateResultReviewResponses, UploadRecordingChunkData, UploadRecordingChunkErrors, UploadRecordingChunkResponses, UploadRecordingFileData, UploadRecordingFileErrors, UploadRecordingFileResponses } from './types.gen';
+import type { CreateMeetingData, CreateMeetingErrors, CreateMeetingResponses, CreateParticipantData, CreateParticipantErrors, CreateParticipantResponses, CreateProcessingJobData, CreateProcessingJobErrors, CreateProcessingJobResponses, CreateRecordingData, CreateRecordingErrors, CreateRecordingResponses, DeleteMeetingData, DeleteMeetingErrors, DeleteMeetingResponses, DeleteParticipantData, DeleteParticipantErrors, DeleteParticipantResponses, DeleteRecordingData, DeleteRecordingErrors, DeleteRecordingResponses, ExportReviewedResultData, ExportReviewedResultErrors, ExportReviewedResultResponses, FinalizeRecordingData, FinalizeRecordingErrors, FinalizeRecordingResponses, GetAccessPolicyData, GetAccessPolicyErrors, GetAccessPolicyResponses, GetCurrentUserData, GetCurrentUserErrors, GetCurrentUserResponses, GetLivenessData, GetLivenessErrors, GetLivenessResponses, GetMeetingData, GetMeetingErrors, GetMeetingResponses, GetProcessingJobData, GetProcessingJobErrors, GetProcessingJobResponses, GetReadinessData, GetReadinessErrors, GetReadinessResponses, GetRecordingData, GetRecordingErrors, GetRecordingMediaData, GetRecordingMediaErrors, GetRecordingMediaResponses, GetRecordingResponses, GetResultDiarizationData, GetResultDiarizationErrors, GetResultDiarizationResponses, GetResultReviewData, GetResultReviewErrors, GetResultReviewResponses, GetResultVersionData, GetResultVersionErrors, GetResultVersionResponses, HeadRecordingMediaData, HeadRecordingMediaErrors, HeadRecordingMediaResponses, ListMeetingsData, ListMeetingsErrors, ListMeetingsResponses, ListParticipantsData, ListParticipantsErrors, ListParticipantsResponses, ListProcessingJobsData, ListProcessingJobsErrors, ListProcessingJobsResponses, ListRecordingsData, ListRecordingsErrors, ListRecordingsResponses, ListResultVersionsData, ListResultVersionsErrors, ListResultVersionsResponses, ListTranscriptSegmentsData, ListTranscriptSegmentsErrors, ListTranscriptSegmentsResponses, UpdateMeetingData, UpdateMeetingErrors, UpdateMeetingResponses, UpdateParticipantData, UpdateParticipantErrors, UpdateParticipantResponses, UpdateResultReviewData, UpdateResultReviewErrors, UpdateResultReviewResponses, UploadRecordingChunkData, UploadRecordingChunkErrors, UploadRecordingChunkResponses, UploadRecordingFileData, UploadRecordingFileErrors, UploadRecordingFileResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -282,6 +282,17 @@ export const getResultVersion = <ThrowOnError extends boolean = false>(options: 
 });
 
 /**
+ * Get Diarization
+ *
+ * Read immutable anonymous turns; confirmed identities live in result review revisions.
+ */
+export const getResultDiarization = <ThrowOnError extends boolean = false>(options: Options<GetResultDiarizationData, ThrowOnError>): RequestResult<GetResultDiarizationResponses, GetResultDiarizationErrors, ThrowOnError> => (options.client ?? client).get<GetResultDiarizationResponses, GetResultDiarizationErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/meetings/{meeting_id}/recordings/{recording_id}/results/{result_version_id}/diarization',
+    ...options
+});
+
+/**
  * Export Result
  *
  * Download a specific saved, reviewed revision; requires authenticated owner access.
@@ -307,6 +318,9 @@ export const getResultReview = <ThrowOnError extends boolean = false>(options: O
  * Update Review
  *
  * Save manual corrections. Arrays/summary replace whole fields; omitted fields stay.
+ *
+ * speakers replaces assignments: omitted speakers become unknown; [] clears all.
+ * Merge sources must have no participant and point directly at a canonical speaker.
  *
  * revision must match the latest result revision. Content edits clear approval unless
  * reviewed=true is explicit. Each save creates an immutable snapshot for later export.

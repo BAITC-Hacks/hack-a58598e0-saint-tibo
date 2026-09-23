@@ -47,6 +47,93 @@ export type CurrentUser = {
 };
 
 /**
+ * DiarizationProvenance
+ */
+export type DiarizationProvenance = {
+    /**
+     * Bundle Id
+     */
+    bundle_id: string;
+    /**
+     * Cluster Threshold
+     */
+    cluster_threshold: number;
+    /**
+     * Model Sha256
+     */
+    model_sha256: {
+        [key: string]: string;
+    };
+    /**
+     * Requested Num Speakers
+     */
+    requested_num_speakers: number;
+    /**
+     * Sherpa Onnx Version
+     */
+    sherpa_onnx_version: string;
+};
+
+/**
+ * DiarizationRead
+ */
+export type DiarizationRead = {
+    /**
+     * Duration Ms
+     */
+    duration_ms: number;
+    provenance: DiarizationProvenance;
+    /**
+     * Recording Id
+     */
+    recording_id: string;
+    /**
+     * Result Version Id
+     */
+    result_version_id: string;
+    /**
+     * Speakers
+     */
+    speakers: Array<DiarizationSpeaker>;
+    /**
+     * Turns
+     */
+    turns: Array<DiarizationTurn>;
+};
+
+/**
+ * DiarizationSpeaker
+ */
+export type DiarizationSpeaker = {
+    /**
+     * Label
+     */
+    label: string;
+    /**
+     * Speaker Id
+     */
+    speaker_id: string;
+};
+
+/**
+ * DiarizationTurn
+ */
+export type DiarizationTurn = {
+    /**
+     * End Ms
+     */
+    end_ms: number;
+    /**
+     * Speaker Id
+     */
+    speaker_id: string;
+    /**
+     * Start Ms
+     */
+    start_ms: number;
+};
+
+/**
  * ErrorDetail
  */
 export type ErrorDetail = {
@@ -373,9 +460,9 @@ export type ProcessingJobCreate = {
     /**
      * Target Stage
      *
-     * Success means transcript ready; extraction is separate.
+     * Diarize also produces anonymous speaker intervals.
      */
-    target_stage?: 'transcribe';
+    target_stage?: 'transcribe' | 'diarize';
 };
 
 /**
@@ -447,7 +534,7 @@ export type ProcessingJobRead = {
     /**
      * Target Stage
      */
-    target_stage: 'transcribe';
+    target_stage: 'transcribe' | 'diarize';
     /**
      * Updated At
      */
@@ -556,7 +643,7 @@ export type ResultVersionRead = {
     /**
      * Completed Stage
      */
-    completed_stage: 'transcribe';
+    completed_stage: 'transcribe' | 'diarize';
     /**
      * Created At
      */
@@ -762,7 +849,51 @@ export type ReviewRead = {
      * Source
      */
     source?: 'persisted';
+    /**
+     * Speakers
+     */
+    speakers?: Array<ReviewSpeakerRead>;
     summary: ReviewSummary;
+};
+
+/**
+ * ReviewSpeakerAssignment
+ */
+export type ReviewSpeakerAssignment = {
+    /**
+     * Merged Into Speaker Id
+     */
+    merged_into_speaker_id?: string | null;
+    /**
+     * Participant Id
+     */
+    participant_id?: string | null;
+    /**
+     * Speaker Id
+     */
+    speaker_id: string;
+};
+
+/**
+ * ReviewSpeakerRead
+ */
+export type ReviewSpeakerRead = {
+    /**
+     * Label
+     */
+    label: string;
+    /**
+     * Merged Into Speaker Id
+     */
+    merged_into_speaker_id?: string | null;
+    /**
+     * Participant Id
+     */
+    participant_id?: string | null;
+    /**
+     * Speaker Id
+     */
+    speaker_id: string;
 };
 
 /**
@@ -803,6 +934,10 @@ export type ReviewUpdate = {
      * Revision
      */
     revision: number;
+    /**
+     * Speakers
+     */
+    speakers?: Array<ReviewSpeakerAssignment> | null;
     summary?: ReviewSummary | null;
 };
 
@@ -2626,6 +2761,68 @@ export type GetResultVersionResponses = {
 };
 
 export type GetResultVersionResponse = GetResultVersionResponses[keyof GetResultVersionResponses];
+
+export type GetResultDiarizationData = {
+    body?: never;
+    path: {
+        /**
+         * Meeting Id
+         */
+        meeting_id: string;
+        /**
+         * Recording Id
+         */
+        recording_id: string;
+        /**
+         * Result Version Id
+         */
+        result_version_id: string;
+    };
+    query?: never;
+    url: '/api/v1/meetings/{meeting_id}/recordings/{recording_id}/results/{result_version_id}/diarization';
+};
+
+export type GetResultDiarizationErrors = {
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ErrorResponse;
+    /**
+     * Internal Server Error
+     */
+    500: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
+};
+
+export type GetResultDiarizationError = GetResultDiarizationErrors[keyof GetResultDiarizationErrors];
+
+export type GetResultDiarizationResponses = {
+    /**
+     * Successful Response
+     */
+    200: DiarizationRead;
+};
+
+export type GetResultDiarizationResponse = GetResultDiarizationResponses[keyof GetResultDiarizationResponses];
 
 export type ExportReviewedResultData = {
     body?: never;

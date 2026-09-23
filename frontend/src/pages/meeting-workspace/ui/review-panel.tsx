@@ -21,16 +21,25 @@ import { useCopy } from "../lib/copy";
 type Tab = "summary" | "transcript" | "actions";
 const actionStatuses = ["open", "in_progress", "done", "cancelled"] as const;
 
+const editableFields = (review: ReviewDocument) => ({
+  reviewed: review.reviewed,
+  summary: review.summary,
+  action_items: review.action_items,
+  speakers: review.speakers,
+});
+
 export function ReviewPanel({
   meetingId,
   review,
   participants,
   recording,
+  onDirtyChange,
 }: {
   meetingId: string;
   review: ReviewDocument;
   participants: ParticipantRead[];
   recording: RecordingRead | null;
+  onDirtyChange: (dirty: boolean) => void;
 }) {
   const t = useCopy();
   const client = useQueryClient();
@@ -49,7 +58,10 @@ export function ReviewPanel({
     segments: review.segments,
     seek: (ms) => player.current?.seek(ms),
   });
-  const dirty = JSON.stringify(draft) !== JSON.stringify(review);
+  const dirty =
+    JSON.stringify(editableFields(draft)) !==
+    JSON.stringify(editableFields(review));
+  useEffect(() => onDirtyChange(dirty), [dirty, onDirtyChange]);
   const canEdit = true;
   const save = useMutation({
     mutationFn: (next: ReviewDocument) => saveReview(meetingId, next),
@@ -77,10 +89,26 @@ export function ReviewPanel({
   const speakerById = new Map(
     draft.speakers.map((speaker) => [speaker.id, speaker])
   );
+  function canonicalSpeaker(id: string | null) {
+    const speaker = speakerById.get(id ?? "");
+    return speaker?.merged_into_speaker_id
+      ? (speakerById.get(speaker.merged_into_speaker_id) ?? speaker)
+      : speaker;
+  }
+  const firstTurnBySpeaker = new Map<
+    string,
+    NonNullable<ReviewDocument["diarization"]>["turns"][number]
+  >();
+  for (const turn of review.diarization?.turns ?? []) {
+    const first = firstTurnBySpeaker.get(turn.speaker_id);
+    if (!first || turn.start_ms < first.start_ms)
+      firstTurnBySpeaker.set(turn.speaker_id, turn);
+  }
   const selectedSegments = review.segments
     .filter(
       (segment) =>
-        (!speakerFilter || segment.speaker_id === speakerFilter) &&
+        (!speakerFilter ||
+          canonicalSpeaker(segment.speaker_id)?.id === speakerFilter) &&
         segment.text.toLocaleLowerCase().includes(search.toLocaleLowerCase())
     )
     .toSorted((a, b) => a.start_ms - b.start_ms);
@@ -350,39 +378,65 @@ export function ReviewPanel({
           </div>
           <aside className="rounded-xl border bg-card p-4">
             <h3 className="font-medium">{t.speakers}</h3>
+            <p className="mt-2 text-xs text-muted-foreground">{t.speakerHelp}</p>
             <div className="mt-3 space-y-3">
-              {draft.speakers.map((speaker, index) => (
-                <label key={speaker.id} className="block space-y-1 text-sm">
-                  <span>{speaker.label}</span>
-                  <select
-                    aria-label={`${speaker.label}: ${t.participants}`}
-                    className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
-                    value={speaker.participant_id ?? ""}
-                    onChange={(event) =>
-                      editDraft((current) => ({
-                        ...current,
-                        speakers: current.speakers.map((item, i) =>
-                          i === index
-                            ? {
-                                ...item,
-                                participant_id: event.target.value || null,
-                              }
-                            : item
-                        ),
-                      }))
-                    }
-                  >
-                    <option value="">{t.unknown}</option>
-                    {participants.map((participant) => (
-                      <option key={participant.id} value={participant.id}>
-                        {participant.display_name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              ))}
+              {draft.speakers.map((speaker, index) => {
+                const canonical = canonicalSpeaker(speaker.id);
+                const turn = firstTurnBySpeaker.get(speaker.id);
+                return (
+                  <div key={speaker.id} className="space-y-1 text-sm">
+                    <label className="block space-y-1">
+                      <span>{speaker.label}</span>
+                      <select
+                        aria-label={`${speaker.label}: ${t.participants}`}
+                        className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm disabled:opacity-60"
+                        disabled={!!speaker.merged_into_speaker_id}
+                        value={canonical?.participant_id ?? ""}
+                        onChange={(event) =>
+                          editDraft((current) => ({
+                            ...current,
+                            speakers: current.speakers.map((item, i) =>
+                              i === index
+                                ? {
+                                    ...item,
+                                    participant_id: event.target.value || null,
+                                  }
+                                : item
+                            ),
+                          }))
+                        }
+                      >
+                        <option value="">{t.unknown}</option>
+                        {participants.map((participant) => (
+                          <option key={participant.id} value={participant.id}>
+                            {participant.display_name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    {speaker.merged_into_speaker_id && (
+                      <p className="text-xs text-muted-foreground">
+                        {t.speakerMerged}: {canonical?.label}
+                      </p>
+                    )}
+                    {turn && (
+                      <button
+                        type="button"
+                        className="text-xs text-primary underline disabled:opacity-50"
+                        disabled={!source}
+                        onClick={() => player.current?.seek(turn.start_ms)}
+                      >
+                        {t.speakerSample} {transcriptTime(turn.start_ms)}–
+                        {transcriptTime(turn.end_ms)}
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
               {!draft.speakers.length && (
-                <p className="text-sm text-muted-foreground">{t.noItems}</p>
+                <p className="text-sm text-muted-foreground">
+                  {review.diarization ? t.noSpeakers : t.speakersUnavailable}
+                </p>
               )}
             </div>
           </aside>
@@ -407,12 +461,14 @@ export function ReviewPanel({
               onChange={(event) => setSpeakerFilter(event.target.value)}
             >
               <option value="">{t.filterSpeaker}</option>
-              {draft.speakers.map((speaker) => (
-                <option key={speaker.id} value={speaker.id}>
-                  {participantById.get(speaker.participant_id ?? "")
-                    ?.display_name ?? speaker.label}
-                </option>
-              ))}
+              {draft.speakers
+                .filter((speaker) => !speaker.merged_into_speaker_id)
+                .map((speaker) => (
+                  <option key={speaker.id} value={speaker.id}>
+                    {participantById.get(speaker.participant_id ?? "")
+                      ?.display_name ?? speaker.label}
+                  </option>
+                ))}
             </select>
             <Button
               variant="outline"
@@ -429,7 +485,7 @@ export function ReviewPanel({
             onTouchMove={() => sync.setFollow(false)}
           >
             {selectedSegments.map((segment) => {
-              const speaker = speakerById.get(segment.speaker_id ?? "");
+              const speaker = canonicalSpeaker(segment.speaker_id);
               return (
                 <button
                   key={segment.id}

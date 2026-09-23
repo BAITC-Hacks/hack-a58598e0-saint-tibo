@@ -82,6 +82,142 @@
         "title": "CurrentUser",
         "type": "object"
       },
+      "DiarizationProvenance": {
+        "additionalProperties": false,
+        "properties": {
+          "bundle_id": {
+            "title": "Bundle Id",
+            "type": "string"
+          },
+          "cluster_threshold": {
+            "title": "Cluster Threshold",
+            "type": "number"
+          },
+          "model_sha256": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Model Sha256",
+            "type": "object"
+          },
+          "requested_num_speakers": {
+            "title": "Requested Num Speakers",
+            "type": "integer"
+          },
+          "sherpa_onnx_version": {
+            "title": "Sherpa Onnx Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "bundle_id",
+          "sherpa_onnx_version",
+          "model_sha256",
+          "requested_num_speakers",
+          "cluster_threshold"
+        ],
+        "title": "DiarizationProvenance",
+        "type": "object"
+      },
+      "DiarizationRead": {
+        "additionalProperties": false,
+        "properties": {
+          "duration_ms": {
+            "exclusiveMinimum": 0.0,
+            "title": "Duration Ms",
+            "type": "integer"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/DiarizationProvenance"
+          },
+          "recording_id": {
+            "format": "uuid",
+            "title": "Recording Id",
+            "type": "string"
+          },
+          "result_version_id": {
+            "format": "uuid",
+            "title": "Result Version Id",
+            "type": "string"
+          },
+          "speakers": {
+            "items": {
+              "$ref": "#/components/schemas/DiarizationSpeaker"
+            },
+            "maxItems": 32,
+            "minItems": 1,
+            "title": "Speakers",
+            "type": "array"
+          },
+          "turns": {
+            "items": {
+              "$ref": "#/components/schemas/DiarizationTurn"
+            },
+            "maxItems": 20000,
+            "minItems": 1,
+            "title": "Turns",
+            "type": "array"
+          }
+        },
+        "required": [
+          "duration_ms",
+          "speakers",
+          "turns",
+          "provenance",
+          "result_version_id",
+          "recording_id"
+        ],
+        "title": "DiarizationRead",
+        "type": "object"
+      },
+      "DiarizationSpeaker": {
+        "additionalProperties": false,
+        "properties": {
+          "label": {
+            "pattern": "^speaker_[0-9]{2}$",
+            "title": "Label",
+            "type": "string"
+          },
+          "speaker_id": {
+            "format": "uuid",
+            "title": "Speaker Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "speaker_id",
+          "label"
+        ],
+        "title": "DiarizationSpeaker",
+        "type": "object"
+      },
+      "DiarizationTurn": {
+        "additionalProperties": false,
+        "properties": {
+          "end_ms": {
+            "exclusiveMinimum": 0.0,
+            "title": "End Ms",
+            "type": "integer"
+          },
+          "speaker_id": {
+            "format": "uuid",
+            "title": "Speaker Id",
+            "type": "string"
+          },
+          "start_ms": {
+            "minimum": 0.0,
+            "title": "Start Ms",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "speaker_id",
+          "start_ms",
+          "end_ms"
+        ],
+        "title": "DiarizationTurn",
+        "type": "object"
+      },
       "ErrorDetail": {
         "properties": {
           "code": {
@@ -608,9 +744,12 @@
             "title": "Retry Of Job Id"
           },
           "target_stage": {
-            "const": "transcribe",
             "default": "transcribe",
-            "description": "Success means transcript ready; extraction is separate.",
+            "description": "Diarize also produces anonymous speaker intervals.",
+            "enum": [
+              "transcribe",
+              "diarize"
+            ],
             "title": "Target Stage",
             "type": "string"
           }
@@ -757,7 +896,10 @@
             "type": "string"
           },
           "target_stage": {
-            "const": "transcribe",
+            "enum": [
+              "transcribe",
+              "diarize"
+            ],
             "title": "Target Stage",
             "type": "string"
           },
@@ -977,7 +1119,10 @@
       "ResultVersionRead": {
         "properties": {
           "completed_stage": {
-            "const": "transcribe",
+            "enum": [
+              "transcribe",
+              "diarize"
+            ],
             "title": "Completed Stage",
             "type": "string"
           },
@@ -1350,6 +1495,13 @@
             "title": "Source",
             "type": "string"
           },
+          "speakers": {
+            "items": {
+              "$ref": "#/components/schemas/ReviewSpeakerRead"
+            },
+            "title": "Speakers",
+            "type": "array"
+          },
           "summary": {
             "$ref": "#/components/schemas/ReviewSummary"
           }
@@ -1367,6 +1519,89 @@
           "summary"
         ],
         "title": "ReviewRead",
+        "type": "object"
+      },
+      "ReviewSpeakerAssignment": {
+        "additionalProperties": false,
+        "properties": {
+          "merged_into_speaker_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Merged Into Speaker Id"
+          },
+          "participant_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Participant Id"
+          },
+          "speaker_id": {
+            "format": "uuid",
+            "title": "Speaker Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "speaker_id"
+        ],
+        "title": "ReviewSpeakerAssignment",
+        "type": "object"
+      },
+      "ReviewSpeakerRead": {
+        "additionalProperties": false,
+        "properties": {
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "merged_into_speaker_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Merged Into Speaker Id"
+          },
+          "participant_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Participant Id"
+          },
+          "speaker_id": {
+            "format": "uuid",
+            "title": "Speaker Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "speaker_id",
+          "label"
+        ],
+        "title": "ReviewSpeakerRead",
         "type": "object"
       },
       "ReviewSummary": {
@@ -1448,6 +1683,21 @@
             "minimum": 1.0,
             "title": "Revision",
             "type": "integer"
+          },
+          "speakers": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ReviewSpeakerAssignment"
+                },
+                "maxItems": 32,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Speakers"
           },
           "summary": {
             "anyOf": [
@@ -5391,6 +5641,135 @@
         ]
       }
     },
+    "/api/v1/meetings/{meeting_id}/recordings/{recording_id}/results/{result_version_id}/diarization": {
+      "get": {
+        "description": "Read immutable anonymous turns; confirmed identities live in result review revisions.",
+        "operationId": "getResultDiarization",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "meeting_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Meeting Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "recording_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Recording Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "result_version_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Result Version Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiarizationRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Diarization",
+        "tags": [
+          "results"
+        ]
+      }
+    },
     "/api/v1/meetings/{meeting_id}/recordings/{recording_id}/results/{result_version_id}/export": {
       "get": {
         "description": "Download a specific saved, reviewed revision; requires authenticated owner access.",
@@ -5693,7 +6072,7 @@
         ]
       },
       "patch": {
-        "description": "Save manual corrections. Arrays/summary replace whole fields; omitted fields stay.\n\nrevision must match the latest result revision. Content edits clear approval unless\nreviewed=true is explicit. Each save creates an immutable snapshot for later export.",
+        "description": "Save manual corrections. Arrays/summary replace whole fields; omitted fields stay.\n\nspeakers replaces assignments: omitted speakers become unknown; [] clears all.\nMerge sources must have no participant and point directly at a canonical speaker.\n\nrevision must match the latest result revision. Content edits clear approval unless\nreviewed=true is explicit. Each save creates an immutable snapshot for later export.",
         "operationId": "updateResultReview",
         "parameters": [
           {
