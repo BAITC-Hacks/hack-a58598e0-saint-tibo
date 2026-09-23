@@ -331,7 +331,7 @@ function PlayerSession({
         />
         {markers.length > 0 && duration !== null && (
           <fieldset
-            className="flex gap-px overflow-hidden rounded-md border"
+            className="flex w-full min-w-0 gap-px overflow-hidden rounded-md border"
             aria-label={m.player_position({}, { locale })}
           >
             {markers.map((marker, index) => (
