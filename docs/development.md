@@ -26,9 +26,12 @@ git worktree add ../saint-tibo-task -b feat/42-meeting-upload origin/dev
 задать разные порты, имя базы и `COMPOSE_PROJECT_NAME` в `.env`.
 Коммиты: `feat:`, `fix:`, `docs:`, `chore:` и конкретное изменение.
 
-Перед интеграцией — `bun run verify`. Авторизация/миграции дополнительно
-проверяются через `bun run test:integration`. После изменения API —
-`bun run api:generate`; контракт и SDK включаются в тот же срез.
+Текущий режим по указанию владельца от 2026-09-23: не писать и не запускать
+тестовые наборы; собирать приложение для deployment и коротко проверять
+изменённый сценарий на живом dev-сервере. Команды `verify` и
+`test:integration` остаются доступными для последующего возврата к полным
+проверкам. После изменения API — `bun run api:generate`; контракт и SDK
+включаются в тот же срез.
 
 ## Интеграция
 
@@ -41,7 +44,6 @@ git push origin danil
 git switch dev
 git merge --ff-only origin/dev
 git merge --no-ff danil
-bun run verify
 git push origin dev
 ```
 
@@ -54,5 +56,6 @@ CI/CD не используется. Каждый участник вручну�
 работу на личном dev-сервере: `saint-dev-danil`, `saint-dev-ivan`,
 `saint-dev-artem`. После интеграции так же проверяется актуальный `dev`.
 Порядок — в [инструкции запуска](dev-server.md). Push ничего не развёртывает.
+Быстрый вход и браузерный сценарий — в [browser-testing.md](browser-testing.md).
 Production обновляет Данил вручную из согласованного `main`; адреса
 окружений и порядок запуска указаны в той же инструкции.
