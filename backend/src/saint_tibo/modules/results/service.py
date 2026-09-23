@@ -31,6 +31,9 @@ async def publish_transcript(
     segments: list[TranscriptSegment],
     language: str,
     duration_ms: int,
+    *,
+    model_id: str,
+    model_revision: str,
 ) -> UUID:
     # Same lock order as recording DELETE: recording first, job second. Inference
     # has finished before this transaction begins; no locks across model execution.
@@ -62,8 +65,8 @@ async def publish_transcript(
             is_incomplete=media.status == "incomplete",
             language=language,
             duration_ms=duration_ms,
-            model_id="Systran/faster-whisper-small",
-            model_revision="536b0662742c02347bc0e980a01041f333bce120",
+            model_id=model_id,
+            model_revision=model_revision,
             segment_count=len(segments),
         )
     )
