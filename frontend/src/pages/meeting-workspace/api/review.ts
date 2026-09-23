@@ -8,6 +8,7 @@ import {
   listTranscriptSegments,
 } from "#/shared/api";
 import type { ResultVersionRead, SegmentRead } from "#/shared/api";
+import { jsonBodySerializer } from "#/shared/api/generated/client";
 
 const segment = z.object({
   id: z.string(),
@@ -138,6 +139,7 @@ export const reviewQuery = (meetingId: string) =>
 
 export async function saveReview(meetingId: string, review: ReviewDocument) {
   const result = await backendClient.patch({
+    ...jsonBodySerializer,
     url: `/api/v1/meetings/${encodeURIComponent(meetingId)}/review`,
     security: [{ scheme: "bearer", type: "http" }],
     headers: { "Content-Type": "application/json" },

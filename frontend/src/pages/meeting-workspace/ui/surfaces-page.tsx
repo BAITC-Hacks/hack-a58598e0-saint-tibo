@@ -4,6 +4,7 @@ import { Search } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { authClient } from "#/shared/auth";
+import { useLocale } from "#/shared/lib/locales";
 import { Button } from "#/shared/ui/shadcn/button";
 import { Input } from "#/shared/ui/shadcn/input";
 
@@ -34,6 +35,7 @@ export function SurfacesPage({
   personId?: string;
 }) {
   const t = useCopy();
+  const locale = useLocale();
   const session = authClient.useSession();
   const meetings = useQuery(meetingsQuery(0));
   const [search, setSearch] = useState("");
@@ -349,7 +351,7 @@ export function SurfacesPage({
                     ←
                   </Button>
                   <h2 className="font-medium">
-                    {new Intl.DateTimeFormat(undefined, {
+                    {new Intl.DateTimeFormat(locale, {
                       month: "long",
                       year: "numeric",
                     }).format(month)}

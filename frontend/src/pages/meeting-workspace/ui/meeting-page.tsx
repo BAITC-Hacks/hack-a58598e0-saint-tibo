@@ -4,6 +4,7 @@ import { AlertCircle, FileAudio, Plus, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import type { ProcessingJobRead, RecordingRead } from "#/shared/api";
+import { useLocale } from "#/shared/lib/locales";
 import { Button } from "#/shared/ui/shadcn/button";
 import { Input } from "#/shared/ui/shadcn/input";
 
@@ -22,6 +23,7 @@ import { ReviewPanel } from "./review-panel";
 
 export function MeetingPage({ meetingId }: { meetingId: string }) {
   const t = useCopy();
+  const locale = useLocale();
   const client = useQueryClient();
   const meeting = useQuery(meetingQuery(meetingId));
   const participants = useQuery(participantsQuery(meetingId));
@@ -120,7 +122,7 @@ export function MeetingPage({ meetingId }: { meetingId: string }) {
         </h1>
         <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
           <time dateTime={meeting.data.started_at}>
-            {new Intl.DateTimeFormat(undefined, {
+            {new Intl.DateTimeFormat(locale, {
               dateStyle: "medium",
               timeStyle: "short",
               timeZone: meeting.data.timezone,

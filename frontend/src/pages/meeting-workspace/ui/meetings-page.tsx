@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { CalendarDays, Plus, Search } from "lucide-react";
 import { useState } from "react";
 
+import { useLocale } from "#/shared/lib/locales";
 import { Button } from "#/shared/ui/shadcn/button";
 import { Input } from "#/shared/ui/shadcn/input";
 
@@ -11,6 +12,7 @@ import { useCopy } from "../lib/copy";
 
 export function MeetingsPage() {
   const t = useCopy();
+  const locale = useLocale();
   const [search, setSearch] = useState("");
   const [offset, setOffset] = useState(0);
   const meetings = useQuery(meetingsQuery(offset));
@@ -91,7 +93,7 @@ export function MeetingsPage() {
                 <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
                   <CalendarDays className="size-4" aria-hidden="true" />
                   <time dateTime={meeting.started_at}>
-                    {new Intl.DateTimeFormat(undefined, {
+                    {new Intl.DateTimeFormat(locale, {
                       dateStyle: "medium",
                       timeStyle: "short",
                       timeZone: meeting.timezone,
