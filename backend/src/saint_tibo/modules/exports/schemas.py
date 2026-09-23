@@ -1,23 +1,14 @@
 """Export payload shaped after the reviewed ResultVersion contract.
 
-Mirrors docs/meeting-contract.md: Meeting, Participant, Speaker, Segment,
-ActionItem and the reviewed version envelope. These are render inputs —
-persistence arrives with #13, until then callers assemble the payload
-from stored entities or fixtures.
+Render inputs assembled from an immutable, owner-authorized ResultReview snapshot.
 """
 
 from datetime import date, datetime
-from enum import StrEnum
 from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-
-class ActionItemStatus(StrEnum):
-    OPEN = "open"
-    IN_PROGRESS = "in_progress"
-    DONE = "done"
-    CANCELLED = "cancelled"
+from saint_tibo.modules.results.schemas import ActionItemStatus
 
 
 class ExportMeeting(BaseModel):
@@ -68,6 +59,7 @@ class ProtocolExport(BaseModel):
 
     result_version_id: UUID
     revision: int = Field(ge=1)
+    is_incomplete: bool = False
     meeting: ExportMeeting
     participants: list[ExportParticipant] = Field(default_factory=list)
     speakers: list[ExportSpeaker] = Field(default_factory=list)

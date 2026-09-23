@@ -5,6 +5,12 @@ export type MediaSource = {
   title: string;
 };
 
+export type TimelineMarker = {
+  id: string;
+  startMs: number;
+  label: string;
+};
+
 export type PlaybackStatus =
   | "loading"
   | "ready"
