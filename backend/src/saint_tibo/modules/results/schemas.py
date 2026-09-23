@@ -88,8 +88,11 @@ class DiarizationData(BaseModel):
             raise ValueError("Duplicate speaker identifiers")
         previous_start = -1
         for turn in self.turns:
-            if (turn.speaker_id not in ids or turn.start_ms < previous_start
-                    or not turn.start_ms < turn.end_ms <= self.duration_ms):
+            if (
+                turn.speaker_id not in ids
+                or turn.start_ms < previous_start
+                or not turn.start_ms < turn.end_ms <= self.duration_ms
+            ):
                 raise ValueError("Invalid speaker timeline")
             previous_start = turn.start_ms
         return self

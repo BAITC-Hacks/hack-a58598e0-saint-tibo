@@ -39,17 +39,29 @@ def speaker_data(output: DiarizationOutput) -> DiarizationData:
     return DiarizationData(
         duration_ms=output.provenance.duration_ms,
         speakers=[DiarizationSpeaker(speaker_id=value, label=key) for key, value in ids.items()],
-        turns=[DiarizationTurn(speaker_id=ids[turn.speaker_label], start_ms=turn.start_ms,
-                               end_ms=turn.end_ms) for turn in output.turns],
-        provenance=DiarizationProvenance.model_validate(output.provenance.model_dump(include={
-            "bundle_id", "sherpa_onnx_version", "model_sha256", "requested_num_speakers",
-            "cluster_threshold",
-        })),
+        turns=[
+            DiarizationTurn(
+                speaker_id=ids[turn.speaker_label], start_ms=turn.start_ms, end_ms=turn.end_ms
+            )
+            for turn in output.turns
+        ],
+        provenance=DiarizationProvenance.model_validate(
+            output.provenance.model_dump(
+                include={
+                    "bundle_id",
+                    "sherpa_onnx_version",
+                    "model_sha256",
+                    "requested_num_speakers",
+                    "cluster_threshold",
+                }
+            )
+        ),
     )
 
 
 def segment_speakers(
-    segments: list[TranscriptSegment], data: DiarizationData,
+    segments: list[TranscriptSegment],
+    data: DiarizationData,
 ) -> dict[int, UUID | None]:
     """Keep a sentence unknown whenever its interval intersects multiple voices."""
     assignments: dict[int, UUID | None] = {}
@@ -73,7 +85,9 @@ def default_speakers(version: ResultVersion) -> list[ReviewSpeakerRead]:
 
 
 def reviewed_speakers(
-    version: ResultVersion, assignments: Sequence[ReviewSpeakerAssignment], participant_ids: set[UUID],
+    version: ResultVersion,
+    assignments: Sequence[ReviewSpeakerAssignment],
+    participant_ids: set[UUID],
 ) -> list[ReviewSpeakerRead]:
     speakers = {row.speaker_id: row for row in default_speakers(version)}
     for assignment in assignments:
@@ -84,12 +98,20 @@ def reviewed_speakers(
         )
     for speaker in speakers.values():
         if speaker.participant_id is not None and speaker.participant_id not in participant_ids:
-            raise APIError(422, "invalid_speaker_participant", "Participant must belong to this meeting")
+            raise APIError(
+                422, "invalid_speaker_participant", "Participant must belong to this meeting"
+            )
         if speaker.merged_into_speaker_id is not None:
             target = speakers.get(speaker.merged_into_speaker_id)
-            if (target is None or target.speaker_id == speaker.speaker_id
-                    or target.merged_into_speaker_id is not None or speaker.participant_id is not None):
-                raise APIError(422, "invalid_speaker_merge", "Merge into a distinct canonical speaker")
+            if (
+                target is None
+                or target.speaker_id == speaker.speaker_id
+                or target.merged_into_speaker_id is not None
+                or speaker.participant_id is not None
+            ):
+                raise APIError(
+                    422, "invalid_speaker_merge", "Merge into a distinct canonical speaker"
+                )
     return list(speakers.values())
 
 
@@ -126,10 +148,14 @@ async def publish_transcript(
             422, "invalid_transcript_timing", "Transcript differs from the recording clock"
         )
     if (current.target_stage == "diarize") != (diarization is not None):
-        raise APIError(422, "invalid_diarization_output", "Diarization does not match the requested stage")
+        raise APIError(
+            422, "invalid_diarization_output", "Diarization does not match the requested stage"
+        )
     data = speaker_data(diarization) if diarization is not None else None
     if data is not None and data.duration_ms != duration_ms:
-        raise APIError(422, "invalid_diarization_output", "Diarization differs from the recording clock")
+        raise APIError(
+            422, "invalid_diarization_output", "Diarization differs from the recording clock"
+        )
     assignments = segment_speakers(segments, data) if data is not None else {}
     version_id = uuid4()
     session.add(
@@ -150,8 +176,12 @@ async def publish_transcript(
     await session.flush()
     session.add_all(
         [
-            Segment(result_version_id=version_id, recording_id=media.id,
-                    speaker_id=assignments.get(index), **row.model_dump())
+            Segment(
+                result_version_id=version_id,
+                recording_id=media.id,
+                speaker_id=assignments.get(index),
+                **row.model_dump(),
+            )
             for index, row in enumerate(segments)
         ]
     )
@@ -210,7 +240,11 @@ async def list_versions(
 
 
 async def get_diarization(
-    session: AsyncSession, owner_id: str, meeting_id: UUID, recording_id: UUID, version_id: UUID,
+    session: AsyncSession,
+    owner_id: str,
+    meeting_id: UUID,
+    recording_id: UUID,
+    version_id: UUID,
 ) -> DiarizationRead:
     version = await get_version(session, owner_id, meeting_id, recording_id, version_id)
     if version.diarization is None:
@@ -285,11 +319,7 @@ async def update_review(
         raise APIError(409, "version_conflict", "Reload the latest revision before saving")
     previous = await review_snapshot(session, version, version.revision)
     base = previous if previous is not None else await initial_review(session, version, meeting_row)
-    summary = (
-        body.summary
-        if body.summary is not None
-        else base.summary
-    )
+    summary = body.summary if body.summary is not None else base.summary
     items = (
         [
             ReviewActionItemRead(**item.model_dump(), result_version_id=version.id)
@@ -308,7 +338,9 @@ async def update_review(
     )
     participant_ids = {row.id for row in participants}
     speakers = reviewed_speakers(
-        version, body.speakers if body.speakers is not None else base.speakers, participant_ids,
+        version,
+        body.speakers if body.speakers is not None else base.speakers,
+        participant_ids,
     )
     if any(
         item.assignee_participant_id is not None
@@ -332,7 +364,9 @@ async def update_review(
         if found != source_ids:
             raise APIError(422, "invalid_source_segment", "Sources must belong to this result")
 
-    content_changed = any(value is not None for value in (body.summary, body.action_items, body.speakers))
+    content_changed = any(
+        value is not None for value in (body.summary, body.action_items, body.speakers)
+    )
     reviewed = (
         body.reviewed
         if body.reviewed is not None
