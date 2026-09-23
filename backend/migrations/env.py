@@ -8,8 +8,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 
 from saint_tibo.core.config import Settings
 from saint_tibo.db.base import Base
-
-# Import every domain model module here so its tables are registered in Base.metadata.
+from saint_tibo.modules.meetings import models as meeting_models  # noqa: F401
 
 target_metadata = Base.metadata
 
