@@ -36,6 +36,7 @@ writer ends `await session.commit()`.
 
 `main`: auth, `/api/v1/me`, `/api/v1/admin/access`, `/health/*`, plus
 the full meetings surface — see API-02. `dev` additionally carries
-processing jobs (#10, STT boundary) and the exports renderers (#14).
+processing jobs + real STT + transcript results (#10/#11, `modules/
+processing` + `modules/results`) and the exports renderers (#14).
 `contracts/openapi.json` is the truth of what's implemented;
 docs drafts ≠ endpoints.

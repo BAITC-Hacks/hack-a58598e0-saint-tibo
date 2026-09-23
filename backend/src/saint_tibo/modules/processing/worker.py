@@ -21,6 +21,8 @@ from saint_tibo.modules.meetings.models import Recording
 from saint_tibo.modules.meetings.storage import recording_dir
 from saint_tibo.modules.processing.models import ProcessingJob
 from saint_tibo.modules.processing.service import interrupt_expired
+from saint_tibo.modules.processing.transcription import transcribe
+from saint_tibo.modules.results.service import publish_transcript
 
 logger = logging.getLogger(__name__)
 SessionFactory = async_sessionmaker[AsyncSession]
@@ -42,9 +44,10 @@ async def claim(factory: SessionFactory, config: Settings) -> ProcessingJob | No
         )
         if row is not None:
             row.status = "running"
-            row.started_at = await session.scalar(select(func.now()))
-            row.claim_token = uuid4()
             now = await session.scalar(select(func.now()))
+            assert now is not None
+            row.started_at = now
+            row.claim_token = uuid4()
             row.lease_expires_at = now + timedelta(seconds=config.processing_lease_seconds)
         await session.commit()
         return row
@@ -121,22 +124,30 @@ async def process(factory: SessionFactory, config: Settings, job: ProcessingJob)
     path = recording_dir(config.recording_storage_path, job.recording_id) / "media.wav"
     await asyncio.to_thread(validate_audio, path, duration, config)
     await save(factory, job, stage="transcribe", progress=None)
-    # hack: #11 connects the self-hosted STT here; unavailable is never a successful result.
-    raise APIError(503, "transcription_unavailable", "Local transcription is not installed yet")
+    assert duration is not None
+
+    async def progress(value: float) -> None:
+        await save(factory, job, progress=value)
+
+    segments, detected_language = await transcribe(config, path, job.language, duration, progress)
+    async with factory() as session:
+        await publish_transcript(session, job, segments, detected_language, duration)
 
 
 async def run_job(factory: SessionFactory, config: Settings, job: ProcessingJob) -> None:
     work = asyncio.create_task(process(factory, config, job))
     pulse = asyncio.create_task(heartbeat(factory, config, job))
-    status, error = "failed", "processing_failed"
+    status = "failed"
+    error: str | None = "processing_failed"
     logger.info("job_started job_id=%s attempt=%s", job.id, job.attempt)
     try:
         async with asyncio.timeout(config.processing_timeout_seconds):
             done, _ = await asyncio.wait((work, pulse), return_when=asyncio.FIRST_COMPLETED)
-            for task in done:
-                await task
-            # Every real stage must explicitly publish a version before success is possible.
-            raise APIError(503, "processing_unavailable", "The processing pipeline is incomplete")
+            if work in done:
+                await work
+                status, error = "succeeded", None
+            else:
+                await pulse
     except LeaseLost:
         logger.info("job_lease_lost job_id=%s", job.id)
         return
@@ -155,15 +166,16 @@ async def run_job(factory: SessionFactory, config: Settings, job: ProcessingJob)
         pulse.cancel()
         await asyncio.gather(work, pulse, return_exceptions=True)
         try:
-            await save(
-                factory,
-                job,
-                status=status,
-                error_code=error,
-                finished_at=func.now(),
-                lease_expires_at=None,
-                claim_token=None,
-            )
+            if status != "succeeded":
+                await save(
+                    factory,
+                    job,
+                    status=status,
+                    error_code=error,
+                    finished_at=func.now(),
+                    lease_expires_at=None,
+                    claim_token=None,
+                )
             logger.info("job_finished job_id=%s status=%s error_code=%s", job.id, status, error)
         except (LeaseLost, SQLAlchemyError):
             # If DB is unavailable, the persisted lease becomes interrupted on recovery.

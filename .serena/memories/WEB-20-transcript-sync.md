@@ -18,8 +18,8 @@
 ## Proof
 
 - typecheck, check (format + typed lint), lint:fsd, i18n:check, build passed.
-- i18n: all 92 messages in ru/kk/en; no new dependencies.
-- Browser on production build at loopback port 3020: 0/4/8/24 s seeks,
+- All demo strings exist in ru/kk/en; no new dependencies.
+- Browser on production build: 0/4/8/24 s seeks,
   paused/playing preservation, rate 2x, 3.2 s gap, wheel/keyboard interruption,
   repeated source jump, unavailable source, locale changes, follow to end.
 - Console warnings/errors empty. Build requires synthetic auth process settings;
@@ -30,4 +30,3 @@
 - Editor integration and agreement with Artyom remain pending (#12/#13).
 - Real authorized results/media integration not verified; #20 stays open.
 - Full current-version segment list is required; no paginated fetching here.
-- No push, shared-branch merge or deploy authorized/performed.

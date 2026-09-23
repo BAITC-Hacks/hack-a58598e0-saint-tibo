@@ -13,10 +13,14 @@
   devices; `bun run tools/meeting-capture/verify.ts` passes with Bun 1.4.2.
 - Strict TypeScript 7.0.2 compilation and `git diff --check` passed.
 - README records lifecycle obligations, deadlines and link policy.
+- Adapter prototypes exist per platform: `teams/adapter.ts`,
+  `google-meet/adapter.ts`, `zoom/adapter.ts` (Playwright guest/browser
+  participants; each has own `verify.ts`, synthetic/local only).
 
 ## Known Gaps
 
-- No real adapter, process supervisor, service auth, durable state or HTTP sink.
+- Adapters are unproven against real meetings: no live join/audio proof,
+  no process supervisor, service auth, durable state or HTTP sink.
   No SDK/API endpoint is claimed as implemented. Backend/storage belong to Danil.
 - Kernel calls teardown and bounds waits, but cannot force a remote participant
   to leave or kill non-cooperative JS. Real adapter must prove process-group kill,
@@ -28,4 +32,4 @@
   Compose is unverified. Hosted providers are not authorized.
 - `docs/meeting-connectors.md` belongs to coordinator; integrate its research
   separately. It must use #8 states, not queued/connecting/connected.
-- No push/merge/deploy; #22 stays open. Claims released after local delivery.
+- #22 stays open until a real adapter proves join/audio end-to-end.

@@ -19,9 +19,11 @@ import models in `migrations/env.py`; parallel checkouts need unique
   `recording_chunks` (PK (recording_id, sequence);
   start_ms/end_ms/sha256 per chunk).
 - `dev` additionally: `0003_processing_jobs` → `processing_jobs`
-  (status/stage/progress/attempt/request_key/lease — API-02).
-- Contract tables ResultVersion/Speaker/Segment/ActionItem —
-  not yet migrated; come with #11–#13.
+  (status/stage/progress/attempt/request_key/lease — API-02) and
+  `0004_transcript_versions` → `result_versions` + `segments`
+  (`speaker_id` nullable until #12) + `target_stage` on jobs.
+- Contract tables Speaker/ActionItem — not yet migrated; come with
+  #12/#13.
 
 ## Auth → app sync
 
