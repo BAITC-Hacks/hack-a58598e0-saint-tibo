@@ -1,6 +1,6 @@
 # Saint Tibo: remaining integration plan
 
-Owner: Danil (rldyourmnd). Runtime release `1adbcb5` is merged into main and deployed to production; Danil dev candidate `420aac5` has the same application tree. Ready teammate work is included. [Current facts](current-state.md), [DEMO](../DEMO.md), [coordination #94](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/94).
+Owner: Danil (rldyourmnd). The verified GPU baseline `1adbcb5` is in production. [PR #127](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/pull/127) adds the now-authorized PR #124 workspace, targeted draft/export guards and the final knowledge handoff. Exact deployment revisions are in the release receipt; ready teammate source is included. [Current facts](current-state.md), [DEMO](../DEMO.md), [coordination #94](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/94).
 
 ## Delivered release
 
