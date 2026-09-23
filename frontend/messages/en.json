@@ -89,6 +89,7 @@
   "player_rate": "Speed",
   "player_volume": "Volume",
   "player_page": "Recording player",
+  "player_open_page": "Open player",
   "player_server_help": "Choose a meeting recording. Audio and its transcript load from protected storage after sign-in.",
   "player_server_recordings": "Protected meeting recordings",
   "player_choose_server_recording": "Choose a playable recording",
