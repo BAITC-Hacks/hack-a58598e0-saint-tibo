@@ -9,8 +9,11 @@ no personal media/text in git or external services. No AppShell/editor/API edits
 - Local #19 dependency merged preserving its commits (`e81429d`, `963e9cb`).
 - `16cd152`: transcript hook, optional read-only panel, synthetic demo, ru/kk/en.
 - `818b7d9`: integration guide + exact synthetic browser proof.
+- `ef58368`: choose either published MP3 or synthetic fixture in demo.
+- `e973681`: document MP3 asset and browser proof.
 - Read `.serena/memories/WEB-20-transcript-sync.md` for domain state.
-- Passed typecheck/check/lint:fsd/i18n:check/build and browser acceptance on fixture.
+- Passed typecheck/check/lint:fsd/i18n:check/build and browser acceptance on
+  synthetic fixture and both published MP3s. I18n has 97 messages per locale.
 
 ## Next
 
@@ -21,5 +24,6 @@ no personal media/text in git or external services. No AppShell/editor/API edits
 - Verify the authorized real-data path after API/editor land. Keep #20 open.
 - Push/deploy require the owner's go. No request for approval is pending here.
 
-The local synthetic demo can run at http://127.0.0.1:3020/transcript-demo.
+The local demo with synthetic and published MP3 choices runs at
+http://127.0.0.1:3020/transcript-demo.
 Commands and disposable configuration are in docs/transcript-sync.md.
