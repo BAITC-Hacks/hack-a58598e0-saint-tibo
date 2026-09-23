@@ -17,11 +17,7 @@
   Query keys include meeting/recording/version; source switching clears stale
   text. Server markers and the transcript use those same segments. No result,
   empty result, loading and errors are distinct states.
-- `/transcript-demo` is explicitly public and synthetic: generated
-  32-second WAV/eight markers, no meeting API or private uploaded data.
-  The local player can also provide validated STT JSON (WEB-19).
-- Integrated #98 adds a separate `/player` synthetic walkthrough with
-  generated tones and explicitly fictional dialogue; this is not STT output.
+- #110 removes synthetic tones, local import and the public demo route. `/player` uses protected server recordings only.
 - Integration details: `docs/transcript-sync.md`; implementation `16cd152`.
   Historical browser evidence is recorded in the doc and
   [#20](https://github.com/BAITC-Hacks/hack-a58598e0-saint-tibo/issues/20#issuecomment-5793184614).

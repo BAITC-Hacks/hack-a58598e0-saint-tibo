@@ -5,8 +5,8 @@
 - TanStack Start SPA under `frontend/src/`; thin route → page modules.
   Shared UI is vendored shadcn/Base UI; reuse existing auth and controls.
 - `app/routes/`: protected `_app` shell/home placeholder, `/capture`
-  (WEB-21), local/stored-media `/player` (WEB-19), synthetic `/transcript-demo`
-  (WEB-20), login/dev-login and auth/media server routes.
+  (WEB-21), protected-recording `/player` (WEB-19/20),
+  login/dev-login and auth/media server routes.
 - Server modules in `app/server/` own Better Auth, auth guards, dev login
   and cookie→JWT media proxy. API requests use the generated backend client.
 - Dev root entry auto-logs in an unauthenticated dedicated dev user;
@@ -20,8 +20,7 @@
   app operation must not require an external font/image CDN.
 - Baseline UI/branding contract: `docs/product-baseline.md`,
   `docs/conventions.md`. Static examples must not masquerade as real results.
-- Dev 34062c4 adds an explicitly synthetic `/player` sample (#98); all three
-  locales distinguish generated tones/fictional dialogue from recorded speech.
+- #110 removes the synthetic `/player` sample and public transcript demo.
 
 ## Known Gaps
 
