@@ -48,6 +48,11 @@ export const en: Record<keyof typeof ru, string> = {
   unsaved: "Unsaved changes",
   saved: "Saved",
   saveError: "Could not save. Your changes remain in the form.",
+  extractDraft: "Generate draft",
+  extractingDraft: "Generating draft…",
+  extractDisclosure: "Transcript text is temporarily sent to an external API. Processing will move to local models later.",
+  extractError: "Could not generate the draft. Check the API configuration or try again later.",
+  extractRefresh: "Refresh result",
   pdf: "Download PDF",
   docx: "Download DOCX",
   exportUnavailable:

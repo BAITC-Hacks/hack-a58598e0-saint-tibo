@@ -7,6 +7,7 @@ import {
   jsonBodySerializer,
 } from "#/shared/api";
 import {
+  extractResultDraft,
   getResultDiarization,
   getResultReview,
   listRecordings,
@@ -58,6 +59,7 @@ export const reviewSchema = z.object({
   result_version_id: z.string(),
   revision: z.number().int().nonnegative(),
   reviewed: z.boolean(),
+  has_extraction_draft: z.boolean().optional(),
   summary: z.object({
     topics: z.array(summaryEntry),
     decisions: z.array(summaryEntry),
@@ -89,6 +91,7 @@ function realDocument(
     result_version_id: data.result_version_id,
     revision: data.revision,
     reviewed: data.reviewed,
+    has_extraction_draft: data.extraction_provenance != null,
     segments,
     diarization,
     speakers: (data.speakers ?? []).map((item) => ({
@@ -214,6 +217,21 @@ export const reviewQuery = (meetingId: string) =>
     refetchOnReconnect: false,
     queryFn: () => loadReview(meetingId),
   });
+
+export async function extractReview(meetingId: string, review: ReviewDocument) {
+  if (review.source !== "real" || !review.recording_id)
+    throw new Error("Extraction requires a saved recording");
+  const result = await extractResultDraft({
+    client: backendClient,
+    path: {
+      meeting_id: meetingId,
+      recording_id: review.recording_id,
+      result_version_id: review.result_version_id,
+    },
+  });
+  if (!result.data) throw new Error("Extraction unavailable");
+  return realDocument(result.data, review.segments, review.diarization);
+}
 
 export async function saveReview(meetingId: string, review: ReviewDocument) {
   if (review.source === "real") {
