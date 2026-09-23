@@ -40,6 +40,11 @@ class Settings(BaseSettings):
     extract_script_path: Path = Path("/app/extract/run.py")
     extract_runtime_path: Path = Path("/llama/llama-server")
     extract_model_path: Path = Path("/extract-model/Qwen3-8B-Q4_K_M.gguf")
+    extract_remote_enabled: bool = False
+    extract_remote_identity_file: Path = Path("/run/stt-ssh/extract_ed25519")
+    extract_remote_runner_path: str = Field(
+        default="/opt/saint-tibo/extract/remote_runner.py", pattern=r"^/[A-Za-z0-9_./-]+$"
+    )
     diarization_python_path: Path = Path("/app/diarize/.venv/bin/python")
     diarization_script_path: Path = Path("/app/diarize/diarize.py")
     diarization_model_path: Path = Path("/models/diarization-v1")
