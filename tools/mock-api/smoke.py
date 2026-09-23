@@ -94,6 +94,7 @@ try:
     save_failure = "10000000-0000-4000-8000-000000000004"
     assert request(f"/api/v1/meetings/{save_failure}/review", "PATCH", {"revision": 1})[0] == 503
     unavailable_export = "10000000-0000-4000-8000-000000000006"
+    assert request(f"/api/v1/meetings/{unavailable_export}/review")[1]["reviewed"]
     assert request(f"/api/v1/meetings/{unavailable_export}/export?format=pdf")[0] == 503
 
     status, created, _ = request(

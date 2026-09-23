@@ -130,6 +130,8 @@ class MockState:
                 if job["recording_id"] == recording["id"]
             )
             self.reviews[meeting["id"]] = self.clone_review(meeting["id"], recording["id"], version)
+            if index == 5:
+                self.reviews[meeting["id"]].update(reviewed=True, revision=2)
 
     def new_id(self, kind):
         self.counter += 1
